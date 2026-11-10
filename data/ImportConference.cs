@@ -11,7 +11,7 @@
 //   {kind}/{id}.md         "# Title" followed by the published abstract, bio or description
 //   {kind}/{id}.png|jpg    local images
 //
-// Usage (from the repository root):  dotnet run ImportConference.cs
+// Usage (from the repository root):  dotnet run data/ImportConference.cs
 // See data/README.md for the format.
 //
 // Each run clears data/.cache/, downloads and builds the new snapshot there, validates it,
@@ -32,7 +32,7 @@ using AngleSharp.Html.Parser;
 const string sourceUrl = "https://cptmsdug.dev/dotnet-conf-2026.html";
 
 // Paths are relative to this file, so the working directory doesn't matter.
-var dataFolder = Path.GetFullPath(Path.Combine(SourceDirectory(), "data"));
+var dataFolder = SourceDirectory();
 var output = Path.Combine(dataFolder, "conference");
 var cache = Path.Combine(dataFolder, ".cache");
 

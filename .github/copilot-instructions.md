@@ -33,7 +33,7 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 ## App architecture
 
 - Keep the structure flat and easy to read on a projector: `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so it doesn't compile the root `ImportConference.cs` script.
+- Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so it doesn't compile `data/ImportConference.cs`.
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`.
 - Use Shell for top-level navigation and routes for detail pages.
 - Conference content comes from the `data/conference/` snapshot, described in `data/README.md`. Copy it into the app's `Resources/Raw/conference/` (raw `MauiAsset` files) and load it with `FileSystem.OpenAppPackageFileAsync`. Don't scrape the website, change the importer, or need network access for this content.

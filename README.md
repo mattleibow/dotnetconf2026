@@ -11,7 +11,7 @@ Reused across four cities. Simple code, great design, no finished app checked in
 [`data/`](data/README.md) holds an offline snapshot of the event: a JSON catalogue, Markdown descriptions and images. The app is built from it, so the demo doesn't depend on the website. To refresh it before an event:
 
 ```sh
-dotnet run ImportConference.cs
+dotnet run data/ImportConference.cs
 ```
 
 ## Copy the prompts

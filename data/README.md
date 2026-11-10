@@ -32,9 +32,9 @@ Some files are only a heading, because the website has no text for them (for exa
 From the repository root, with the .NET 11 SDK:
 
 ```sh
-dotnet run ImportConference.cs
+dotnet run data/ImportConference.cs
 ```
 
-It downloads the website into `data/.cache/` (ignored by Git), builds and validates a new snapshot there, and replaces `conference/` only if everything succeeded. If the site is down, the existing snapshot is untouched.
+`ImportConference.cs` downloads the website into `data/.cache/` (ignored by Git), builds and validates a new snapshot there, and replaces `conference/` only if everything succeeded. If the site is down, the existing snapshot is untouched.
 
 The site has one AVIF logo, which the importer converts to PNG using macOS `sips`, so refresh on a Mac. The snapshot itself works everywhere.
