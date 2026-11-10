@@ -14,14 +14,13 @@
 // Usage (from the repository root):  dotnet run data/ImportConference.cs
 // See data/README.md for the format.
 //
-// Each run clears data/.cache/, downloads and builds the new snapshot there, validates it,
-// and only then replaces data/conference/. A failed run leaves the existing snapshot intact.
+// Each run deletes and rewrites data/conference/. If something goes wrong, use Git to see
+// what changed or to restore the previous snapshot.
 
 using System.Diagnostics;
 using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -31,10 +30,8 @@ using AngleSharp.Html.Parser;
 
 const string sourceUrl = "https://cptmsdug.dev/dotnet-conf-2026.html";
 
-// Paths are relative to this file, so the working directory doesn't matter.
-var dataFolder = SourceDirectory();
-var output = Path.Combine(dataFolder, "conference");
-var cache = Path.Combine(dataFolder, ".cache");
+// Relative to this file, so the working directory doesn't matter.
+var output = Path.Combine(SourceDirectory(), "conference");
 
 using var cancellation = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; cancellation.Cancel(); };
@@ -44,8 +41,16 @@ try
     if (args.Length != 0)
         throw new ArgumentException("This single-purpose importer takes no arguments.");
 
-    using var downloads = new Downloads(Path.Combine(cache, "downloads"));
-    var conference = await Snapshot.RefreshAsync(output, cache, downloads, new Uri(sourceUrl), cancellation.Token);
+    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+    http.DefaultRequestHeaders.UserAgent.ParseAdd("dotnetconf2026-demo-importer/1.0");
+
+    // Start clean so removed sessions or speakers don't leave stale files behind.
+    if (Directory.Exists(output))
+        Directory.Delete(output, recursive: true);
+    Directory.CreateDirectory(output);
+
+    var conference = await new ContentBuilder(output, http, new Uri(sourceUrl), cancellation.Token).BuildAsync();
+    Content.Validate(output, conference);
 
     Console.WriteLine($"Imported {conference.Sessions.Count} agenda entries, {conference.Speakers.Count} speakers, " +
         $"{conference.Venues.Count} venues and {conference.Sponsors.Count} sponsors into {output}");
@@ -57,93 +62,11 @@ catch (Exception error) when (error is IOException or UnauthorizedAccessExceptio
     or InvalidOperationException or ArgumentException or FormatException or OperationCanceledException)
 {
     Console.Error.WriteLine($"Import failed: {error.Message}");
-    Console.Error.WriteLine("The existing demo snapshot has not been replaced.");
+    Console.Error.WriteLine("Run 'git restore data/conference' to get the previous snapshot back.");
     return 1;
 }
 
 static string SourceDirectory([CallerFilePath] string file = "") => Path.GetDirectoryName(file)!;
-
-
-// ---------------------------------------------------------------------------------------------
-// Snapshot replacement
-// ---------------------------------------------------------------------------------------------
-
-static class Snapshot
-{
-    // Builds the new snapshot in the cache folder, then swaps it into place.
-    public static async Task<Conference> RefreshAsync(string output, string cache, Downloads downloads,
-        Uri sourceUrl, CancellationToken ct)
-    {
-        var staged = Path.Combine(cache, "conference");
-        var backup = Path.Combine(cache, "previous");
-
-        // If an earlier run died mid-swap, the backup is the only copy of the old snapshot.
-        // Never delete it automatically.
-        if (Directory.Exists(backup) && !Directory.Exists(output))
-            throw new IOException($"An interrupted refresh left the previous snapshot at {backup}. Restore it before retrying.");
-
-        // Start from a clean cache every time.
-        if (Directory.Exists(cache))
-            Directory.Delete(cache, recursive: true);
-        Directory.CreateDirectory(staged);
-
-        // Download, convert and validate everything before touching the real snapshot.
-        var conference = await new ContentBuilder(staged, downloads, sourceUrl, ct).BuildAsync();
-        Content.Validate(staged, conference);
-
-        // Move the old snapshot aside, move the new one in, and put the old one back if that fails.
-        if (Directory.Exists(output))
-            Directory.Move(output, backup);
-
-        try
-        {
-            Directory.Move(staged, output);
-        }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        {
-            if (Directory.Exists(backup))
-                Directory.Move(backup, output);
-            throw;
-        }
-
-        return conference;
-    }
-}
-
-
-// ---------------------------------------------------------------------------------------------
-// Downloads
-// ---------------------------------------------------------------------------------------------
-
-// Downloads files and keeps a copy of each in the cache, named by a hash of its URL,
-// so a run can be inspected after the fact.
-sealed class Downloads(string cache) : IDisposable
-{
-    readonly HttpClient client = new() { Timeout = TimeSpan.FromSeconds(60) };
-
-    public async Task<byte[]> GetAsync(Uri uri, CancellationToken ct)
-    {
-        if (uri.Scheme is not ("https" or "http"))
-            throw new ArgumentException($"Unsupported source URL: {uri}");
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        request.Headers.UserAgent.ParseAdd("dotnetconf2026-demo-importer/1.0");
-
-        using var response = await client.SendAsync(request, ct);
-        response.EnsureSuccessStatusCode();
-        var bytes = await response.Content.ReadAsByteArrayAsync(ct);
-
-        // Write to a temporary file first so the cache never holds a partial download.
-        var path = Path.Combine(cache, Convert.ToHexStringLower(SHA256.HashData(Encoding.UTF8.GetBytes(uri.AbsoluteUri))));
-        Directory.CreateDirectory(cache);
-        await File.WriteAllBytesAsync(path + ".tmp", bytes, ct);
-        File.Move(path + ".tmp", path, overwrite: true);
-
-        return bytes;
-    }
-
-    public void Dispose() => client.Dispose();
-}
 
 
 // ---------------------------------------------------------------------------------------------
@@ -152,7 +75,7 @@ sealed class Downloads(string cache) : IDisposable
 
 // Reads the event page and writes the whole snapshot into one folder.
 // This targets the CPTMSDUG page structure; it isn't a general-purpose scraper.
-sealed class ContentBuilder(string folder, Downloads downloads, Uri sourceUrl, CancellationToken ct)
+sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, CancellationToken ct)
 {
     // The page uses these keys in its tab IDs: #durban-schedule, #capetown-speakers, and so on.
     static readonly (string Key, string Name)[] Cities =
@@ -170,7 +93,7 @@ sealed class ContentBuilder(string folder, Downloads downloads, Uri sourceUrl, C
 
     public async Task<Conference> BuildAsync()
     {
-        var html = Encoding.UTF8.GetString(await downloads.GetAsync(sourceUrl, ct));
+        var html = Encoding.UTF8.GetString(await http.GetByteArrayAsync(sourceUrl, ct));
         using var page = await new HtmlParser().ParseDocumentAsync(html, ct);
 
         await ReadEmbeddedTextAsync(page);
@@ -199,7 +122,7 @@ sealed class ContentBuilder(string folder, Downloads downloads, Uri sourceUrl, C
         {
             var src = script.GetAttribute("src")!;
             if (src.EndsWith("/js/main.js", StringComparison.Ordinal))
-                javascript.AppendLine(Encoding.UTF8.GetString(await downloads.GetAsync(new(sourceUrl, src), ct)));
+                javascript.AppendLine(Encoding.UTF8.GetString(await http.GetByteArrayAsync(new Uri(sourceUrl, src), ct)));
         }
 
         // Inline scripts come after main.js, so their values win.
@@ -405,7 +328,7 @@ sealed class ContentBuilder(string folder, Downloads downloads, Uri sourceUrl, C
             return null;
 
         var uri = new Uri(sourceUrl, img.GetAttribute("src") ?? throw new InvalidOperationException("Image has no source."));
-        var bytes = await downloads.GetAsync(uri, ct);
+        var bytes = await http.GetByteArrayAsync(uri, ct);
 
         // Trust the file's contents rather than the extension in its URL.
         var extension = ImageExtension(bytes) ?? throw new InvalidOperationException($"Unsupported or invalid image: {uri}");
@@ -586,7 +509,7 @@ static class Content
 
     static IEnumerable<string> Paths(string content, string? image) => image is null ? [content] : [content, image];
 
-    // Checks the built snapshot before it replaces the real one: IDs, relationships, times, and files.
+    // Checks the written snapshot: IDs, relationships, times, and files.
     public static void Validate(string folder, Conference value)
     {
         if (value.SchemaVersion != 1)

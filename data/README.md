@@ -35,6 +35,6 @@ From the repository root, with the .NET 11 SDK:
 dotnet run data/ImportConference.cs
 ```
 
-`ImportConference.cs` downloads the website into `data/.cache/` (ignored by Git), builds and validates a new snapshot there, and replaces `conference/` only if everything succeeded. If the site is down, the existing snapshot is untouched.
+It deletes and rewrites `conference/`. Review the changes with `git diff`; if a run fails or the site is down, `git restore data/conference` brings the previous snapshot back.
 
 The site has one AVIF logo, which the importer converts to PNG using macOS `sips`, so refresh on a Mac. The snapshot itself works everywhere.
