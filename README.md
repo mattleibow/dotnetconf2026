@@ -19,7 +19,7 @@ dotnet run data/ImportConference.cs
 Run these in order, one at a time:
 
 1. [Build the conference app](.github/prompts/01-build-conference-app.prompt.md) - from the offline demo data.
-2. [Add semantic search](.github/prompts/02-add-semantic-search.prompt.md) - on-device where available, keyword search elsewhere.
+2. [Add semantic search](.github/prompts/02-add-semantic-search.prompt.md) - Apple embeddings on Apple, a small ONNX model elsewhere.
 3. [Add local chat](.github/prompts/03-add-local-chat.prompt.md) - a grounded, on-device assistant.
 4. [Add assistant actions](.github/prompts/04-add-assistant-actions.prompt.md) - navigation and favourites, with approval.
 5. [Route to the cloud](.github/prompts/05-add-cloud-routing.prompt.md) - optional: send complex questions to a cloud model.
