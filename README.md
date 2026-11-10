@@ -14,6 +14,8 @@ Reused across four cities. Simple code, great design, no finished app checked in
 dotnet run data/ImportConference.cs
 ```
 
+[`models/`](models/README.md) holds the small ONNX embedding model used for semantic search where there's no built-in one. To refresh it: `dotnet run models/DownloadModels.cs`.
+
 ## Copy the prompts
 
 Run these in order, one at a time:
