@@ -33,10 +33,10 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 ## App architecture
 
 - Keep the structure flat and easy to read on a projector: `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so the standalone `tools/*.cs` apps aren't compiled into it.
+- Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so it doesn't compile the root `ImportConference.cs` script.
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`.
 - Use Shell for top-level navigation and routes for detail pages.
-- Start from the existing `data/conference/` snapshot. Copy it into the app's `Resources/Raw/conference/` as raw `MauiAsset` files: `conference.json` holds structure and links; `{kind}/{id}.md` holds prose (H1 title, then body), with local PNG/JPG images beside it. The .NET 11 file-based app `tools/ImportConference.cs` refreshes the snapshot before the demo, not during app creation. Don't rewrite the importer, scrape at app runtime, or require website access to use the snapshot. Load assets with `FileSystem.OpenAppPackageFileAsync`; paths in the catalogue are relative to its directory. Don't duplicate prose in JSON.
+- Conference content comes from the `data/conference/` snapshot, described in `data/README.md`. Copy it into the app's `Resources/Raw/conference/` (raw `MauiAsset` files) and load it with `FileSystem.OpenAppPackageFileAsync`. Don't scrape the website, change the importer, or need network access for this content.
 - Store user state such as favourites locally with `Preferences` or a small JSON file. Don't add a database unless it's actually needed.
 - Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavoriteAsync`, `SearchSessions`, and navigation helpers. These should be useful on their own and easy to expose to an in-app AI assistant later.
 - Do not add AI features unless explicitly asked.
