@@ -6,7 +6,7 @@ Let the assistant look things up itself. Expose read-only tools from the existin
 
 - On Apple, tools run inside the native client, so pass the service provider with `functionInvocationServices`.
 - Where the model can't call tools, RAG keeps doing the work.
-- Make sessions in answers tappable.
+- Under each answer, show the sessions the tools returned as compact tappable cards. Use the tool results, not the model's wording.
 
 Docs: [source-generated app tools](https://github.com/dotnet/maui-labs/blob/main/src/AIExtensions/Microsoft.Maui.AI.Attributes/README.md) and [provider tool support](https://github.com/dotnet/maui-labs/blob/main/docs/ai/local-chat-provider.md).
 

@@ -9,7 +9,7 @@ Put what it needs to know in the system instructions: the event, the selected ci
 - Answer only from this data, and say so when it doesn't know.
 - Stream replies, allow cancelling, and let me start a new chat.
 - Check whether the model is available and show a friendly message if not. Don't download models without asking.
-- In Debug, add a setting to pretend it's a given time on event day, so "what's next?" works before the event.
+- In Debug, add a setting to pretend it's a given time on event day, so "what's next?" works before the event. Keep it out of the way, for example behind a toolbar button.
 
 Docs: [local chat clients](https://github.com/dotnet/maui-labs/blob/main/src/AI/Microsoft.Maui.Essentials.AI/README.md).
 
