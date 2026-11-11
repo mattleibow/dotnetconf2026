@@ -35,7 +35,8 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 - Keep the structure flat and easy to read on a projector: `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
 - Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so it doesn't compile the scripts in `data/` and `models/`.
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`.
-- Use Shell for top-level navigation and routes for detail pages.
+- Use Shell for navigation: one page per top-level section, and routes for detail pages. Never fake tabs by toggling `IsVisible` on one page.
+- One view model per page, with commands (`CommunityToolkit.Mvvm`) rather than event handlers in code-behind.
 - Conference content comes from the `data/conference/` snapshot, described in `data/README.md`. Copy it into the app's `Resources/Raw/conference/` (raw `MauiAsset` files) and load it with `FileSystem.OpenAppPackageFileAsync`. Don't scrape the website, change the importer, or need network access for this content.
 - Store user state such as favourites locally with `Preferences` or a small JSON file. Don't add a database unless it's actually needed.
 - Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavoriteAsync`, `SearchSessions`, and navigation helpers. These should be useful on their own and easy to expose to an in-app AI assistant later.
@@ -43,10 +44,18 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 
 ## Design
 
-- Make it look polished: a strong theme, good typography, generous spacing, rounded cards, clear hierarchy, light and dark mode, and subtle motion.
-- Use the event's branding where available, while making the app feel like a celebration of .NET 11 and .NET MAUI 11.
+The app should look like a professional, shipping conference app from the first build.
+
+- **Theme first.** Put the brand colours from `data/README.md` in `Resources/Styles/Colors.xaml`, and a small type ramp (display, title, subtitle, body, caption), spacing and card styles in `Styles.xaml`. Pages use these resources, never raw colours or font sizes. Support light and dark mode with `AppThemeBinding` in the resources.
+- **Real content.** Show speaker photos (circular, with initials as the fallback), sponsor logos on white tiles, and the venue photo. Use the event's real name and dates; don't invent slogans.
+- **Agenda.** Group sessions by time slot, show the track or room as a coloured chip, speaker photos and names, and a favourite (heart) toggle on each card. Breaks and registration look lighter than talks.
+- **Details.** A header with the brand gradient, then time and room chips, speakers with photos, the abstract, and a clear favourite button.
+- **City picker.** Three city chips (or a segmented control) in the header, not a dropdown.
+- **Adaptive layout.** It must look right on a phone in portrait and in a large desktop window:
+  - Phones: bottom tabs, single-column lists, full-width cards.
+  - Wide windows (about 800 px and up): a sidebar if it's simple in Shell (tabs are fine otherwise), multi-column card grids, content limited to about 1,100 px wide and centred, and two-column detail pages.
+  - Switch with `AdaptiveTrigger` visual states or the window width, in one place, not per control.
 - Use `CollectionView` for lists, with useful empty, loading, and error states.
-- Images from the event website are fine. Provide graceful fallbacks, such as initials for missing speaker photos.
 - Keep accessibility in mind: semantic descriptions, readable contrast, and platform-appropriate touch targets (at least 44 points on Apple and 48 dp on Android).
 
 ## Agent workflow
@@ -60,7 +69,7 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
   ```
 
 - Give interactive and important elements a stable, kebab-case `AutomationId`, such as `session-list`, `favorite-button`, and `sponsors-tab`.
-- After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Fix what you see; don't stop at "it compiles."
+- After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a large desktop window (for example Mac Catalyst at 1440 × 900). Fix what you see; don't stop at "it compiles."
 - Verify SDK/workload/Xcode compatibility before a long build. Don't change shared toolchain settings or install workloads without approval. If device or model execution is blocked, report the blocker and what remains unverified; don't claim success or retry indefinitely.
 - Use available skills when relevant:
   - **dotnet-maui**: `dotnet-maui-doctor`, `maui-shell-navigation`, `maui-collectionview`, `maui-data-binding`, `maui-theming`, `maui-safe-area`, `maui-dependency-injection`, and `maui-app-lifecycle`.
