@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AssistantViewModel(AssistantService assistant, ConferenceService conference, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
+public partial class AssistantViewModel(AssistantService assistant, DayPlannerService planner, ConferenceService conference, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
 {
     public FavoriteApproval Approval { get; } = approval;
     private CancellationTokenSource? cancellation;
@@ -105,6 +105,76 @@ public partial class AssistantViewModel(AssistantService assistant, ConferenceSe
             logger.LogWarning(ex, "On-device chat failed.");
             if (version == conversationVersion)
                 reply.Text = "Sorry, the on-device model couldn't answer. Please try again.";
+        }
+        finally
+        {
+            if (version == conversationVersion)
+            {
+                cancellation = null;
+                IsBusy = false;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private async Task PlanDayAsync()
+    {
+        if (!CanSend)
+            return;
+
+        var request = Input.Trim();
+        Input = "";
+        var version = conversationVersion;
+        using var source = new CancellationTokenSource();
+        cancellation = source;
+        IsBusy = true;
+        Messages.Add(new AssistantMessage("You", request));
+        var reply = new AssistantMessage("Plan my day", "Planning your day on this device...");
+        Messages.Add(reply);
+        try
+        {
+            var cityId = conference.CityId;
+            var plan = await planner.PlanAsync(request, cityId, source.Token);
+            source.Token.ThrowIfCancellationRequested();
+            if (version != conversationVersion)
+                return;
+            if (conference.CityId != cityId)
+                throw new InvalidOperationException("The selected city changed while planning.");
+            var data = await conference.GetConferenceAsync();
+            foreach (var talk in plan.Talks)
+                reply.Sessions.Add(new SessionItem(talk.Session, data, conference, matchText: talk.Reason));
+            if (plan.Talks.Count == 0)
+            {
+                reply.Text = "No matching talks fit those preferences and the available time. Try different interests or a later departure.";
+                return;
+            }
+            var departure = plan.LeaveBy is null ? "no departure time specified" : $"leaving by {plan.LeaveBy}";
+            reply.Text = $"Your suggested day in {data.Cities.First(c => c.Id == cityId).Name}, for {string.Join(", ", plan.Interests)}; {departure}. {plan.Warning}".Trim();
+            var approved = await Approval.RequestAsync($"Add all {plan.Talks.Count} suggested talks to favourites?", source.Token);
+            source.Token.ThrowIfCancellationRequested();
+            if (version != conversationVersion)
+                return;
+            if (!approved)
+            {
+                reply.Text += "\n\nNo favourites were changed.";
+                return;
+            }
+            if (conference.CityId != cityId)
+                throw new InvalidOperationException("The selected city changed before approval.");
+            foreach (var talk in plan.Talks)
+                conference.SetFavorite(talk.Session.Id, true);
+            reply.Text += "\n\nAdded all suggested talks to favourites.";
+        }
+        catch (OperationCanceledException) when (source.IsCancellationRequested)
+        {
+            if (version == conversationVersion)
+                reply.Text += "\n\nPlanning cancelled; no favourites were changed.";
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Planning the day failed.");
+            if (version == conversationVersion)
+                reply.Text = "Couldn't plan your day on this device. Please check your request and try again.";
         }
         finally
         {

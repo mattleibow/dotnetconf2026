@@ -36,13 +36,14 @@ public static class MauiProgram
 #pragma warning disable MAUIAI0001
 		if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
 		{
+			builder.Services.AddSingleton<AppleIntelligenceChatClient>();
 			builder.Services.AddSingleton<IChatClient>(services =>
 #if IOS
 				OperatingSystem.IsIOSVersionAtLeast(26)
 #else
 				OperatingSystem.IsMacCatalystVersionAtLeast(26)
 #endif
-					? AssistantService.AddSessionContext(new AppleIntelligenceChatClient(), services)
+					? AssistantService.AddSessionContext(services.GetRequiredService<AppleIntelligenceChatClient>(), services)
 					: throw new PlatformNotSupportedException("Apple Intelligence requires iOS or Mac Catalyst 26 or later."));
 		}
 #pragma warning disable CS0162
@@ -61,6 +62,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<FavoriteApproval>();
 		builder.Services.AddScoped<ConferenceTools>();
 		builder.Services.AddSingleton<AssistantService>();
+		builder.Services.AddSingleton<DayPlannerService>();
 		builder.Services.AddSingleton<AssistantViewModel>();
 		builder.Services.AddTransient<AssistantPage>();
 		builder.Services.AddTransient<AgendaViewModel>();
