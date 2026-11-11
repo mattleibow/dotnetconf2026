@@ -12,9 +12,10 @@ public partial class FavoritesViewModel(ConferenceDatabase database, UserPrefere
     [RelayCommand]
     private async Task LoadAsync()
     {
+        var city = await preferences.GetSelectedCityAsync(database);
         Sessions.Clear();
         var ids = preferences.GetFavoriteIds();
-        foreach (var session in (await database.GetSessionsAsync(preferences.SelectedCityId)).Where(s => ids.Contains(s.Id)))
+        foreach (var session in (await database.GetSessionsAsync(city.Id)).Where(s => ids.Contains(s.Id)))
         {
             var speakers = await database.GetSpeakersForSessionAsync(session);
             Sessions.Add(new SessionItem(session, string.Join(", ", speakers.Select(s => s.Name))));

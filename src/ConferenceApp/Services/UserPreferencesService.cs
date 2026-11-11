@@ -1,3 +1,5 @@
+using ConferenceApp.Models;
+
 namespace ConferenceApp.Services;
 
 public class UserPreferencesService
@@ -8,17 +10,23 @@ public class UserPreferencesService
     public event EventHandler? CityChanged;
     public event EventHandler? FavoritesChanged;
 
-    public string SelectedCityId
+    public string? SelectedCityId
     {
-        get => Preferences.Get(CityKey, "durban");
+        get => Preferences.Get(CityKey, null);
         set
         {
             if (value == SelectedCityId)
                 return;
-            Preferences.Set(CityKey, value);
+            if (string.IsNullOrEmpty(value))
+                Preferences.Remove(CityKey);
+            else
+                Preferences.Set(CityKey, value);
             CityChanged?.Invoke(this, EventArgs.Empty);
         }
     }
+
+    public async Task<City> GetSelectedCityAsync(ConferenceDatabase database) =>
+        await database.GetCityAsync(SelectedCityId);
 
     public IReadOnlySet<string> GetFavoriteIds() =>
         Preferences.Get(FavoritesKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();

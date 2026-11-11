@@ -18,10 +18,9 @@ public partial class AgendaViewModel(ConferenceDatabase database, UserPreference
 
     partial void OnSelectedCityChanged(City? value)
     {
-        if (value is null || value.Id == preferences.SelectedCityId)
+        if (value is null)
             return;
-        preferences.SelectedCityId = value.Id;
-        _ = LoadSessionsAsync();
+        _ = LoadSessionsAsync(value.Id);
     }
 
     [RelayCommand]
@@ -32,14 +31,13 @@ public partial class AgendaViewModel(ConferenceDatabase database, UserPreference
             foreach (var city in await database.GetCitiesAsync())
                 Cities.Add(city);
         }
-        SelectedCity = await database.GetCityAsync(preferences.SelectedCityId);
-        await LoadSessionsAsync();
+        SelectedCity = await preferences.GetSelectedCityAsync(database);
     }
 
-    private async Task LoadSessionsAsync()
+    private async Task LoadSessionsAsync(string cityId)
     {
         Sessions.Clear();
-        foreach (var session in await database.GetSessionsAsync(preferences.SelectedCityId))
+        foreach (var session in await database.GetSessionsAsync(cityId))
         {
             var speakers = await database.GetSpeakersForSessionAsync(session);
             Sessions.Add(new SessionItem(session, string.Join(", ", speakers.Select(s => s.Name))));
@@ -52,7 +50,10 @@ public partial class AgendaViewModel(ConferenceDatabase database, UserPreference
         var names = Cities.Select(c => c.Name).ToArray();
         var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
         if (Cities.FirstOrDefault(c => c.Name == choice) is { } city)
+        {
+            preferences.SelectedCityId = city.Id;
             SelectedCity = city;
+        }
     }
 
     [RelayCommand]

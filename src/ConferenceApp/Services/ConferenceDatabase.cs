@@ -22,8 +22,16 @@ public class ConferenceDatabase
     public async Task<IReadOnlyList<City>> GetCitiesAsync() =>
         (await GetConferenceAsync()).Cities;
 
-    public async Task<City> GetCityAsync(string cityId) =>
-        (await GetConferenceAsync()).Cities.First(c => c.Id == cityId);
+    public async Task<City> GetCityAsync(string? cityId = null)
+    {
+        var cities = await GetCitiesAsync();
+        if (!string.IsNullOrEmpty(cityId) && cities.FirstOrDefault(c => c.Id == cityId) is { } match)
+            return match;
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        return cities.OrderBy(c => c.Date).FirstOrDefault(c => c.Date >= today)
+            ?? cities.OrderBy(c => c.Date).Last();
+    }
 
     public async Task<IReadOnlyList<Session>> GetSessionsAsync(string cityId) =>
         [.. (await GetConferenceAsync()).Sessions.Where(s => s.CityId == cityId).OrderBy(s => s.Start)];

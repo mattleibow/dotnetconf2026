@@ -13,8 +13,9 @@ public partial class SpeakersViewModel(ConferenceDatabase database, UserPreferen
     [RelayCommand]
     private async Task LoadAsync()
     {
+        var city = await preferences.GetSelectedCityAsync(database);
         Speakers.Clear();
-        foreach (var speaker in await database.GetSpeakersAsync(preferences.SelectedCityId))
+        foreach (var speaker in await database.GetSpeakersAsync(city.Id))
             Speakers.Add(speaker);
     }
 

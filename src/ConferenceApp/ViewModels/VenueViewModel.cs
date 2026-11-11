@@ -19,11 +19,11 @@ public partial class VenueViewModel(ConferenceDatabase database, UserPreferences
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var cityId = preferences.SelectedCityId;
-        Venue = await database.GetVenueAsync(cityId);
+        var city = await preferences.GetSelectedCityAsync(database);
+        Venue = await database.GetVenueAsync(city.Id);
         Description = await database.GetTextAsync(Venue.Content);
         Sponsors.Clear();
-        foreach (var sponsor in await database.GetSponsorsAsync(cityId))
+        foreach (var sponsor in await database.GetSponsorsAsync(city.Id))
             Sponsors.Add(sponsor);
     }
 
