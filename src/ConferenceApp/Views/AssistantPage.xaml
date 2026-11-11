@@ -34,6 +34,20 @@
                             <VerticalStackLayout Spacing="4">
                                 <Label Text="{Binding Role}" Style="{StaticResource Metadata}" />
                                 <Label Text="{Binding Text}" AutomationId="assistant-message-text" />
+                                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Sessions}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:AssistantSessionLink">
+                                            <Border Style="{StaticResource SessionLink}" AutomationId="{Binding AutomationId}"
+                                                    SemanticProperties.Description="{Binding Title}" SemanticProperties.Hint="Open session details">
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AssistantViewModel}}, Path=OpenSessionCommand}"
+                                                                          CommandParameter="{Binding .}" />
+                                                </Border.GestureRecognizers>
+                                                <Label Text="{Binding Title}" Style="{StaticResource SessionLinkText}" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

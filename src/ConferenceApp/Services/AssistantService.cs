@@ -30,6 +30,7 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
         if (status.Availability != ChatModelAvailability.Available)
             return "The on-device model isn't ready. Check Apple Intelligence in your device settings and try again.";
         client ??= new ChatClientBuilder(services.GetRequiredService<IChatClient>())
+            .ConfigureOptions(options => options.Tools = [.. AssistantTools.Default.Tools])
             .Use(async (messages, options, next, cancellationToken) =>
             {
                 var prompt = messages.ToList();
@@ -76,10 +77,10 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
             : DateTimeOffset.UtcNow.ToOffset(offset);
         var speakerNames = conference.Speakers.ToDictionary(s => s.Id, s => s.Name);
         var result = new StringBuilder();
-        result.AppendLine("You are a conference assistant. Answer only from the current data below, never from prior knowledge or earlier answers. If the answer is missing, say you don't know. Do not invent speaker biographies. Copy session times exactly from the matching agenda line; do not guess. Times are local to the event. Be concise.");
+        result.AppendLine("You are a conference assistant. Answer only from the current conference data below or the available tools, never from prior knowledge or earlier answers. Use tools to look up speaker biographies, sponsors, venues and session details. For a time range, use the time range tool and list every matching session, including all tracks. If the answer is missing, say you don't know. Copy session titles and times exactly. Times are local to the event. Be concise.");
         result.AppendLine($"Event: {conference.Name}; {selected.Name}; {selected.Date:yyyy-MM-dd}; {venue.Name}, {venue.Address}.");
         result.AppendLine($"Current local time: {now:yyyy-MM-dd HH:mm zzz}.");
-        var saved = conference.Sessions.Where(s => favorites.Contains(s.Id))
+        var saved = conference.Sessions.Where(s => s.CityId == selected.Id && favorites.Contains(s.Id))
             .Select(s => $"{Compact(s.Title, 160)} ({s.CityId}, {s.Start:dd MMM HH:mm})");
         result.AppendLine($"Favourites: {string.Join("; ", saved)}");
         result.AppendLine("Agenda: start-end | track | title | speakers | topic | summary. A * marks a favourite.");
@@ -97,6 +98,18 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
         var text = string.Join(" ", (value ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
         return text.Length <= maxLength ? text : text[..(maxLength - 1)] + "…";
     }
+
+    public async Task<IReadOnlyList<Session>> FindMentionedSessionsAsync(string answer, string cityId)
+    {
+        var conference = await data.GetConferenceAsync();
+        var normalizedAnswer = NormalizeQuotes(answer);
+        return conference.Sessions.Where(s => s.CityId == cityId && s.Kind != "general" &&
+            normalizedAnswer.Contains(NormalizeQuotes(s.Title), StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private static string NormalizeQuotes(string text) => text
+        .Replace('‘', '\'').Replace('’', '\'')
+        .Replace('“', '"').Replace('”', '"');
 
     public IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {

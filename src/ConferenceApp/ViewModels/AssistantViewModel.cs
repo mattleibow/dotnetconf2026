@@ -55,6 +55,7 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
         var request = new CancellationTokenSource();
         currentRequest = request;
         IsBusy = true;
+        var requestCityId = assistant.SelectedCityId;
         Messages.Add(new AssistantMessage("You", question));
         var answer = new AssistantMessage("Assistant", "");
         Messages.Add(answer);
@@ -72,6 +73,10 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
             request.Token.ThrowIfCancellationRequested();
             if (string.IsNullOrWhiteSpace(answer.Text))
                 throw new InvalidOperationException("The model returned an empty response.");
+            var mentioned = await assistant.FindMentionedSessionsAsync(answer.Text, requestCityId);
+            request.Token.ThrowIfCancellationRequested();
+            foreach (var session in mentioned)
+                answer.Sessions.Add(new AssistantSessionLink(session.Id, session.Title));
             history.Add(new ChatMessage(ChatRole.User, question));
             history.Add(new ChatMessage(ChatRole.Assistant, answer.Text.Length <= 600 ? answer.Text : answer.Text[..600]));
             if (history.Count > 4)
@@ -102,6 +107,10 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
     private void Cancel() => currentRequest?.Cancel();
 
     [RelayCommand]
+    private Task OpenSessionAsync(AssistantSessionLink session) =>
+        Shell.Current.GoToAsync($"session?id={Uri.EscapeDataString(session.Id)}");
+
+    [RelayCommand]
     private void NewChat()
     {
         currentRequest?.Cancel();
@@ -115,4 +124,10 @@ public sealed partial class AssistantMessage(string role, string text) : Observa
 {
     public string Role { get; } = role;
     [ObservableProperty] public partial string Text { get; set; } = text;
+    public ObservableCollection<AssistantSessionLink> Sessions { get; } = [];
+}
+
+public sealed record AssistantSessionLink(string Id, string Title)
+{
+    public string AutomationId => $"assistant-session-{Id}";
 }
