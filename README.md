@@ -10,8 +10,8 @@ It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands
 
 | Path | Contents |
 |---|---|
-| [`src/ConferenceApp/`](src/ConferenceApp/) | The starting wireframe app: Agenda, Speakers, Favourites, Venue with sponsors, Assistant, and DevFlow |
-| [`.github/prompts/`](.github/prompts/) | Seven prompts (`01`–`07`), plus optional [extras](.github/prompts/extras/). Copy each into your agent in order |
+| [`src/ConferenceApp/`](src/ConferenceApp/) | The starting wireframe app: Event (with sponsors and map), Agenda (with search and favourites filter), Speakers, Assistant, and DevFlow |
+| [`.github/prompts/`](.github/prompts/) | Eight prompts (`01`–`08`), plus optional [extras](.github/prompts/extras/). Copy each into your agent in order |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and how to test with DevFlow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions and images |
@@ -30,7 +30,7 @@ It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands
   copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
   copilot plugin install dotnet/skills:plugins/dotnet   # optional: C# and MSBuild
   ```
-- **For on-device AI** (steps 02 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
+- **For on-device AI** (steps 03 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
 
 ## The steps
 
@@ -38,13 +38,14 @@ Run the prompts in order, one at a time, and check the app after each. Each buil
 
 | # | Prompt | Adds |
 |---|---|---|
-| 01 | [Make it beautiful](.github/prompts/01-make-it-beautiful.prompt.md) | Styles the wireframe app with `impeccable` and `DESIGN.md` |
-| 02 | [On-device chat](.github/prompts/02-on-device-chat.prompt.md) | Connects the Assistant tab to the local chat model (`IChatClient`) with titles and times |
-| 03 | [Ingestion and enrichment](.github/prompts/03-ingestion-and-enrichment.prompt.md) | `Microsoft.Extensions.DataIngestion` pipeline generating cached summaries and topics |
-| 04 | [Apple semantic search](.github/prompts/04-apple-semantic-search.prompt.md) | `VectorStoreWriter` and semantic search with Apple's built-in sentence embeddings |
-| 05 | [ONNX semantic search](.github/prompts/05-onnx-semantic-search.prompt.md) | Swaps `IEmbeddingGenerator` to the bundled ONNX MiniLM model for accurate retrieval |
-| 06 | [Tools and actions](.github/prompts/06-tools-and-actions.prompt.md) | Read-only tools (including semantic search RAG), navigation, and approval-gated favourites |
-| 07 | [Plan my day](.github/prompts/07-plan-my-day.prompt.md) | An Agent Framework workflow that builds a conflict-free schedule |
+| 01 | [Inspect and drive](.github/prompts/01-inspect-and-drive.prompt.md) | Launches the wireframe in the Mobile Canvas + DevFlow Web Inspector, drives the UI, and inspects `Preferences` |
+| 02 | [Make it beautiful](.github/prompts/02-make-it-beautiful.prompt.md) | Styles the wireframe app with `impeccable` and `DESIGN.md`, checking light/dark themes and `ui diagnostics` |
+| 03 | [On-device chat](.github/prompts/03-on-device-chat.prompt.md) | Connects the Assistant tab to the local chat model (`IChatClient`) with titles and times |
+| 04 | [Ingestion and enrichment](.github/prompts/04-ingestion-and-enrichment.prompt.md) | `Microsoft.Extensions.DataIngestion` pipeline generating cached summaries and topics |
+| 05 | [Apple semantic search](.github/prompts/05-apple-semantic-search.prompt.md) | `VectorStoreWriter` and semantic search with Apple's built-in sentence embeddings |
+| 06 | [ONNX semantic search](.github/prompts/06-onnx-semantic-search.prompt.md) | Swaps `IEmbeddingGenerator` to the bundled ONNX MiniLM model for accurate retrieval |
+| 07 | [Tools and actions](.github/prompts/07-tools-and-actions.prompt.md) | Read-only tools (including semantic search RAG), navigation, and approval-gated favourites |
+| 08 | [Plan my day](.github/prompts/08-plan-my-day.prompt.md) | An Agent Framework workflow that builds a conflict-free schedule |
 
 ### Workshop extras
 
