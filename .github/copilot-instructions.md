@@ -69,9 +69,10 @@ The .NET Conf 2026 brand, from the event website:
 
 - **Theme first.** Put the style guide colours in `Resources/Styles/Colors.xaml`, and a small type ramp (display, title, subtitle, body, caption), spacing and card styles in `Styles.xaml`. Pages use these resources, never raw colours or font sizes. Support light and dark mode with `AppThemeBinding` in the resources.
 - **Real content.** Show speaker photos (circular, with initials as the fallback), sponsor logos on white tiles, and the venue photo. Use the event's real name and dates; don't invent slogans.
-- **Agenda.** Group sessions by time slot, show the track or room as a coloured chip, speaker photos and names, and a favourite (heart) toggle on each card. Breaks and registration look lighter than talks.
+- **Agenda.** Group sessions by time slot, show the track or room as a coloured chip, speaker photos and names, and a favourite (heart) toggle on each card. Breaks, registration and other general items are compact one-line rows with no favourite toggle and no empty sections.
 - **Details.** A header with the brand gradient, then time and room chips, speakers with photos, the abstract, and a clear favourite button.
 - **City picker.** Three city chips (or a segmented control) in the header, not a dropdown.
+- **Navigation.** Tabs for Agenda, Speakers, Favourites and Venue (with sponsors). Pages with their own branded header hide the Shell navigation bar, so the title isn't shown twice.
 - **Adaptive layout.** It must look right on a phone in portrait and in a large desktop window:
   - Phones: bottom tabs, single-column lists, full-width cards.
   - Wide windows (about 800 px and up): a sidebar if it's simple in Shell (tabs are fine otherwise), multi-column card grids, content limited to about 1,100 px wide and centred, and two-column detail pages.
@@ -92,8 +93,8 @@ The .NET Conf 2026 brand, from the event website:
 - Give interactive and important elements a stable, kebab-case `AutomationId`, such as `session-list`, `favorite-button`, and `sponsors-tab`.
 - Make list items tappable with a tap gesture or command on the item, and give each item a stable `AutomationId`; `CollectionView` selection is awkward to drive from automation.
 - Build one target framework at a time (`dotnet build -f net11.0-maccatalyst`, then run). Parallel builds of different target frameworks share `obj/` and corrupt each other.
-- When driving the app with the `maui devflow` CLI, prefer `batch` for several steps and pass the agent port explicitly; separate concurrent CLI calls can conflict.
-- After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a large desktop window (for example Mac Catalyst at 1440 × 900). Fix what you see; don't stop at "it compiles."
+- When driving the app with the `maui devflow` CLI, prefer `batch` for several steps and pass the agent port explicitly; separate concurrent CLI calls can conflict. The broker may list agents from other apps, so pick yours by app name and process.
+- After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a wide desktop window (Mac Catalyst at about 1200 px wide). Fix what you see; don't stop at "it compiles."
 - **Design review.** When a screen is done, take phone and desktop screenshots and ask a second reviewer to critique them: a rubber-duck or code-review sub-agent, ideally on a stronger model than the one building. Give it the screenshots, the style guide above, and what the screen is for. Ask for the top issues in functionality, layout, visual polish and accessibility, then fix the ones that matter. One review round per screen is enough.
 - Verify SDK/workload/Xcode compatibility before a long build. Don't change shared toolchain settings or install workloads without approval. If device or model execution is blocked, report the blocker and what remains unverified; don't claim success or retry indefinitely.
 - Use available skills when relevant:
