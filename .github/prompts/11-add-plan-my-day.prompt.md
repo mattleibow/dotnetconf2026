@@ -4,7 +4,7 @@ description: Plan my day with an Agent Framework workflow
 
 Add a "Plan my day" feature using an Agent Framework workflow (`Microsoft.Agents.AI.Workflows`) on the on-device model:
 
-1. A preferences agent turns my request ("I'm a mobile dev, into AI, leaving at 3") into structured preferences.
+1. A preferences agent turns my request ("I'm a mobile dev, into AI, leaving at 3") into structured preferences. Small models sometimes misread times, so check those in code.
 2. Find candidate talks with our search service (plain code).
 3. Pick talks that don't clash (plain code).
 4. For each picked talk, an agent writes one line on why it fits me. Run these concurrently.
