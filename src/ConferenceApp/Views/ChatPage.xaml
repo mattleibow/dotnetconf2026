@@ -25,7 +25,7 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="m:ChatItem">
                     <VerticalStackLayout Padding="0,6">
-                        <Label Text="{Binding Text}" />
+                        <Label FormattedText="{Binding FormattedText}" />
                     </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
