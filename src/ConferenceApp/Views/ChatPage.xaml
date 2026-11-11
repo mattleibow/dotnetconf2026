@@ -2,8 +2,13 @@
 <ContentPage x:Class="ConferenceApp.Views.ChatPage"
              xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
              xmlns:m="clr-namespace:ConferenceApp.Models"
+             xmlns:conv="clr-namespace:ConferenceApp.Converters"
              x:DataType="vm:ChatViewModel"
              Title="Assistant">
+    <ContentPage.Resources>
+        <conv:MarkdownToFormattedStringConverter x:Key="MarkdownConverter" />
+    </ContentPage.Resources>
+
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
                      Text="{Binding SelectedCity.Name, FallbackValue='City'}"
@@ -25,7 +30,7 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="m:ChatItem">
                     <VerticalStackLayout Padding="0,6">
-                        <Label FormattedText="{Binding FormattedText}" />
+                        <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}" />
                     </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>

@@ -176,7 +176,7 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 
 ### Assistant
 - **Suggestion Chips:** Horizontal scrollable pill chips at the top (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke).
-- **Message Bubbles:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound to `ChatItem.FormattedText`.
+- **Message Bubbles:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter`.
 - **Input Bar:** Pinned bottom bar with a rounded `Surface` `Entry` and a `Primary` Send button.
 
 ## Do's and Don'ts
