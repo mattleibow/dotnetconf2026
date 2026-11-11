@@ -9,7 +9,11 @@ public record Conference(
     List<Venue> Venues,
     List<Sponsor> Sponsors);
 
-public record City(string Id, string Name, DateOnly Date, string VenueId);
+public record City(
+    string Id,
+    string Name,
+    DateOnly Date,
+    string VenueId);
 
 public record Session(
     string Id,
@@ -27,23 +31,28 @@ public record Session(
 }
 
 public record Speaker(
-  string Id,
-  string Name,
-  string? Tagline,
-  List<string> CityIds,
-  string Content,
-  string? Image);
+    string Id,
+    string Name,
+    string? Tagline,
+    List<string> CityIds,
+    string Content,
+    string? Image);
 
 public record Venue(
-  string Id,
-  string Name,
-  string CityId,
-  string Address,
-  double Latitude,
-  double Longitude,
-  string MapUrl,
-  string Content,
-  string? Image);
+    string Id,
+    string Name,
+    string CityId,
+    string Address,
+    double Latitude,
+    double Longitude,
+    string MapUrl,
+    string Content,
+    string? Image);
 
 public record Sponsor(
-  string Id, string Name, string Tier, List<string> CityIds, string Url, string? Image);
+    string Id,
+    string Name,
+    string Tier,
+    List<string> CityIds,
+    string Url,
+    string? Image);

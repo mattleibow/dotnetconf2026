@@ -8,19 +8,8 @@ namespace ConferenceApp.ViewModels;
 
 public record SessionItem(Session Session, string Speakers);
 
-public partial class AgendaViewModel : ObservableObject
+public partial class AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
-    private readonly ConferenceDatabase database;
-    private readonly UserPreferencesService preferences;
-
-    public AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences)
-    {
-        this.database = database;
-        this.preferences = preferences;
-        preferences.CityChanged += async (_, _) => await LoadAsync();
-        preferences.FavoritesChanged += async (_, _) => await LoadAsync();
-    }
-
     public ObservableCollection<SessionItem> Sessions { get; } = [];
 
     [ObservableProperty]

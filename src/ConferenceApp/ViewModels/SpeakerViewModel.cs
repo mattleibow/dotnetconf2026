@@ -22,6 +22,13 @@ public partial class SpeakerViewModel(ConferenceDatabase database, UserPreferenc
         if (Speaker is null)
             return;
         Bio = await database.GetTextAsync(Speaker.Content);
+        await LoadSessionsAsync();
+    }
+
+    public async Task LoadSessionsAsync()
+    {
+        if (Speaker is null)
+            return;
         var city = await preferences.GetSelectedCityAsync(database);
         Sessions.Clear();
         foreach (var session in await database.GetSessionsForSpeakerAsync(city.Id, Speaker.Id))

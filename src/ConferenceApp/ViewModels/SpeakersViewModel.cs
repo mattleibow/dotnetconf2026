@@ -6,18 +6,8 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakersViewModel : ObservableObject
+public partial class SpeakersViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
-    private readonly ConferenceDatabase database;
-    private readonly UserPreferencesService preferences;
-
-    public SpeakersViewModel(ConferenceDatabase database, UserPreferencesService preferences)
-    {
-        this.database = database;
-        this.preferences = preferences;
-        preferences.CityChanged += async (_, _) => await LoadAsync();
-    }
-
     public ObservableCollection<Speaker> Speakers { get; } = [];
 
     [ObservableProperty]

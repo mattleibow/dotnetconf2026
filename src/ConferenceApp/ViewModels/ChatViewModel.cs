@@ -6,20 +6,8 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel : ObservableObject
+public partial class ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
-    private readonly ChatService chat;
-    private readonly ConferenceDatabase database;
-    private readonly UserPreferencesService preferences;
-
-    public ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences)
-    {
-        this.chat = chat;
-        this.database = database;
-        this.preferences = preferences;
-        preferences.CityChanged += async (_, _) => await LoadAsync();
-    }
-
     public ObservableCollection<ChatItem> Messages { get; } = [];
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
 
