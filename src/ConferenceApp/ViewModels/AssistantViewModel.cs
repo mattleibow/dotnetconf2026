@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public sealed partial class AssistantViewModel(AssistantService assistant, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
+public sealed partial class AssistantViewModel(AssistantService assistant, DayPlannerService planner, FavoritesService favorites, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
 {
     public FavoriteApproval Approval { get; } = approval;
     private CancellationTokenSource? currentRequest;
@@ -129,6 +129,67 @@ public sealed partial class AssistantViewModel(AssistantService assistant, Favor
     private void Cancel() => currentRequest?.Cancel();
 
     [RelayCommand]
+    private async Task PlanDayAsync()
+    {
+        var question = Input.Trim();
+        if (!IsAvailable || IsBusy || question.Length == 0)
+            return;
+        Input = "";
+        var request = new CancellationTokenSource();
+        currentRequest = request;
+        IsBusy = true;
+        var cityId = assistant.SelectedCityId;
+        Messages.Add(new AssistantMessage("You", question));
+        var answer = new AssistantMessage("Day plan", "Finding a non-overlapping plan on your device...");
+        Messages.Add(answer);
+        try
+        {
+            var plan = await planner.PlanAsync(question, request.Token);
+            request.Token.ThrowIfCancellationRequested();
+            if (plan.Items.Count == 0)
+            {
+                answer.Text = "No matching talks fit those preferences. Try different interests or a later departure time.";
+                return;
+            }
+            var departure = plan.Preferences.LeaveBy.Length == 0 ? "No departure time specified" : $"Leaving by {plan.Preferences.LeaveBy}";
+            answer.Text = $"Interests: {string.Join(", ", plan.Preferences.Interests)} · {departure}";
+            foreach (var item in plan.Items)
+                answer.Sessions.Add(new AssistantSessionLink(item.Session.Id, item.Session.Title,
+                    $"{item.Session.Start:HH:mm}–{item.Session.End:HH:mm} · {item.Session.Track}", item.Reason));
+            var approved = await Approval.RequestAsync($"Add all {plan.Items.Count} talks in this plan to favourites?", request.Token);
+            request.Token.ThrowIfCancellationRequested();
+            if (!approved)
+            {
+                answer.Text += "\n\nNot added to favourites.";
+                return;
+            }
+            if (assistant.SelectedCityId != cityId || plan.CityId != cityId)
+                throw new InvalidOperationException("The selected city changed before approval.");
+            favorites.AddAll(plan.Items.Select(item => item.Session.Id));
+            answer.Text += "\n\nAdded the plan to favourites.";
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested)
+        {
+            if (Messages.Contains(answer))
+                answer.Text += "\n\nPlanning cancelled; favourites were not changed.";
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Unable to plan the conference day.");
+            answer.Text += "\n\nCouldn't finish the plan; favourites were not changed. Please try again.";
+        }
+        finally
+        {
+            if (currentRequest == request)
+            {
+                currentRequest = null;
+                IsBusy = false;
+            }
+            request.Dispose();
+        }
+    }
+
+    [RelayCommand]
     private Task OpenSessionAsync(AssistantSessionLink session) =>
         Shell.Current.GoToAsync($"session?id={Uri.EscapeDataString(session.Id)}");
 
@@ -149,7 +210,9 @@ public sealed partial class AssistantMessage(string role, string text) : Observa
     public ObservableCollection<AssistantSessionLink> Sessions { get; } = [];
 }
 
-public sealed record AssistantSessionLink(string Id, string Title)
+public sealed record AssistantSessionLink(string Id, string Title, string Metadata = "", string Reason = "")
 {
     public string AutomationId => $"assistant-session-{Id}";
+    public bool HasMetadata => Metadata.Length > 0;
+    public bool HasReason => Reason.Length > 0;
 }

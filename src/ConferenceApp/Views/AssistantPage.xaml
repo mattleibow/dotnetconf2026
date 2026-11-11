@@ -43,7 +43,11 @@
                                                     <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:AssistantViewModel}}, Path=OpenSessionCommand}"
                                                                           CommandParameter="{Binding .}" />
                                                 </Border.GestureRecognizers>
-                                                <Label Text="{Binding Title}" Style="{StaticResource SessionLinkText}" />
+                                                <VerticalStackLayout Spacing="4">
+                                                    <Label Text="{Binding Metadata}" Style="{StaticResource Metadata}" IsVisible="{Binding HasMetadata}" />
+                                                    <Label Text="{Binding Title}" Style="{StaticResource SessionLinkText}" />
+                                                    <Label Text="{Binding Reason}" IsVisible="{Binding HasReason}" />
+                                                </VerticalStackLayout>
                                             </Border>
                                         </DataTemplate>
                                     </BindableLayout.ItemTemplate>
@@ -65,15 +69,16 @@
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
-            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Grid Grid.Row="4" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                 <Grid.Triggers>
                     <DataTrigger TargetType="Grid" Binding="{Binding Approval.IsPending}" Value="True">
                         <Setter Property="IsVisible" Value="False" />
                     </DataTrigger>
                 </Grid.Triggers>
-                <Entry Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}" AutomationId="assistant-input" SemanticProperties.Description="Your question" Text="{Binding Input}" MaxLength="500" IsEnabled="{Binding IsAvailable}" ReturnCommand="{Binding SendCommand}" />
-                <Button Grid.Column="1" Text="Send" AutomationId="assistant-send" Command="{Binding SendCommand}" IsEnabled="{Binding IsAvailable}" />
-                <Button Grid.Column="2" Text="Cancel" AutomationId="assistant-cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+                <Entry Grid.ColumnSpan="3" Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}" AutomationId="assistant-input" SemanticProperties.Description="Your question or planning preferences" Text="{Binding Input}" MaxLength="500" IsEnabled="{Binding IsAvailable}" ReturnCommand="{Binding SendCommand}" />
+                <Button Grid.Row="1" Text="Plan my day" AutomationId="plan-my-day" Command="{Binding PlanDayCommand}" IsEnabled="{Binding IsAvailable}" HorizontalOptions="Start" />
+                <Button Grid.Row="1" Grid.Column="1" Text="Send" AutomationId="assistant-send" Command="{Binding SendCommand}" IsEnabled="{Binding IsAvailable}" />
+                <Button Grid.Row="1" Grid.Column="2" Text="Cancel" AutomationId="assistant-cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
             </Grid>
         </Grid>
     </Grid>

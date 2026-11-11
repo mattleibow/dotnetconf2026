@@ -65,6 +65,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SemanticSessionSearch>();
 		builder.Services.AddSingleton<SessionSummaryService>();
 		builder.Services.AddSingleton<AssistantService>();
+		builder.Services.AddSingleton<DayPlannerService>();
 		builder.Services.AddSingleton<ConferenceTools>();
 		builder.Services.AddSingleton<FavoriteApproval>();
 		builder.Services.AddSingleton<SessionSearchService>();

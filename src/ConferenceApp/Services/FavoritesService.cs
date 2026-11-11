@@ -29,4 +29,15 @@ public sealed class FavoritesService
             favorites.Remove(id);
         Changed?.Invoke(this, EventArgs.Empty);
     }
+
+    public void AddAll(IEnumerable<string> ids)
+    {
+        var updated = new HashSet<string>(favorites);
+        updated.UnionWith(ids);
+        if (updated.SetEquals(favorites))
+            return;
+        Preferences.Default.Set("favorites", JsonSerializer.Serialize(updated));
+        favorites.UnionWith(updated);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
 }
