@@ -1,4 +1,3 @@
-#if IOS || MACCATALYST
 using System.Text.RegularExpressions;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
@@ -46,8 +45,20 @@ public sealed class SemanticSearchService(
     private async Task<Index> BuildIndexAsync()
     {
         var generator = services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+        logger.LogInformation("Building semantic search index with {Generator}", generator.GetType().FullName);
         var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
-        var collection = store.GetCollection<int, SessionChunk>("sessions");
+        var dimensions = generator is OnnxEmbeddingGenerator ? 384 : 512;
+        var definition = new VectorStoreCollectionDefinition
+        {
+            Properties =
+            [
+                new VectorStoreKeyProperty(nameof(SessionChunk.Key), typeof(int)),
+                new VectorStoreDataProperty(nameof(SessionChunk.SessionId), typeof(string)),
+                new VectorStoreDataProperty(nameof(SessionChunk.Excerpt), typeof(string)),
+                new VectorStoreVectorProperty(nameof(SessionChunk.Text), typeof(string), dimensions),
+            ]
+        };
+        var collection = store.GetCollection<int, SessionChunk>("sessions", definition);
         await collection.EnsureCollectionExistsAsync();
         var data = await conferenceService.GetConferenceAsync();
         var sessions = data.Sessions.Where(s => s.Kind == "session").ToDictionary(s => s.Id);
@@ -76,14 +87,9 @@ public sealed class SemanticSearchService(
 
     private sealed class SessionChunk
     {
-        [VectorStoreKey]
         public int Key { get; set; }
-        [VectorStoreData]
         public string SessionId { get; set; } = "";
-        [VectorStoreData]
         public string Excerpt { get; set; } = "";
-        [VectorStoreVector(512)]
         public string Text { get; set; } = "";
     }
 }
-#endif

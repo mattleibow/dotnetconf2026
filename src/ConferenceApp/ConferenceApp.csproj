@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net11.0-android</TargetFrameworks>
 		<TargetFrameworks Condition="!$([MSBuild]::IsOSPlatform('linux'))">$(TargetFrameworks);net11.0-ios;net11.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net11.0-windows10.0.19041.0</TargetFrameworks>
 
 		<!-- Note for MacCatalyst:
 		The default runtime is maccatalyst-x64, except in Release config, in which case the default is maccatalyst-x64;maccatalyst-arm64.
@@ -55,6 +56,7 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<MauiAsset Include="..\..\models\all-MiniLM-L6-v2\*" LogicalName="models/all-MiniLM-L6-v2/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -62,11 +64,18 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26421.1" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.1" />
+		<PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
+		<PackageReference Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' Or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">
 		<PackageReference Include="Microsoft.Maui.Essentials.AI" Version="11.0.0-preview.8.26555.2" />
-		<PackageReference Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<ReferenceNativeSymbol Include="RegisterCustomOps" SymbolType="Function" SymbolMode="Ignore" />
+		<LinkerArgument Include="-lsqlite3" />
 	</ItemGroup>
 
 </Project>

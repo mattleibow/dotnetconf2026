@@ -3,9 +3,7 @@ using ConferenceApp.Models;
 namespace ConferenceApp.Services;
 
 public sealed class SessionSearchService(ConferenceService conferenceService
-#if IOS || MACCATALYST
     , SemanticSearchService semanticSearch
-#endif
     )
 {
     public async Task<SessionSearchResponse> SearchSessionsAsync(string query)
@@ -39,14 +37,10 @@ public sealed class SessionSearchService(ConferenceService conferenceService
             return new SessionSearchResult(session, excerpt);
         }));
         var matches = results.OfType<SessionSearchResult>().ToList();
-#if IOS || MACCATALYST
         var semantic = await semanticSearch.SearchAsync(query, cityId);
         var exactIds = matches.Select(r => r.Session.Id).ToHashSet();
         matches.AddRange(semantic.Results.Where(r => !exactIds.Contains(r.Session.Id)).Take(5));
         return new(matches, semantic.Warning);
-#else
-        return new(matches, "");
-#endif
     }
 }
 

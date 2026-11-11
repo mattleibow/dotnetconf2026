@@ -4,7 +4,7 @@ On-device models the app bundles, so the demo doesn't download anything at runti
 
 ## all-MiniLM-L6-v2
 
-A small sentence-embedding model used for semantic search on platforms without a built-in embedding model (Apple uses its own `NLEmbedding` instead).
+A small sentence-embedding model used for semantic search on device. The app uses it on Android, Windows, iOS and Mac Catalyst. To compare Apple's `NLEmbedding`, set `MauiProgram.UseOnnxOnApple` to `false` and rebuild.
 
 ```text
 all-MiniLM-L6-v2/
