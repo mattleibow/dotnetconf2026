@@ -45,6 +45,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, OnnxEmbeddingGenerator>();
 #endif
 		builder.Services.AddSingleton<SemanticSearchService>();
+		builder.Services.AddSingleton<SessionEnrichmentService>();
 		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<AgendaPage>();

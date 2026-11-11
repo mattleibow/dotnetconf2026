@@ -5,7 +5,7 @@ namespace ConferenceApp.Services;
 
 public sealed class ConferenceService
 {
-    private Conference? conference;
+    private readonly Lazy<Task<Conference>> conference = new(LoadConferenceAsync);
     public event EventHandler? Changed;
 
     public string CityId
@@ -18,16 +18,15 @@ public sealed class ConferenceService
         }
     }
 
-    public async Task<Conference> GetConferenceAsync()
+    public Task<Conference> GetConferenceAsync() => conference.Value;
+
+    private static async Task<Conference> LoadConferenceAsync()
     {
-        if (conference is not null)
-            return conference;
         using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
-        conference = await JsonSerializer.DeserializeAsync<Conference>(stream, new JsonSerializerOptions
+        return await JsonSerializer.DeserializeAsync<Conference>(stream, new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true
         }) ?? throw new InvalidDataException("Conference data is empty.");
-        return conference;
     }
 
     public async Task<string> GetContentAsync(string path)

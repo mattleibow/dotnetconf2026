@@ -13,6 +13,10 @@
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{Binding Track}" Style="{StaticResource MetadataText}"/>
                         <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                        <Border Style="{StaticResource TopicChip}" IsVisible="{Binding Session.HasTopic}" AutomationId="{Binding TopicAutomationId}">
+                            <Label Text="{Binding Session.Topic}" Style="{StaticResource MetadataText}"/>
+                        </Border>
+                        <Label Text="{Binding Session.Summary}" Style="{StaticResource BodyText}" MaxLines="3" LineBreakMode="TailTruncation" AutomationId="{Binding SummaryAutomationId}"/>
                         <Label Text="{Binding MatchText}" IsVisible="{Binding HasMatchText}" Style="{StaticResource BodyText}" AutomationId="{Binding MatchAutomationId}"/>
                         <VerticalStackLayout Spacing="4" BindableLayout.ItemsSource="{Binding SpeakerItems}">
                             <BindableLayout.ItemTemplate>
@@ -34,7 +38,7 @@
                         <Label Text="{Binding Time}" Style="{StaticResource CaptionText}"/>
                     </VerticalStackLayout>
                     <ImageButton Grid.Column="1" Source="{Binding Heart}" Command="{Binding FavoriteCommand}" AutomationId="{Binding FavoriteAutomationId}"
-                                 WidthRequest="48" HeightRequest="48" Padding="12" VerticalOptions="Center" BackgroundColor="Transparent" SemanticProperties.Description="{Binding FavoriteDescription}"/>
+                                 WidthRequest="48" HeightRequest="48" Padding="12" VerticalOptions="Start" BackgroundColor="Transparent" SemanticProperties.Description="{Binding FavoriteDescription}"/>
                 </Grid>
             </Border>
         </DataTemplate>
@@ -69,10 +73,18 @@
             <Button Text="Find nearest city" Command="{Binding FindNearestCommand}" AutomationId="nearest-city" HorizontalOptions="Start"/>
         </VerticalStackLayout>
         </Grid>
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*" MaximumWidthRequest="1100" HorizontalOptions="Fill">
             <SearchBar Text="{Binding SearchText}" Placeholder="Search sessions" AutomationId="agenda-search" Margin="16,8,16,0" SemanticProperties.Description="Search sessions in the selected city"/>
-            <Label Grid.Row="1" Text="{Binding SearchNotice}" Style="{StaticResource CaptionText}" Margin="16,0" AutomationId="search-notice"/>
-            <CollectionView Grid.Row="2" ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
+            <Border Grid.Row="1" Margin="24,0" Padding="12,0" StrokeShape="RoundRectangle 16"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource SurfaceDark}}">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                    <Label Text="Topic" Style="{StaticResource MetadataText}" VerticalOptions="Center"/>
+                    <Picker Grid.Column="1" Title="Filter by topic" ItemsSource="{Binding Topics}" SelectedItem="{Binding SelectedTopic}" AutomationId="topic-filter" SemanticProperties.Description="Filter sessions by topic"/>
+                    <Label Grid.Column="2" Text="⌄" Style="{StaticResource SubtitleText}" VerticalOptions="Center" InputTransparent="True"/>
+                </Grid>
+            </Border>
+            <Label Grid.Row="2" Text="{Binding SearchNotice}" Style="{StaticResource CaptionText}" Margin="16,0" AutomationId="search-notice"/>
+            <CollectionView Grid.Row="3" ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
                 <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="1" HorizontalItemSpacing="8"/></CollectionView.ItemsLayout>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="Layout">
@@ -91,8 +103,8 @@
                     </DataTemplate>
                 </CollectionView.GroupHeaderTemplate>
             </CollectionView>
-            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
-            <Label Grid.Row="2" Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <ActivityIndicator Grid.Row="3" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Grid.Row="3" Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
     </Grid>
 </ContentPage>

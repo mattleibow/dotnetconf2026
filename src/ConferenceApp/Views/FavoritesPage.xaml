@@ -22,6 +22,10 @@
                                 <VerticalStackLayout Spacing="6">
                                     <Label Text="{Binding Time}" Style="{StaticResource MetadataText}"/>
                                     <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                                    <Border Style="{StaticResource TopicChip}" IsVisible="{Binding Session.HasTopic}" AutomationId="{Binding TopicAutomationId}">
+                                        <Label Text="{Binding Session.Topic}" Style="{StaticResource MetadataText}"/>
+                                    </Border>
+                                    <Label Text="{Binding Session.Summary}" Style="{StaticResource BodyText}" MaxLines="3" LineBreakMode="TailTruncation" AutomationId="{Binding SummaryAutomationId}"/>
                                     <Label Text="{Binding Speakers}" Style="{StaticResource BodyText}"/>
                                     <Label Text="{Binding Track}" Style="{StaticResource CaptionText}"/>
                                 </VerticalStackLayout>
