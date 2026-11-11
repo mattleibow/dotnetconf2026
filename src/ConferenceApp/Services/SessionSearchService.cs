@@ -16,6 +16,11 @@ public sealed class SessionSearchService
     }
 
     public Task InitializeAsync() => semantic.InitializeAsync();
+    public event EventHandler? TopicsChanged
+    {
+        add => semantic.TopicsChanged += value;
+        remove => semantic.TopicsChanged -= value;
+    }
     public string SearchMode => !semantic.IsInitialized ? "Preparing on-device search..." : semantic.IsAvailable
         ? "On-device semantic and keyword search"
         : "Keyword search only · sentence model unavailable";

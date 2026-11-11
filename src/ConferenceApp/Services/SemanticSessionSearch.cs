@@ -7,7 +7,7 @@ using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Services;
 
-public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvider services, ILogger<SemanticSessionSearch> logger) : IDisposable
+public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvider services, SessionSummaryService summaries, ILogger<SemanticSessionSearch> logger) : IDisposable
 {
     private readonly Lock sync = new();
     private Task? initialization;
@@ -17,6 +17,7 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
     private int chunkCount;
     public bool IsAvailable { get; private set; }
     public bool IsInitialized { get; private set; }
+    public event EventHandler? TopicsChanged;
 
     public Task InitializeAsync()
     {
@@ -27,18 +28,6 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
     private async Task BuildIndexAsync()
     {
         var conference = await data.GetConferenceAsync();
-        IEmbeddingGenerator<string, Embedding<float>> generator;
-        try
-        {
-            generator = services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
-        }
-        catch (NotSupportedException ex)
-        {
-            logger.LogWarning(ex, "Sentence embeddings are unavailable; using keyword search.");
-            IsInitialized = true;
-            return;
-        }
-        logger.LogInformation("Semantic search using {Generator}", generator.GetType().Name);
         var directory = Path.Combine(FileSystem.AppDataDirectory, "session-search");
         Directory.CreateDirectory(directory);
         var documents = new Dictionary<string, Session>();
@@ -51,17 +40,40 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
             documents.Add(path, session);
         }
 
+        _ = Task.Run(() => summaries.GenerateAsync(documents));
+        IEmbeddingGenerator<string, Embedding<float>> generator;
+        try
+        {
+            generator = services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>();
+        }
+        catch (NotSupportedException ex)
+        {
+            logger.LogWarning(ex, "Sentence embeddings are unavailable; using keyword search.");
+            IsInitialized = true;
+            return;
+        }
+        logger.LogInformation("Semantic search using {Generator}", generator.GetType().Name);
         var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
-        var writer = new VectorStoreWriter<string>(store, MauiProgram.EmbeddingDimensions,
+        var dimensions = generator is OnnxEmbeddingGenerator ? 384 : 512;
+        var writer = new VectorStoreWriter<string>(store, dimensions,
             new() { CollectionName = "sessions", IncrementalIngestion = false });
         var chunker = new SessionChunker(documents);
         var ingestion = new IngestionPipeline<string>(new MarkdownReader(), chunker, writer);
+        var topics = new TopicProcessor(generator);
+        ingestion.ChunkProcessors.Add(topics);
         try
         {
             await foreach (var result in ingestion.ProcessAsync(documents.Keys.Select(path => new FileInfo(path))))
             {
                 if (!result.Succeeded)
                     throw new InvalidOperationException($"Failed to index session document '{result.DocumentId}'.", result.Exception);
+                var session = documents[result.DocumentId];
+                var topic = topics.TopicFor(result.DocumentId);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    session.Topic = topic;
+                    TopicsChanged?.Invoke(this, EventArgs.Empty);
+                });
             }
         }
         catch

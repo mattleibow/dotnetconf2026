@@ -35,7 +35,7 @@ Run the prompts in order, one at a time, and check the app after each. Each buil
 | 03 | [Apple embeddings](.github/prompts/03-add-apple-embeddings.prompt.md) | Semantic search on Apple, with an in-memory vector store |
 | 04 | [ONNX embeddings](.github/prompts/04-add-onnx-embeddings.prompt.md) | The same on Android and Windows with a small ONNX model |
 | 05 | [Ingestion](.github/prompts/05-add-ingestion.prompt.md) | A DataIngestion pipeline instead of the indexing loop |
-| 06 | [Enrichment](.github/prompts/06-add-enrichment.prompt.md) | Topics from embeddings and summaries from the local model |
+| 06 | [Enrichment](.github/prompts/06-add-enrichment.prompt.md) | Topics from embeddings and background summaries from Apple Intelligence when available |
 | 07 | [Local chat](.github/prompts/07-add-local-chat.prompt.md) | An on-device assistant primed with the agenda |
 | 08 | [Chat RAG](.github/prompts/08-add-chat-rag.prompt.md) | Full abstracts via simple RAG middleware |
 | 09 | [Chat tools](.github/prompts/09-add-chat-tools.prompt.md) | Read-only tools the model can call |
@@ -48,6 +48,7 @@ Tips:
 - Commit after each step, so you can go back if a step goes wrong.
 - Start each step in a fresh agent session; the prompts are written to stand alone.
 - The AI packages are experimental. If a step fails because an API changed, tell the agent to check the linked docs.
+- Topic filters use the on-device embedding model; classifications are approximate. Summaries run in the background on supported Apple Intelligence devices and can be unavailable or refused. Android retains topic filtering without local summaries.
 
 ## Refreshing the data and model
 

@@ -15,6 +15,14 @@
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{Binding Track}" Style="{StaticResource Metadata}" />
                         <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
+                        <Border Style="{StaticResource TrackChip}" BackgroundColor="{StaticResource BrandSecondary}"
+                                IsVisible="{Binding Session.HasTopic}" AutomationId="session-topic">
+                            <Label Text="{Binding Session.Topic}" Style="{StaticResource ChipText}" />
+                        </Border>
+                        <Label Text="{Binding Session.Summary, StringFormat='AI summary: {0}'}" Style="{StaticResource SearchMatchText}"
+                               IsVisible="{Binding Session.HasSummary}" AutomationId="session-summary" />
+                        <Label Text="On-device summary unavailable" Style="{StaticResource SearchMatchText}"
+                               IsVisible="{Binding Session.SummaryUnavailable}" />
                         <Label Text="{Binding CityAndDate}" />
                         <Label Text="{Binding Time}" />
                         <Label Text="{Binding SpeakerNames}" />

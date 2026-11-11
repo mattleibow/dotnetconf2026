@@ -4,6 +4,7 @@
              x:DataType="vm:AgendaViewModel"
              x:Name="Page"
              Title="Agenda"
+             Shell.NavBarIsVisible="False"
              BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
     <Grid RowDefinitions="Auto,*">
         <Border Background="{StaticResource BrandGradient}" StrokeThickness="0" Padding="24,16,24,20">
@@ -16,23 +17,49 @@
                 </Grid>
                 <FlexLayout Wrap="Wrap" Direction="Row">
                     <Button Text="Durban" Style="{StaticResource CityButton}" AutomationId="city-durban" SemanticProperties.Description="Select Durban" Command="{Binding SelectCityCommand}" CommandParameter="durban">
-                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Durban"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Durban, selected" /></DataTrigger></Button.Triggers>
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Durban"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource White}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Durban, selected" /></DataTrigger></Button.Triggers>
                     </Button>
                     <Button Text="Cape Town" Style="{StaticResource CityButton}" AutomationId="city-cape-town" SemanticProperties.Description="Select Cape Town" Command="{Binding SelectCityCommand}" CommandParameter="cape-town">
-                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Cape Town"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Cape Town, selected" /></DataTrigger></Button.Triggers>
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Cape Town"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource White}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Cape Town, selected" /></DataTrigger></Button.Triggers>
                     </Button>
                     <Button Text="Bloemfontein" Style="{StaticResource CityButton}" AutomationId="city-bloemfontein" SemanticProperties.Description="Select Bloemfontein" Command="{Binding SelectCityCommand}" CommandParameter="bloemfontein">
-                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Bloemfontein"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Bloemfontein, selected" /></DataTrigger></Button.Triggers>
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Bloemfontein"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource White}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Bloemfontein, selected" /></DataTrigger></Button.Triggers>
                     </Button>
                 </FlexLayout>
             </VerticalStackLayout>
         </Border>
-        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" RowDefinitions="Auto,Auto,Auto,Auto,*">
             <SearchBar AutomationId="agenda-search" Placeholder="Search sessions, speakers or tracks"
                        SemanticProperties.Description="Search sessions in the selected city"
                        Text="{Binding SearchText}" Margin="16,8,16,0" />
             <Label Grid.Row="1" Text="{Binding SearchMode}" Style="{StaticResource SearchMatchText}" AutomationId="search-mode" Margin="24,0,24,0" />
-            <CollectionView Grid.Row="2" AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
+            <ScrollView Grid.Row="2" Orientation="Horizontal" HorizontalScrollBarVisibility="Default" Margin="16,4,16,0">
+                <HorizontalStackLayout Spacing="8">
+                    <Button Text="All" Style="{StaticResource TopicFilterButton}" AutomationId="topic-all" SemanticProperties.Description="Show all topics" Command="{Binding SelectTopicCommand}" CommandParameter="All">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="All"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="All topics, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="AI" Style="{StaticResource TopicFilterButton}" AutomationId="topic-ai" SemanticProperties.Description="Filter by AI" Command="{Binding SelectTopicCommand}" CommandParameter="AI">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="AI"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="AI, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Mobile" Style="{StaticResource TopicFilterButton}" AutomationId="topic-mobile" SemanticProperties.Description="Filter by Mobile" Command="{Binding SelectTopicCommand}" CommandParameter="Mobile">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="Mobile"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Mobile, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Web" Style="{StaticResource TopicFilterButton}" AutomationId="topic-web" SemanticProperties.Description="Filter by Web" Command="{Binding SelectTopicCommand}" CommandParameter="Web">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="Web"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Web, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Data" Style="{StaticResource TopicFilterButton}" AutomationId="topic-data" SemanticProperties.Description="Filter by Data" Command="{Binding SelectTopicCommand}" CommandParameter="Data">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="Data"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Data, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Cloud" Style="{StaticResource TopicFilterButton}" AutomationId="topic-cloud" SemanticProperties.Description="Filter by Cloud" Command="{Binding SelectTopicCommand}" CommandParameter="Cloud">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="Cloud"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Cloud, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Other" Style="{StaticResource TopicFilterButton}" AutomationId="topic-other" SemanticProperties.Description="Filter by Other" Command="{Binding SelectTopicCommand}" CommandParameter="Other">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding SelectedTopic}" Value="Other"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="TextColor" Value="{StaticResource Black}" /><Setter Property="BorderColor" Value="{StaticResource BrandDark}" /><Setter Property="BorderWidth" Value="2" /><Setter Property="SemanticProperties.Description" Value="Other, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                </HorizontalStackLayout>
+            </ScrollView>
+            <Label Grid.Row="3" Text="{Binding SummaryStatus}" Style="{StaticResource SearchMatchText}" AutomationId="summary-status" Margin="24,0" />
+            <CollectionView Grid.Row="4" AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
                 <CollectionView.EmptyView>
                     <Label AutomationId="agenda-status" Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
                 </CollectionView.EmptyView>
@@ -62,7 +89,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <ActivityIndicator Grid.Row="4" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         </Grid>
     </Grid>
 </ContentPage>

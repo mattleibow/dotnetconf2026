@@ -6,12 +6,16 @@
             <DataTrigger TargetType="Border" Binding="{Binding IsGeneral}" Value="True">
                 <Setter Property="Style" Value="{StaticResource GeneralCard}" />
             </DataTrigger>
+            <DataTrigger TargetType="Border" Binding="{Binding IsGeneral}" Value="False">
+                <Setter Property="Style" Value="{StaticResource Card}" />
+            </DataTrigger>
         </Border.Triggers>
         <Border.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}" CommandParameter="{Binding .}" />
         </Border.GestureRecognizers>
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <VerticalStackLayout Spacing="6">
+                <HorizontalStackLayout Spacing="8">
                 <Border Style="{StaticResource TrackChip}">
                     <Border.Triggers>
                         <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Track 2"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
@@ -20,7 +24,16 @@
                     </Border.Triggers>
                     <Label Text="{Binding Track}" Style="{StaticResource ChipText}" />
                 </Border>
+                <Border Style="{StaticResource TrackChip}" BackgroundColor="{StaticResource BrandSecondary}"
+                        IsVisible="{Binding Session.HasTopic}" AutomationId="session-topic">
+                    <Label Text="{Binding Session.Topic}" Style="{StaticResource ChipText}" />
+                </Border>
+                </HorizontalStackLayout>
                 <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
+                <Label Text="{Binding Session.Summary, StringFormat='AI summary: {0}'}" Style="{StaticResource SearchMatchText}"
+                       IsVisible="{Binding Session.HasSummary}" AutomationId="session-summary" />
+                <Label Text="On-device summary unavailable" Style="{StaticResource SearchMatchText}"
+                       IsVisible="{Binding Session.SummaryUnavailable}" />
                 <Label Text="{Binding Time}" />
                 <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Speakers}">
                     <BindableLayout.ItemTemplate>

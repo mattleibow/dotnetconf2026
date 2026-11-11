@@ -13,7 +13,9 @@ public partial class AgendaViewModel : ObservableObject
     private readonly FavoritesService favorites;
     private readonly NearbyCityService nearby;
     private readonly SessionSearchService search;
+    private readonly SessionSummaryService summaries;
     private Conference? conference;
+    private string? searchError;
     private int refreshVersion;
 
     [ObservableProperty] public partial string CityName { get; set; } = "";
@@ -22,22 +24,28 @@ public partial class AgendaViewModel : ObservableObject
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial bool IsWide { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = "";
-    public string SearchMode => search.SearchMode;
+    [ObservableProperty] public partial string SelectedTopic { get; set; } = "All";
+    public string SearchMode => searchError ?? search.SearchMode;
+    public string SummaryStatus => summaries.Status;
 
     public ObservableCollection<SessionGroup> Groups { get; } = [];
 
     partial void OnIsWideChanged(bool value) => _ = RefreshAsync();
     partial void OnSearchTextChanged(string value) => _ = RefreshAsync();
+    partial void OnSelectedTopicChanged(string value) => _ = RefreshAsync();
 
-    public AgendaViewModel(ConferenceService data, CityService city, FavoritesService favorites, NearbyCityService nearby, SessionSearchService search)
+    public AgendaViewModel(ConferenceService data, CityService city, FavoritesService favorites, NearbyCityService nearby, SessionSearchService search, SessionSummaryService summaries)
     {
         this.data = data;
         this.city = city;
         this.favorites = favorites;
         this.nearby = nearby;
         this.search = search;
+        this.summaries = summaries;
         city.Changed += (_, _) => _ = RefreshAsync();
         favorites.Changed += (_, _) => _ = RefreshAsync();
+        search.TopicsChanged += (_, _) => { if (SelectedTopic != "All") _ = RefreshAsync(); };
+        summaries.StatusChanged += (_, _) => OnPropertyChanged(nameof(SummaryStatus));
     }
 
     public async Task LoadAsync()
@@ -48,10 +56,10 @@ public partial class AgendaViewModel : ObservableObject
         try
         {
             conference = await data.GetConferenceAsync();
-            await search.InitializeAsync();
-            OnPropertyChanged(nameof(SearchMode));
             await RefreshAsync();
+            _ = InitializeSearchAsync();
         }
+
         catch (Exception ex)
         {
             Status = $"Couldn't load the conference: {ex.Message}";
@@ -60,6 +68,19 @@ public partial class AgendaViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    private async Task InitializeSearchAsync()
+    {
+        try
+        {
+            await search.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            searchError = $"Couldn't prepare on-device search: {ex.Message}";
+        }
+        OnPropertyChanged(nameof(SearchMode));
     }
 
     private async Task RefreshAsync()
@@ -88,6 +109,8 @@ public partial class AgendaViewModel : ObservableObject
 
             if (version != refreshVersion)
                 return;
+            if (SelectedTopic != "All")
+                results = results.Where(r => r.Session.Topic == SelectedTopic).ToList();
             Groups.Clear();
             if (string.IsNullOrWhiteSpace(query))
             {
@@ -102,7 +125,7 @@ public partial class AgendaViewModel : ObservableObject
                         new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), match: r.Match)), IsWide));
             }
             Status = Groups.Count == 0
-                ? (string.IsNullOrWhiteSpace(query) ? "No sessions available for this city." : "No sessions match your search.")
+                ? (SelectedTopic != "All" ? "No sessions match this topic and search yet." : string.IsNullOrWhiteSpace(query) ? "No sessions available for this city." : "No sessions match your search.")
                 : "";
         }
         catch (Exception ex)
@@ -117,6 +140,9 @@ public partial class AgendaViewModel : ObservableObject
 
     [RelayCommand]
     private void SelectCity(string id) => city.Select(id);
+
+    [RelayCommand]
+    private void SelectTopic(string topic) => SelectedTopic = topic;
 
     [RelayCommand]
     private async Task FindNearestAsync()

@@ -52,6 +52,9 @@
         <Setter Property="MinimumHeightRequest" Value="48" />
         <Setter Property="Margin" Value="0,0,8,8" />
     </Style>
+    <Style x:Key="TopicFilterButton" TargetType="Button" BasedOn="{StaticResource CityButton}">
+        <Setter Property="Margin" Value="0" />
+    </Style>
     <Style x:Key="HeartButton" TargetType="Button">
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="TextColor" Value="{StaticResource BrandAccent}" />

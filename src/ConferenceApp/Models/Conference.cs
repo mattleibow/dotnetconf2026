@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace ConferenceApp.Models;
 
 public sealed class Conference
@@ -19,7 +21,7 @@ public sealed class City
     public string RegistrationUrl { get; set; } = "";
 }
 
-public sealed class Session
+public sealed partial class Session : ObservableObject
 {
     public string Id { get; set; } = "";
     public string Title { get; set; } = "";
@@ -30,6 +32,11 @@ public sealed class Session
     public List<string> SpeakerIds { get; set; } = [];
     public string Kind { get; set; } = "";
     public string Content { get; set; } = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasTopic))] public partial string Topic { get; set; } = "";
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(HasSummary))] public partial string Summary { get; set; } = "";
+    [ObservableProperty] public partial bool SummaryUnavailable { get; set; }
+    public bool HasTopic => !string.IsNullOrEmpty(Topic);
+    public bool HasSummary => !string.IsNullOrEmpty(Summary);
 }
 
 public sealed class Speaker
