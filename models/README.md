@@ -26,3 +26,15 @@ dotnet run models/DownloadModels.cs
 ```
 
 It downloads the files, checks their SHA-256 hashes, and runs a quick test: "saving money on AI" must score closer to a talk on cost-efficient GenAI than to lunch. `DownloadModels.cs` is also a short working example of the embedding code the app needs.
+
+## Using the model in a .NET MAUI app
+
+- Bundle the folder as raw assets, for example `<MauiAsset Include="..\..\models\all-MiniLM-L6-v2\*" LogicalName="models/all-MiniLM-L6-v2/%(Filename)%(Extension)" />`.
+- On iOS, ONNX Runtime is linked statically and needs two extra linker settings:
+
+  ```xml
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <ReferenceNativeSymbol Include="RegisterCustomOps" SymbolType="Function" SymbolMode="Ignore" />
+    <LinkerArgument Include="-lsqlite3" />
+  </ItemGroup>
+  ```
