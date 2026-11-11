@@ -142,7 +142,7 @@ The .NET Conf 2026 brand palette pairs deep .NET purple with vibrant magenta aga
 ## Layout
 
 Spacing follows a strict 4pt grid: `4`, `8`, `12`, `16`, `24`, `32`.
-- **Phones (<800pt):** 16pt page padding, bottom tab bar (Agenda, Speakers, Favourites, Venue, Assistant), single-column lists, full-width cards.
+- **Phones (<800pt):** 16pt page padding, bottom tab bar (Agenda, Speakers, Favourites, Venue, Sponsors, Assistant), single-column lists, full-width cards.
 - **Wide windows (≥800pt):** 24pt page padding, content centred with a maximum width of 1,100pt, multi-column card grids for parallel sessions and speakers, and two-column detail pages (header and speaker cards on the left, abstract on the right).
 - **Responsive switching:** Switch layouts in one place per page using `AdaptiveTrigger` visual states or page width, never per control.
 

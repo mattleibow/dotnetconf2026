@@ -1524,6 +1524,8 @@
       "name": "Richfield Campus Umhlanga",
       "cityId": "durban",
       "address": "Centenary Boulevard, Park Square, 5-9 Park Avenue, Umhlanga",
+      "latitude": -29.7258,
+      "longitude": 31.0663,
       "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=Richfield\u002BCampus\u002BUmhlanga\u002BPark\u002BAvenue",
       "content": "venues/richfield-campus-umhlanga.md",
       "image": "venues/richfield-campus-umhlanga.png"
@@ -1533,6 +1535,8 @@
       "name": "BBD Cape Town",
       "cityId": "cape-town",
       "address": "3rd Floor, Northbank Building, No. 1 N Bank Ln, Century City, Cape Town, 7441",
+      "latitude": -33.8931,
+      "longitude": 18.5112,
       "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=BBD\u002BCape\u002BTown\u002BNorthbank\u002BBuilding\u002BCentury\u002BCity",
       "content": "venues/bbd-cape-town.md",
       "image": "venues/bbd-cape-town.png"
@@ -1542,6 +1546,8 @@
       "name": "Central University of Technology (CUT)",
       "cityId": "bloemfontein",
       "address": "20 President Brand Street, Westdene, Bloemfontein, 9300",
+      "latitude": -29.1213,
+      "longitude": 26.2128,
       "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=Central\u002BUniversity\u002Bof\u002BTechnology\u002BBloemfontein\u002BCampus",
       "content": "venues/central-university-of-technology-cut.md",
       "image": "venues/central-university-of-technology-cut.jpg"

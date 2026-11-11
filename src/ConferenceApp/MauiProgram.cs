@@ -15,6 +15,7 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseMauiMaps()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -29,6 +30,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<SpeakersPage>().AddTransient<SpeakersViewModel>();
 		builder.Services.AddTransient<FavoritesPage>().AddTransient<FavoritesViewModel>();
 		builder.Services.AddTransient<VenuePage>().AddTransient<VenueViewModel>();
+		builder.Services.AddTransient<SponsorsPage>().AddTransient<SponsorsViewModel>();
 		builder.Services.AddTransient<ChatPage>().AddTransient<ChatViewModel>();
 		builder.Services.AddTransient<SessionPage>().AddTransient<SessionViewModel>();
 		builder.Services.AddTransient<SpeakerPage>().AddTransient<SpeakerViewModel>();

@@ -16,7 +16,7 @@ conference/
 - `cities`: ID, name, date, venue and registration link.
 - `sessions`: one entry per scheduled session **per city**, so a talk given in two cities has two IDs (such as `durban-…` and `cape-town-…`). Each has `start`/`end` (ISO 8601 with a `+02:00` offset), `track`, `speakerIds`, and `kind` (`session` for talks, `general` for registration, lunch and so on). Each talk in a lightning round is its own session.
 - `speakers`: name, tagline, social links, and the cities they speak in.
-- `venues`: one per city, with address and map link.
+- `venues`: one per city, with address, latitude/longitude, and map link.
 - `sponsors`: tier and the cities they sponsor.
 
 Every entity has a `content` path to its Markdown, and most have an `image` path. Paths are relative to `conference/`.

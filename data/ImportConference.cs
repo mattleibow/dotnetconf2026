@@ -136,6 +136,13 @@ sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, Cance
             throw new InvalidOperationException("Published abstracts/bios were not found; website markup changed.");
     }
 
+    static readonly Dictionary<string, (double Latitude, double Longitude)> VenueCoordinates = new(StringComparer.Ordinal)
+    {
+        ["richfield-campus-umhlanga"] = (-29.7258, 31.0663),
+        ["bbd-cape-town"] = (-33.8931, 18.5112),
+        ["central-university-of-technology-cut"] = (-29.1213, 26.2128),
+    };
+
     // Each city has a venue card ("Durban - November 21, 2026") and a registration card.
     async Task AddCitiesAndVenuesAsync(IDocument page)
     {
@@ -154,10 +161,11 @@ sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, Cance
             var venueId = Content.Slug(venueName);
             var address = Text(card, "p");
             var registration = page.QuerySelectorAll(".register-card").Single(node => Text(node, "h3") == cityName);
+            var (latitude, longitude) = VenueCoordinates[venueId];
 
             conference.Cities.Add(new(cityId, cityName, date, venueId, Href(registration)));
 
-            conference.Venues.Add(new(venueId, venueName, cityId, address, Href(card),
+            conference.Venues.Add(new(venueId, venueName, cityId, address, latitude, longitude, Href(card),
                 await WriteMarkdownAsync("venues", venueId, venueName, address),
                 await WriteImageAsync(card, "venues", venueId)));
         }
@@ -625,7 +633,8 @@ sealed record Session(string Id, string Title, string CityId, string Start, stri
 sealed record Speaker(string Id, string Name, string Tagline, List<string> CityIds, List<string> Links,
     bool HasBio, string Content, string? Image);
 
-sealed record Venue(string Id, string Name, string CityId, string Address, string MapUrl, string Content, string? Image);
+sealed record Venue(string Id, string Name, string CityId, string Address, double Latitude, double Longitude,
+    string MapUrl, string Content, string? Image);
 
 sealed record Sponsor(string Id, string Name, string Tier, List<string> CityIds, string Url, string Content, string? Image);
 

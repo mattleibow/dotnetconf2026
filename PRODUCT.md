@@ -25,7 +25,7 @@ Used live during one-day developer events across four South African cities, as w
 ## Capabilities and Constraints
 
 - Offline conference data packaged in `data/conference/` (`conference.json`, Markdown abstracts, speaker photos, sponsor logos, venue photos).
-- Five primary tabs: Agenda, Speakers, Favourites, Venue (including sponsors), and Assistant.
+- Six primary tabs: Agenda, Speakers, Favourites, Venue (with embedded map), Sponsors, and Assistant.
 - City switching updates Agenda, Speakers, Favourites, Venue, and Assistant context.
 - Must look great on both a phone in portrait and a wide desktop window (Mac Catalyst).
 

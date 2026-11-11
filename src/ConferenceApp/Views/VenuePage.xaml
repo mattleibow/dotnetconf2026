@@ -1,30 +1,19 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.VenuePage"
              xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             xmlns:m="clr-namespace:ConferenceApp.Models"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
              x:DataType="vm:VenueViewModel"
              Title="Venue">
     <ScrollView>
         <VerticalStackLayout Padding="10" Spacing="10">
             <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
             <Label Text="{Binding Venue.Address}" />
-            <Button AutomationId="open-map" Text="Open map" Command="{Binding OpenMapCommand}" />
+            <maps:Map x:Name="VenueMap"
+                      AutomationId="venue-map"
+                      HeightRequest="240"
+                      IsShowingUser="False" />
+            <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
             <Label Text="{Binding Description}" />
-            <Label Text="Sponsors" FontAttributes="Bold" />
-            <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="m:Sponsor">
-                        <VerticalStackLayout Background="Transparent" AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
-                            <Label Text="{Binding Name}" />
-                            <Label Text="{Binding Tier}" />
-                            <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding BindingContext.OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
-                                                      CommandParameter="{Binding .}" />
-                            </VerticalStackLayout.GestureRecognizers>
-                        </VerticalStackLayout>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
