@@ -26,10 +26,13 @@
                 </FlexLayout>
             </VerticalStackLayout>
         </Border>
-        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill">
-            <CollectionView AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" RowDefinitions="Auto,*">
+            <SearchBar AutomationId="agenda-search" Placeholder="Search sessions, speakers or tracks"
+                       SemanticProperties.Description="Search sessions in the selected city"
+                       Text="{Binding SearchText}" Margin="16,8,16,0" />
+            <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
                 <CollectionView.EmptyView>
-                    <Label Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Label AutomationId="agenda-status" Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SessionGroup">
@@ -73,6 +76,7 @@
                                         </BindableLayout.ItemTemplate>
                                     </HorizontalStackLayout>
                                     <Label Text="{Binding SpeakerNames}" />
+                                    <Label Text="{Binding Match}" IsVisible="{Binding HasMatch}" Style="{StaticResource SearchMatchText}" AutomationId="search-match" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Text="{Binding Heart}" Style="{StaticResource HeartButton}" AutomationId="{Binding FavoriteAutomationId}"
                                         SemanticProperties.Description="{Binding FavoriteDescription}"
@@ -87,7 +91,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         </Grid>
     </Grid>
 </ContentPage>

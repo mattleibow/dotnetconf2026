@@ -23,6 +23,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<ConferenceService>();
 		builder.Services.AddSingleton<CityService>();
+		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddSingleton<NearbyCityService>();
 		builder.Services.AddSingleton<FavoritesService>();
 		builder.Services.AddSingleton<AgendaViewModel>();

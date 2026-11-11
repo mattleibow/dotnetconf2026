@@ -12,26 +12,31 @@ public partial class AgendaViewModel : ObservableObject
     private readonly CityService city;
     private readonly FavoritesService favorites;
     private readonly NearbyCityService nearby;
+    private readonly SessionSearchService search;
     private Conference? conference;
+    private int refreshVersion;
 
     [ObservableProperty] public partial string CityName { get; set; } = "";
     [ObservableProperty] public partial string EventDate { get; set; } = "";
     [ObservableProperty] public partial string Status { get; set; } = "Loading the agenda...";
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial bool IsWide { get; set; }
+    [ObservableProperty] public partial string SearchText { get; set; } = "";
 
     public ObservableCollection<SessionGroup> Groups { get; } = [];
 
-    partial void OnIsWideChanged(bool value) => Refresh();
+    partial void OnIsWideChanged(bool value) => _ = RefreshAsync();
+    partial void OnSearchTextChanged(string value) => _ = RefreshAsync();
 
-    public AgendaViewModel(ConferenceService data, CityService city, FavoritesService favorites, NearbyCityService nearby)
+    public AgendaViewModel(ConferenceService data, CityService city, FavoritesService favorites, NearbyCityService nearby, SessionSearchService search)
     {
         this.data = data;
         this.city = city;
         this.favorites = favorites;
         this.nearby = nearby;
-        city.Changed += (_, _) => Refresh();
-        favorites.Changed += (_, _) => Refresh();
+        this.search = search;
+        city.Changed += (_, _) => _ = RefreshAsync();
+        favorites.Changed += (_, _) => _ = RefreshAsync();
     }
 
     public async Task LoadAsync()
@@ -42,7 +47,7 @@ public partial class AgendaViewModel : ObservableObject
         try
         {
             conference = await data.GetConferenceAsync();
-            Refresh();
+            await RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -54,19 +59,48 @@ public partial class AgendaViewModel : ObservableObject
         }
     }
 
-    private void Refresh()
+    private async Task RefreshAsync()
     {
         if (conference is null)
             return;
+        var version = ++refreshVersion;
         var selected = conference.Cities.First(c => c.Id == city.SelectedId);
         CityName = selected.Name;
         EventDate = selected.Date.ToString("dddd, d MMMM yyyy");
-        Groups.Clear();
-        foreach (var group in conference.Sessions.Where(s => s.CityId == selected.Id)
-                     .OrderBy(s => s.Start).GroupBy(s => s.Start))
-            Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(s =>
-                new SessionCard(s, conference.Speakers, favorites.Contains(s.Id), IsWide && group.Count() > 1))));
-        Status = Groups.Count == 0 ? "No sessions available for this city." : "";
+        var query = SearchText;
+        try
+        {
+            IReadOnlyList<SessionSearchResult> results;
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                results = conference.Sessions.Where(s => s.CityId == selected.Id)
+                    .Select(s => new SessionSearchResult(s, "")).ToList();
+            }
+            else
+            {
+                Groups.Clear();
+                Status = "Searching sessions...";
+                results = await search.SearchSessionsAsync(query);
+            }
+
+            if (version != refreshVersion)
+                return;
+            Groups.Clear();
+            foreach (var group in results.OrderBy(r => r.Session.Start).GroupBy(r => r.Session.Start))
+                Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(r =>
+                    new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+            Status = Groups.Count == 0
+                ? (string.IsNullOrWhiteSpace(query) ? "No sessions available for this city." : "No sessions match your search.")
+                : "";
+        }
+        catch (Exception ex)
+        {
+            if (version == refreshVersion)
+            {
+                Groups.Clear();
+                Status = $"Couldn't search sessions: {ex.Message}";
+            }
+        }
     }
 
     [RelayCommand]
@@ -106,7 +140,7 @@ public sealed class SessionGroup(string time, IEnumerable<SessionCard> sessions)
     public string Time { get; } = time;
 }
 
-public sealed class SessionCard(Session session, IEnumerable<Speaker> speakers, bool favorite, bool useHalfWidth = false, string cityName = "")
+public sealed class SessionCard(Session session, IEnumerable<Speaker> speakers, bool favorite, bool useHalfWidth = false, string cityName = "", string match = "")
 {
     public Session Session { get; } = session;
     public string Title => Session.Title;
@@ -116,6 +150,8 @@ public sealed class SessionCard(Session session, IEnumerable<Speaker> speakers, 
     public bool IsGeneral => Session.Kind == "general";
     public bool UseHalfWidth => useHalfWidth;
     public string SpeakerNames { get; } = string.Join(", ", speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => s.Name));
+    public string Match { get; } = match;
+    public bool HasMatch => !string.IsNullOrEmpty(Match);
     public List<SpeakerCard> Speakers { get; } = speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => new SpeakerCard(s)).ToList();
     public string Heart => favorite ? "♥" : "♡";
     public string AutomationId => $"session-{Session.Id}";
