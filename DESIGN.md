@@ -166,7 +166,7 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 - **Global City Switcher:** Every tab (Event, Agenda, Speakers, Assistant) exposes the city switcher in the top-right toolbar showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet—do not put a second city picker inside the page body.
 
 ### Agenda & Session Cards
-- **Agenda Filter:** Segmented pill toggle at the top of Agenda switching between **All Sessions** and **Favourites** (`AutomationId="favorites-filter"`).
+- **Search & Filter Bar:** Top bar on Agenda with a rounded search input (`AutomationId="agenda-search"`) and the **All Sessions** / **Favourites** filter toggle (`AutomationId="favorites-filter"`).
 - **Talk Cards:** 16pt rounded `Surface` card with time and track chip along the top, session title in `Subtitle` (max 2 lines), speaker avatars + names in `Caption`, and a 44×44pt heart toggle aligned top-right (filled `Accent` heart when favourited, outline `TextSecondary` heart otherwise). Entire card is tappable with `Background="Transparent"` on hit targets.
 - **General Items** (registration, breaks, lunch): Compact single row with time and title—no card chrome and no favourite heart.
 

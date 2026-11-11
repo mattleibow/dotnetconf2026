@@ -13,11 +13,13 @@ public partial class AgendaViewModel : ObservableObject, IRecipient<CityChangedM
 {
     private readonly ConferenceDatabase database;
     private readonly UserPreferencesService preferences;
+    private readonly SearchService search;
 
-    public AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    public AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences, SearchService search)
     {
         this.database = database;
         this.preferences = preferences;
+        this.search = search;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
@@ -27,10 +29,16 @@ public partial class AgendaViewModel : ObservableObject, IRecipient<CityChangedM
     public partial City? SelectedCity { get; set; }
 
     [ObservableProperty]
+    public partial string SearchQuery { get; set; } = "";
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(FilterText))]
     public partial bool ShowFavoritesOnly { get; set; }
 
     public string FilterText => ShowFavoritesOnly ? "Showing: Favourites" : "Showing: All Sessions";
+
+    partial void OnSearchQueryChanged(string value) =>
+        _ = LoadAsync();
 
     partial void OnShowFavoritesOnlyChanged(bool value) =>
         _ = LoadAsync();
@@ -47,8 +55,9 @@ public partial class AgendaViewModel : ObservableObject, IRecipient<CityChangedM
         var city = await preferences.GetSelectedCityAsync(database);
         SelectedCity = city;
         var favoriteIds = preferences.GetFavoriteIds();
+        var matching = await search.SearchSessionsAsync(city.Id, SearchQuery);
         Sessions.Clear();
-        foreach (var session in await database.GetSessionsAsync(city.Id))
+        foreach (var session in matching)
         {
             if (ShowFavoritesOnly && !favoriteIds.Contains(session.Id))
                 continue;

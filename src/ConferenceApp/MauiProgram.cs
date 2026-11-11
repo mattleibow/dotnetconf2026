@@ -24,6 +24,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<ConferenceDatabase>();
 		builder.Services.AddSingleton<UserPreferencesService>();
+		builder.Services.AddSingleton<SearchService>();
 		builder.Services.AddSingleton<ChatService>();
 
 		builder.Services.AddTransient<EventPage>().AddTransient<EventViewModel>();
