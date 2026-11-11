@@ -69,6 +69,9 @@ The app should look like a professional, shipping conference app from the first 
   ```
 
 - Give interactive and important elements a stable, kebab-case `AutomationId`, such as `session-list`, `favorite-button`, and `sponsors-tab`.
+- Make list items tappable with a tap gesture or command on the item, and give each item a stable `AutomationId`; `CollectionView` selection is awkward to drive from automation.
+- Build one target framework at a time (`dotnet build -f net11.0-maccatalyst`, then run). Parallel builds of different target frameworks share `obj/` and corrupt each other.
+- When driving the app with the `maui devflow` CLI, prefer `batch` for several steps and pass the agent port explicitly; separate concurrent CLI calls can conflict.
 - After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a large desktop window (for example Mac Catalyst at 1440 × 900). Fix what you see; don't stop at "it compiles."
 - Verify SDK/workload/Xcode compatibility before a long build. Don't change shared toolchain settings or install workloads without approval. If device or model execution is blocked, report the blocker and what remains unverified; don't claim success or retry indefinitely.
 - Use available skills when relevant:
