@@ -10,4 +10,11 @@ Load the `impeccable` skill and make the wireframe app in `src/ConferenceApp/` l
 - Use the real speaker photos, sponsor logos, and venue photo from the packaged `conference/` assets.
 - Keep layouts simple and native, preserve existing `AutomationId`s, and don't change how the app works.
 
-Deploy and run the app on the booted iOS simulator (and Mac Catalyst for wide desktop checks), open the **Mobile Device** canvas (`mobile-device`) selected on that simulator, and open the **MAUI DevFlow Inspector** (`http://localhost:19223/inspector/<agent-id>/`) in the **Browser** canvas (`browser`) while you use DevFlow to check every tab, a session detail page, and a speaker detail page in both phone and wide desktop window sizes.
+## Live preview and inspection
+
+Always run and show the app in the side-panel canvases so we can watch it live:
+
+1. Deploy and launch the app on the booted iOS simulator (and on Mac Catalyst for wide desktop layout checks).
+2. Open the **Mobile Device** canvas (`open_canvas` with `canvasId: "mobile-device"`) and select the booted iOS simulator (`select_device`) so the live simulator stream is visible in the panel.
+3. Find the running app's DevFlow inspector URL from `http://localhost:19223/inspector/` (or `maui devflow list`) and open `http://localhost:19223/inspector/<agent-id>/` in a **Browser** canvas (`open_canvas` with `canvasId: "browser"`, `title: "DevFlow Inspector"`).
+4. Use `maui devflow` to navigate through all four tabs (**Event**, **Agenda**, **Speakers**, **Assistant**), a session detail page, and a speaker detail page in both phone and wide desktop window sizes, checking `ui diagnostics` and screenshots as you go.
