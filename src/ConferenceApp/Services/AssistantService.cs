@@ -64,7 +64,38 @@ public sealed class AssistantService(ConferenceService conferenceService, IServi
 
     public IChatClient? Client => services.GetService<IChatClient>();
 
-    public async Task<(string Instructions, string ConversationKey)> BuildInstructionsAsync(TimeSpan? eventTime = null)
+    public async Task<ToolSession?> CreateToolSessionAsync(string cityId)
+    {
+#if IOS || MACCATALYST
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+        {
+#pragma warning disable MAUIAI0001
+            var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
+            if (status.Capabilities?.Contains(ChatModelCapability.ToolCalling) == true)
+            {
+                var scope = services.CreateScope();
+                try
+                {
+                    var tools = scope.ServiceProvider.GetRequiredService<ConferenceTools>();
+                    tools.CityId = cityId;
+                    var client = new AppleIntelligenceChatClient(
+                        loggerFactory: scope.ServiceProvider.GetRequiredService<ILoggerFactory>(),
+                        functionInvocationServices: scope.ServiceProvider);
+                    return new ToolSession(scope, client, tools);
+                }
+                catch
+                {
+                    scope.Dispose();
+                    throw;
+                }
+            }
+#pragma warning restore MAUIAI0001
+        }
+#endif
+        return null;
+    }
+
+    public async Task<(string Instructions, string ConversationKey)> BuildInstructionsAsync(TimeSpan? eventTime = null, bool useTools = false)
     {
         var data = await conferenceService.GetConferenceAsync();
         var city = data.Cities.First(c => c.Id == conferenceService.CityId);
@@ -78,9 +109,21 @@ public sealed class AssistantService(ConferenceService conferenceService, IServi
         var next = upcoming.Length == 0 ? "None" :
             $"{upcoming[0].Start:yyyy-MM-dd HH:mm}: {string.Join("; ", upcoming.TakeWhile(s => s.Start == upcoming[0].Start).Select(s => s.Title))}";
 
+        var favorites = sessions.Where(s => conferenceService.IsFavorite(s.Id)).ToArray();
+        var conversationKey = $"{city.Id}\n{string.Join("\n", favorites.Select(s => s.Id))}";
+        if (useTools)
+        {
+            var hours = sessions.Length == 0 ? "" : $"The agenda runs from {sessions[0].Start:HH:mm} to {sessions.Max(s => s.End):HH:mm}. ";
+            return ($"You are a conference assistant for {data.Name} in {city.Name} on {city.Date:yyyy-MM-dd}. " +
+                $"Current local time: {now:yyyy-MM-dd HH:mm zzz}. {hours}" +
+                "Interpret ambiguous times within the conference day: 2 to 4 means 14:00 to 16:00 unless the user says otherwise. " +
+                "Use the provided tools to look up facts for every question. " +
+                "For speaker backgrounds use get_speaker, for time ranges use list_sessions_in_time_range, and for sponsors use get_sponsors. " +
+                "Use only tool results; if they do not contain the answer, say you don't know. Be concise and use plain text, not Markdown.", conversationKey);
+        }
+
         var text = new StringBuilder();
         text.AppendLine($"Event: {data.Name}; city: {city.Name}; date: {city.Date:yyyy-MM-dd}; venue: {venue.Name}, {venue.Address}.");
-        var favorites = sessions.Where(s => conferenceService.IsFavorite(s.Id)).ToArray();
         text.AppendLine($"Favourites: {string.Join("; ", favorites.Select(s => s.Title).DefaultIfEmpty("none"))}.");
         text.AppendLine("Agenda (start-end | track | title | speakers | topic | summary):");
         foreach (var session in sessions)
@@ -93,7 +136,18 @@ public sealed class AssistantService(ConferenceService conferenceService, IServi
             "Each agenda line describes one event; copy its title, time, track and speakers from that same line. Never combine details from different lines. " +
             "When asked about a speaker's talk, include every matching session, including keynotes. For broad questions, give a few relevant examples, not an exhaustive list. Be concise.\n" +
             $"Current local time: {now:yyyy-MM-dd HH:mm zzz}. Agenda times are local. 'Next' means starting after the current time. Next scheduled start: {next}.\n" + dataText;
-        return (instructions, $"{city.Id}\n{string.Join("\n", favorites.Select(s => s.Id))}");
+        return (instructions, conversationKey);
+    }
+
+    public sealed class ToolSession(IServiceScope scope, IChatClient client, ConferenceTools tools) : IDisposable
+    {
+        public IChatClient Client { get; } = client;
+        public ConferenceTools Tools { get; } = tools;
+        public void Dispose()
+        {
+            Client.Dispose();
+            scope.Dispose();
+        }
     }
 
     private static string Compact(string? value) =>

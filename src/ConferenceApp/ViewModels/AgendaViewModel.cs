@@ -140,6 +140,7 @@ public partial class SessionItem : ObservableObject
     public bool IsGeneral => !IsSession;
     public bool IsSession => session.Kind == "session";
     public string AutomationId => $"session-{session.Id}";
+    public string AssistantAutomationId => $"assistant-session-{session.Id}";
     public string TopicAutomationId => $"topic-{session.Id}";
     public string SummaryAutomationId => $"summary-{session.Id}";
     public string MatchAutomationId => $"search-match-{session.Id}";

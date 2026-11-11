@@ -39,6 +39,25 @@
                             <VerticalStackLayout Spacing="8">
                                 <Label Text="{Binding Author}" Style="{StaticResource MetadataText}"/>
                                 <Label Text="{Binding Text}" Style="{StaticResource BodyText}"/>
+                                <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Sessions}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:SessionItem">
+                                            <Border Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}" StrokeShape="RoundRectangle 12"
+                                                    Padding="12" MinimumHeightRequest="48" AutomationId="{Binding AssistantAutomationId}"
+                                                    SemanticProperties.Description="{Binding Title}" SemanticProperties.Hint="Open session details">
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding OpenCommand}"/>
+                                                </Border.GestureRecognizers>
+                                                <VerticalStackLayout Spacing="4">
+                                                    <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                                                    <Label Text="{Binding Time}" Style="{StaticResource MetadataText}"/>
+                                                    <Label Text="{Binding Speakers}" Style="{StaticResource BodyText}"/>
+                                                    <Label Text="View session" Style="{StaticResource MetadataText}"/>
+                                                </VerticalStackLayout>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
                             </VerticalStackLayout>
                         </Border>
                     </DataTemplate>

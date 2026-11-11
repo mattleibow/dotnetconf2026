@@ -6,13 +6,13 @@ public sealed class SessionSearchService(ConferenceService conferenceService
     , SemanticSearchService semanticSearch
     )
 {
-    public async Task<SessionSearchResponse> SearchSessionsAsync(string query)
+    public async Task<SessionSearchResponse> SearchSessionsAsync(string query, string? selectedCityId = null)
     {
         query = query.Trim();
         if (query.Length == 0)
             return new([], "");
 
-        var cityId = conferenceService.CityId;
+        var cityId = selectedCityId ?? conferenceService.CityId;
         var data = await conferenceService.GetConferenceAsync();
         var results = await Task.WhenAll(data.Sessions.Where(s => s.CityId == cityId).Select(async session =>
         {

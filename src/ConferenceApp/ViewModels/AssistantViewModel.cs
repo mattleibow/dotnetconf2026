@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AssistantViewModel(AssistantService assistant, ILogger<AssistantViewModel> logger) : ObservableObject
+public partial class AssistantViewModel(AssistantService assistant, ConferenceService conference, ILogger<AssistantViewModel> logger) : ObservableObject
 {
     private CancellationTokenSource? cancellation;
     private int conversationVersion;
@@ -62,7 +62,11 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
         Messages.Add(reply);
         try
         {
-            var (instructions, conversationKey) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null);
+            var cityId = conference.CityId;
+            using var toolSession = await assistant.CreateToolSessionAsync(cityId);
+            var (instructions, conversationKey) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null, toolSession is not null);
+            if (conference.CityId != cityId)
+                throw new InvalidOperationException("The selected city changed while preparing the answer.");
             source.Token.ThrowIfCancellationRequested();
             var eventTime = UseEventTime ? EventTime : (TimeSpan?)null;
             if (previousConversationKey != conversationKey || previousEventTime != eventTime)
@@ -73,13 +77,20 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
             if (history.Count >= 2)
                 request.AddRange(history.TakeLast(2));
             request.Add(new ChatMessage(ChatRole.User, question));
-            await foreach (var update in client.GetStreamingResponseAsync(request, cancellationToken: source.Token))
+            var options = toolSession is null ? null : new ChatOptions { Tools = [.. ConferenceToolContext.Default.Tools] };
+            await foreach (var update in (toolSession?.Client ?? client).GetStreamingResponseAsync(request, options, source.Token))
             {
                 if (version != conversationVersion) return;
                 reply.Text += update.Text;
             }
             if (string.IsNullOrWhiteSpace(reply.Text))
                 throw new InvalidOperationException("The on-device model returned an empty response.");
+            if (toolSession is not null)
+            {
+                var data = await conference.GetConferenceAsync();
+                foreach (var session in toolSession.Tools.ReturnedSessions)
+                    reply.Sessions.Add(new SessionItem(session, data, conference));
+            }
             history.Add(new ChatMessage(ChatRole.User, question));
             history.Add(new ChatMessage(ChatRole.Assistant, reply.Text));
         }
@@ -128,5 +139,6 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
 public partial class AssistantMessage(string author, string text) : ObservableObject
 {
     public string Author { get; } = author;
+    public ObservableCollection<SessionItem> Sessions { get; } = [];
     [ObservableProperty] public partial string Text { get; set; } = text;
 }
