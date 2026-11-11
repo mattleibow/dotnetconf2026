@@ -26,11 +26,12 @@
                 </FlexLayout>
             </VerticalStackLayout>
         </Border>
-        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" RowDefinitions="Auto,*">
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" RowDefinitions="Auto,Auto,*">
             <SearchBar AutomationId="agenda-search" Placeholder="Search sessions, speakers or tracks"
                        SemanticProperties.Description="Search sessions in the selected city"
                        Text="{Binding SearchText}" Margin="16,8,16,0" />
-            <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
+            <Label Grid.Row="1" Text="{Binding SearchMode}" Style="{StaticResource SearchMatchText}" AutomationId="search-mode" Margin="24,0,24,0" />
+            <CollectionView Grid.Row="2" AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
                 <CollectionView.EmptyView>
                     <Label AutomationId="agenda-status" Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
                 </CollectionView.EmptyView>
@@ -76,7 +77,7 @@
                                         </BindableLayout.ItemTemplate>
                                     </HorizontalStackLayout>
                                     <Label Text="{Binding SpeakerNames}" />
-                                    <Label Text="{Binding Match}" IsVisible="{Binding HasMatch}" Style="{StaticResource SearchMatchText}" AutomationId="search-match" />
+                                    <Label Text="{Binding Match}" IsVisible="{Binding HasMatch}" Style="{StaticResource SearchMatchText}" MaxLines="2" LineBreakMode="TailTruncation" AutomationId="search-match" />
                                 </VerticalStackLayout>
                                 <Button Grid.Column="1" Text="{Binding Heart}" Style="{StaticResource HeartButton}" AutomationId="{Binding FavoriteAutomationId}"
                                         SemanticProperties.Description="{Binding FavoriteDescription}"
@@ -91,7 +92,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
         </Grid>
     </Grid>
 </ContentPage>

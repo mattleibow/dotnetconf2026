@@ -22,6 +22,7 @@ public partial class AgendaViewModel : ObservableObject
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial bool IsWide { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = "";
+    public string SearchMode => search.SearchMode;
 
     public ObservableCollection<SessionGroup> Groups { get; } = [];
 
@@ -47,6 +48,8 @@ public partial class AgendaViewModel : ObservableObject
         try
         {
             conference = await data.GetConferenceAsync();
+            await search.InitializeAsync();
+            OnPropertyChanged(nameof(SearchMode));
             await RefreshAsync();
         }
         catch (Exception ex)
@@ -86,9 +89,18 @@ public partial class AgendaViewModel : ObservableObject
             if (version != refreshVersion)
                 return;
             Groups.Clear();
-            foreach (var group in results.OrderBy(r => r.Session.Start).GroupBy(r => r.Session.Start))
-                Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(r =>
-                    new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                foreach (var group in results.OrderBy(r => r.Session.Start).GroupBy(r => r.Session.Start))
+                    Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(r =>
+                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+            }
+            else
+            {
+                foreach (var group in results.GroupBy(r => r.IsSemantic))
+                    Groups.Add(new SessionGroup(group.Key ? "Semantic matches" : "Keyword matches", group.Select(r =>
+                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+            }
             Status = Groups.Count == 0
                 ? (string.IsNullOrWhiteSpace(query) ? "No sessions available for this city." : "No sessions match your search.")
                 : "";

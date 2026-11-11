@@ -2,6 +2,10 @@ using Microsoft.Extensions.Logging;
 using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;
+#if IOS || MACCATALYST
+using Microsoft.Extensions.AI;
+using Microsoft.Maui.Essentials.AI;
+#endif
 #if DEBUG
 using Microsoft.Maui.DevFlow.Agent;
 #endif
@@ -23,6 +27,12 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<ConferenceService>();
 		builder.Services.AddSingleton<CityService>();
+#if IOS || MACCATALYST
+#pragma warning disable MAUIAI0001
+		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, NLEmbeddingGenerator>();
+#pragma warning restore MAUIAI0001
+		builder.Services.AddSingleton<SemanticSessionSearch>();
+#endif
 		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddSingleton<NearbyCityService>();
 		builder.Services.AddSingleton<FavoritesService>();
