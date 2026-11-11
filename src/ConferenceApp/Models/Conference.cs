@@ -4,6 +4,7 @@ namespace ConferenceApp.Models;
 
 public sealed class Conference
 {
+    public string Name { get; set; } = "";
     public List<City> Cities { get; set; } = [];
     public List<Session> Sessions { get; set; } = [];
     public List<Speaker> Speakers { get; set; } = [];

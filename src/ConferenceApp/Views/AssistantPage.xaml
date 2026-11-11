@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels" x:Class="ConferenceApp.Views.AssistantPage"
+             x:DataType="vm:AssistantViewModel" Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Background="{StaticResource BrandGradient}">
+            <Grid Padding="24,20,24,20" MaximumWidthRequest="1100" HorizontalOptions="Fill" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text=".NET CONF 2026  •  SOUTH AFRICA" TextColor="White" Style="{StaticResource CaptionText}"/>
+                    <Label Text="Assistant" TextColor="White" Style="{StaticResource DisplayText}"/>
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="New chat" Command="{Binding NewChatCommand}" AutomationId="assistant-new-chat" VerticalOptions="Center"/>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16" MaximumWidthRequest="800" HorizontalOptions="Fill" RowSpacing="8">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Text="{Binding Notice}" Style="{StaticResource BodyText}" AutomationId="assistant-status" VerticalOptions="Center"/>
+                <Button x:Name="DebugClockButton" Grid.Column="1" Text="Debug clock" Command="{Binding ToggleDebugClockCommand}" AutomationId="assistant-clock" IsVisible="False"/>
+            </Grid>
+            <HorizontalStackLayout Grid.Row="1" IsVisible="{Binding ShowDebugClock}" Spacing="8">
+                <Label Text="Simulate event-day time" VerticalOptions="Center" Style="{StaticResource BodyText}"/>
+                <Switch IsToggled="{Binding UseEventTime}" AutomationId="assistant-clock-enabled"/>
+                <TimePicker Time="{Binding EventTime}" AutomationId="assistant-clock-time"/>
+            </HorizontalStackLayout>
+            <Label Grid.Row="2" Text="Debug: simulating event-day time" IsVisible="{Binding UseEventTime}" Style="{StaticResource MetadataText}" AutomationId="assistant-clock-active"/>
+            <CollectionView x:Name="MessageList" Grid.Row="3" ItemsSource="{Binding Messages}" ItemsUpdatingScrollMode="KeepLastItemInView" AutomationId="assistant-messages">
+                <CollectionView.EmptyView>
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Ask your conference assistant" Style="{StaticResource SubtitleText}"/>
+                            <Label Text="Try “What's next?” or “Anything on AI agents?”" Style="{StaticResource BodyText}"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AssistantMessage">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="{Binding Author}" Style="{StaticResource MetadataText}"/>
+                                <Label Text="{Binding Text}" Style="{StaticResource BodyText}"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Entry Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" Text="{Binding Input}" IsEnabled="{Binding IsAvailable}" AutomationId="assistant-input" ReturnCommand="{Binding SendCommand}" SemanticProperties.Description="Ask about the conference"/>
+                <Button Grid.Column="1" Text="Send" Command="{Binding SendCommand}" IsEnabled="{Binding CanSend}" AutomationId="assistant-send"/>
+                <Button Grid.Column="2" Text="Stop" Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" AutomationId="assistant-stop"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

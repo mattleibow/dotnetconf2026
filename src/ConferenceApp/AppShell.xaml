@@ -7,5 +7,6 @@
         <ShellContent Title="Speakers" Icon="tab_speakers.png" Route="speakers" ContentTemplate="{DataTemplate views:SpeakersPage}" />
         <ShellContent Title="Favourites" Icon="tab_favorites.png" Route="favourites" ContentTemplate="{DataTemplate views:FavoritesPage}" />
         <ShellContent Title="Venue" Icon="tab_venue.png" Route="venue" ContentTemplate="{DataTemplate views:VenuePage}" />
+        <ShellContent Title="Assistant" Icon="tab_assistant.png" Route="assistant" ContentTemplate="{DataTemplate views:AssistantPage}" />
     </TabBar>
 </Shell>

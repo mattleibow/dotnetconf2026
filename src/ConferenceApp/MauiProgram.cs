@@ -34,6 +34,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<ConferenceService>();
 #if IOS || MACCATALYST
 #pragma warning disable MAUIAI0001
+		if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+			builder.Services.AddSingleton<IChatClient, AppleIntelligenceChatClient>();
 #pragma warning disable CS0162
 		if (!UseOnnxOnApple)
 			builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, NLEmbeddingGenerator>();
@@ -47,6 +49,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SemanticSearchService>();
 		builder.Services.AddSingleton<SessionEnrichmentService>();
 		builder.Services.AddSingleton<SessionSearchService>();
+		builder.Services.AddSingleton<AssistantService>();
+		builder.Services.AddSingleton<AssistantViewModel>();
+		builder.Services.AddTransient<AssistantPage>();
 		builder.Services.AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<AgendaPage>();
 		builder.Services.AddTransient<SessionDetailPage>();
