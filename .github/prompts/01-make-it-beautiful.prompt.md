@@ -10,4 +10,4 @@ Load the `impeccable` skill and make the wireframe app in `src/ConferenceApp/` l
 - Use the real speaker photos, sponsor logos, and venue photo from the packaged `conference/` assets.
 - Keep layouts simple and native, preserve existing `AutomationId`s, and don't change how the app works.
 
-Use DevFlow on Mac Catalyst to check every tab, a session detail page, and a speaker detail page in both phone and wide desktop window sizes.
+Deploy and run the app on the booted iOS simulator (and Mac Catalyst for wide desktop checks), open the **Mobile Device** canvas (`mobile-device`) selected on that simulator, and open the **MAUI DevFlow Inspector** (`http://localhost:19223/inspector/<agent-id>/`) in the **Browser** canvas (`browser`) while you use DevFlow to check every tab, a session detail page, and a speaker detail page in both phone and wide desktop window sizes.
