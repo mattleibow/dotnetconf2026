@@ -33,31 +33,32 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 ## App architecture
 
 - Keep the structure flat and easy to read on a projector: `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- Create the MAUI project in its own directory, such as `src/ConferenceApp/`, so it doesn't compile the scripts in `data/` and `models/`.
-- Register pages, view models, and services with dependency injection in `MauiProgram.cs`.
+- The baseline wireframe app lives in `src/ConferenceApp/` with `ConferenceDatabase` (stateless data access), `UserPreferencesService` (city and favourites in `Preferences`), and `ChatService`.
+- Register pages, view models, and services with dependency injection in `MauiProgram.cs`. Never call `AddTransient<Page, ViewModel>()`: register them separately with `AddTransient<Page>().AddTransient<ViewModel>()`.
 - Use Shell for navigation: one page per top-level section, and routes for detail pages. Never fake tabs by toggling `IsVisible` on one page.
 - One view model per page, with commands (`CommunityToolkit.Mvvm`) rather than event handlers in code-behind.
-- Conference content comes from the `data/conference/` snapshot, described in `data/README.md`. Copy it into the app's `Resources/Raw/conference/` (raw `MauiAsset` files) and load it with `FileSystem.OpenAppPackageFileAsync`. Don't scrape the website, change the importer, or need network access for this content.
+- Conference content is linked in `ConferenceApp.csproj` directly from `data/conference/` as raw `MauiAsset` files (`LogicalName="conference/..."`) and loaded with `FileSystem.OpenAppPackageFileAsync("conference/...")`. Don't scrape the website, change the importer, or need network access for this content.
 - Store user state such as favourites locally with `Preferences` or a small JSON file. Don't add a database unless it's actually needed.
-- Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavoriteAsync`, `SearchSessions`, and navigation helpers. These should be useful on their own and easy to expose to an in-app AI assistant later.
+- Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavorite`, `SearchSessionsAsync`, and navigation helpers. These should be useful on their own and easy to expose to an in-app AI assistant later.
 - Do not add AI features unless explicitly asked.
 
 ## Design
 
-Follow [`docs/design.md`](../docs/design.md) for colours, type, spacing, components and layouts. Put it into `Colors.xaml` and `Styles.xaml` before building pages, and make every page work on a phone in portrait and in a wide desktop window.
+Follow [`DESIGN.md`](../DESIGN.md) and [`PRODUCT.md`](../PRODUCT.md) for colours, type, spacing, components and layouts, using the `impeccable` skill when designing or styling UI. Put tokens into `Colors.xaml` and `Styles.xaml` before styling pages, and make every page work on a phone in portrait and in a wide desktop window.
 
 ## Skills
 
 Use the installed skills rather than guessing. Load the ones that match the task before writing code:
 
+- **Design:** `impeccable` (reads `PRODUCT.md`, `DESIGN.md`, and `.impeccable/config.json`).
 - **MAUI Labs** ([dotnet/maui-labs](https://github.com/dotnet/maui-labs)): `maui-project-structure`, `maui-app-architecture`, `maui-ui-patterns`, `maui-localization-theming`, `maui-accessibility`, `maui-current-apis`, `maui-app-assets-lifecycle`, `maui-device-capabilities`; DevFlow: `maui-devflow-onboard` and `maui-devflow-debug` (its `references/batch.md` covers driving several UI steps at once).
 - **.NET skills** ([dotnet/skills](https://github.com/dotnet/skills), optional): `csharp-expert` and `msbuild` from the `dotnet` plugin.
 - **In-app AI, only when asked:** `maui-essentials-ai` and `maui-ai-tool-bindings`. These APIs are experimental, so check the linked MAUI Labs docs too.
 
 ## Agent workflow
 
-- Add `Microsoft.Maui.DevFlow.Agent` with the version that matches the installed `maui` CLI (`maui --version`); `--prerelease` can pick an older, incompatible build. Register it in Debug only with `builder.AddMauiDevFlowAgent();`.
-- Give interactive elements and list items a stable kebab-case `AutomationId` (`agenda-search`, `session-card-<id>`, `favorite-button`), and make list items tappable with a tap gesture or command rather than `CollectionView` selection.
+- `Microsoft.Maui.DevFlow.Agent` is registered in Debug only with `builder.AddMauiDevFlowAgent();`, and `Platforms/MacCatalyst/Entitlements.plist` includes `com.apple.security.network.server` so the DevFlow agent can listen on Mac Catalyst.
+- Give interactive elements and list items a stable kebab-case `AutomationId` (`agenda-search`, `session-card-<id>`, `favorite-button`), and make list items tappable with a tap gesture or command rather than `CollectionView` selection. Always set `Background="Transparent"` on layouts that have a `TapGestureRecognizer` so taps register on iOS and Mac Catalyst.
 - Work in small loops on Mac Catalyst: change, build, run, check with DevFlow. Build iOS and Android once at the end. Build one target framework at a time, and don't use `--no-restore` on a fresh worktree's first build.
 - Check what you changed: run the steps in the prompt, take a phone and a desktop screenshot of the changed screens, and look at them against the design guide. Fix anything broken, clipped or off-brand.
 - Apple's on-device model is small: keep structured-output types flat with no nullable properties, and keep tool sets small with clearly distinct names.

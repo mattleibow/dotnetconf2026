@@ -31,7 +31,7 @@ Used live during one-day developer events across four South African cities, as w
 
 ## Brand Commitments
 
-- Follow `docs/design.md` as the pinned design system and visual brief (.NET Conf 2026 purple `#512BD4` and pink `#E63888` palette, Open Sans type ramp, light and dark themes).
+- Follow `DESIGN.md` as the pinned design system and visual brief (.NET Conf 2026 purple `#512BD4` and pink `#E63888` palette, Open Sans type ramp, light and dark themes).
 - Real speaker photos, sponsor logos, and venue photos—never fabricated claims, stock art, or emoji.
 
 ## Evidence on Hand
