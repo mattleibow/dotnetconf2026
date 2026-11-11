@@ -16,6 +16,10 @@ public sealed class SessionSearchService(ConferenceService conferenceService
         var data = await conferenceService.GetConferenceAsync();
         var results = await Task.WhenAll(data.Sessions.Where(s => s.CityId == cityId).Select(async session =>
         {
+            if (!string.IsNullOrWhiteSpace(session.Title) &&
+                query.Contains(session.Title, StringComparison.OrdinalIgnoreCase))
+                return new SessionSearchResult(session, $"Title: {session.Title}");
+
             var fields = new[] { (Name: "Title", Text: session.Title), (Name: "Track", Text: session.Track ?? "") }
                 .Concat(data.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => (Name: "Speaker", Text: s.Name)));
             foreach (var field in fields)

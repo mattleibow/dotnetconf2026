@@ -12,7 +12,7 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
     private CancellationTokenSource? cancellation;
     private int conversationVersion;
     private readonly List<ChatMessage> history = [];
-    private string? previousData;
+    private string? previousConversationKey;
     private TimeSpan? previousEventTime;
     public ObservableCollection<AssistantMessage> Messages { get; } = [];
     [ObservableProperty] public partial string Input { get; set; } = "";
@@ -62,15 +62,15 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
         Messages.Add(reply);
         try
         {
-            var (instructions, data) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null);
+            var (instructions, conversationKey) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null);
             source.Token.ThrowIfCancellationRequested();
             var eventTime = UseEventTime ? EventTime : (TimeSpan?)null;
-            if (previousData != data || previousEventTime != eventTime)
+            if (previousConversationKey != conversationKey || previousEventTime != eventTime)
                 history.Clear();
-            previousData = data;
+            previousConversationKey = conversationKey;
             previousEventTime = eventTime;
             var request = new List<ChatMessage> { new(ChatRole.System, instructions) };
-            if (history.Count >= 2 && history[^2].Text?.Length + history[^1].Text?.Length <= 1200)
+            if (history.Count >= 2)
                 request.AddRange(history.TakeLast(2));
             request.Add(new ChatMessage(ChatRole.User, question));
             await foreach (var update in client.GetStreamingResponseAsync(request, cancellationToken: source.Token))
@@ -115,7 +115,7 @@ public partial class AssistantViewModel(AssistantService assistant, ILogger<Assi
         cancellation = null;
         IsBusy = false;
         history.Clear();
-        previousData = null;
+        previousConversationKey = null;
         previousEventTime = null;
         Messages.Clear();
         Input = "";

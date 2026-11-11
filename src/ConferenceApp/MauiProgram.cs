@@ -35,7 +35,11 @@ public static class MauiProgram
 #if IOS || MACCATALYST
 #pragma warning disable MAUIAI0001
 		if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
-			builder.Services.AddSingleton<IChatClient, AppleIntelligenceChatClient>();
+		{
+			var appleClient = new AppleIntelligenceChatClient();
+			builder.Services.AddSingleton<IChatClient>(services =>
+				AssistantService.AddSessionContext(appleClient, services));
+		}
 #pragma warning disable CS0162
 		if (!UseOnnxOnApple)
 			builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, NLEmbeddingGenerator>();
