@@ -2,35 +2,35 @@
 
 > Use AI to build the app, then give the app that same AI.
 
-This repository starts almost empty. A coding agent such as GitHub Copilot builds a .NET MAUI 11 conference app from it, one prompt at a time. Then the agent adds AI to the app itself: semantic search, an on-device assistant, tools and actions, an Agent Framework workflow, and optional cloud routing.
+This repository starts with a working wireframe .NET MAUI 11 conference app in `src/ConferenceApp/`. A coding agent such as GitHub Copilot styles it into a polished conference companion app, then adds on-device AI step by step: local chat, data ingestion and enrichment, semantic search (comparing Apple's built-in embeddings with a bundled ONNX model), tool calling and approved actions, and an Agent Framework workflow.
 
 It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands-on workshop.
 
 ## What's here
 
-| Folder | Contents |
+| Path | Contents |
 |---|---|
-| [`.github/prompts/`](.github/prompts/) | Twelve prompts, one per step. Copy each into your agent in order |
+| [`src/ConferenceApp/`](src/ConferenceApp/) | The starting wireframe app: Agenda, Speakers, Favourites, Venue with sponsors, Assistant, and DevFlow |
+| [`.github/prompts/`](.github/prompts/) | Seven prompts (`01`–`07`), plus optional [extras](.github/prompts/extras/). Copy each into your agent in order |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and how to test with DevFlow |
-| [`docs/design.md`](docs/design.md) | The design guide: brand colours, type, spacing, components and layouts |
+| [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions and images |
-| [`models/`](models/README.md) | A small ONNX embedding model for semantic search on platforms without a built-in one |
-
-There's no app code yet. You create it.
+| [`models/`](models/README.md) | A small ONNX embedding model (`all-MiniLM-L6-v2`) for cross-platform semantic search |
 
 ## Before you start
 
 - **.NET 11 SDK** with the MAUI workload (`dotnet workload install maui`), and the platform tooling for your target: Xcode for iOS and Mac Catalyst, the Android SDK for Android.
 - **MAUI CLI** from [MAUI Labs](https://github.com/dotnet/maui-labs): `dotnet tool install -g Microsoft.Maui.Cli --prerelease`, then run `maui doctor`.
-- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the MAUI Labs and .NET skills. With the Copilot CLI:
+- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the `impeccable` design skill and the MAUI Labs skills. With the Copilot CLI:
 
   ```sh
+  npx skills add google-labs-code/impeccable
   copilot plugin marketplace add dotnet/maui-labs
   copilot plugin install dotnet-maui@dotnet-maui-labs
   copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
   copilot plugin install dotnet/skills:plugins/dotnet   # optional: C# and MSBuild
   ```
-- **For on-device AI** (steps 03 and 06 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
+- **For on-device AI** (steps 02 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
 
 ## The steps
 
@@ -38,18 +38,19 @@ Run the prompts in order, one at a time, and check the app after each. Each buil
 
 | # | Prompt | Adds |
 |---|---|---|
-| 01 | [Create the app](.github/prompts/01-create-app.prompt.md) | `dotnet new maui`, then the conference app from the offline data |
-| 02 | [Keyword search](.github/prompts/02-add-keyword-search.prompt.md) | A search box and one small search service |
-| 03 | [Apple embeddings](.github/prompts/03-add-apple-embeddings.prompt.md) | Semantic search on Apple, with an in-memory vector store |
-| 04 | [ONNX embeddings](.github/prompts/04-add-onnx-embeddings.prompt.md) | The same on Android and Windows with a small ONNX model |
-| 05 | [Ingestion](.github/prompts/05-add-ingestion.prompt.md) | A DataIngestion pipeline instead of the indexing loop |
-| 06 | [Enrichment](.github/prompts/06-add-enrichment.prompt.md) | Topics from embeddings and summaries from the local model |
-| 07 | [Local chat](.github/prompts/07-add-local-chat.prompt.md) | An on-device assistant primed with the agenda |
-| 08 | [Chat RAG](.github/prompts/08-add-chat-rag.prompt.md) | Full abstracts via simple RAG middleware |
-| 09 | [Chat tools](.github/prompts/09-add-chat-tools.prompt.md) | Read-only tools the model can call |
-| 10 | [Chat actions](.github/prompts/10-add-chat-actions.prompt.md) | Navigation and favourites, with approval |
-| 11 | [Plan my day](.github/prompts/11-add-plan-my-day.prompt.md) | An Agent Framework workflow |
-| 12 | [Cloud routing](.github/prompts/12-add-cloud-routing.prompt.md) | Optional: send complex questions to a cloud model |
+| 01 | [Make it beautiful](.github/prompts/01-make-it-beautiful.prompt.md) | Styles the wireframe app with `impeccable` and `DESIGN.md` |
+| 02 | [On-device chat](.github/prompts/02-on-device-chat.prompt.md) | Connects the Assistant tab to the local chat model (`IChatClient`) with titles and times |
+| 03 | [Ingestion and enrichment](.github/prompts/03-ingestion-and-enrichment.prompt.md) | `Microsoft.Extensions.DataIngestion` pipeline generating cached summaries and topics |
+| 04 | [Apple semantic search](.github/prompts/04-apple-semantic-search.prompt.md) | `VectorStoreWriter` and semantic search with Apple's built-in sentence embeddings |
+| 05 | [ONNX semantic search](.github/prompts/05-onnx-semantic-search.prompt.md) | Swaps `IEmbeddingGenerator` to the bundled ONNX MiniLM model for accurate retrieval |
+| 06 | [Tools and actions](.github/prompts/06-tools-and-actions.prompt.md) | Read-only tools (including semantic search RAG), navigation, and approval-gated favourites |
+| 07 | [Plan my day](.github/prompts/07-plan-my-day.prompt.md) | An Agent Framework workflow that builds a conflict-free schedule |
+
+### Workshop extras
+
+- [Create the app from scratch](.github/prompts/extras/create-app-from-scratch.prompt.md)
+- [Chat RAG middleware](.github/prompts/extras/chat-rag-middleware.prompt.md) (for local models without tool calling)
+- [Cloud routing](.github/prompts/extras/cloud-routing.prompt.md) (`SemanticRoutingChatClient` failover to a cloud model)
 
 Tips:
 
