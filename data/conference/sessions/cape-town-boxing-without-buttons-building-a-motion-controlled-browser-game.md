@@ -1,0 +1,3 @@
+# Boxing Without Buttons: Building a Motion-Controlled Browser Game
+
+What if you could throw a punch to control a game, no controller, no keyboard, just your hands and a webcam? In this session, Kai and Hayden walk through how they built Throwdown, a browser-based boxing game built on C# and .NET Core that uses real-time motion detection to read your movements and translate them into in-game punches. We cover the technical decisions behind the webcam input pipeline, how we handled lag and false positives, and what it actually took to make it feel good to play. Expect live demos, war stories, and maybe a fight.

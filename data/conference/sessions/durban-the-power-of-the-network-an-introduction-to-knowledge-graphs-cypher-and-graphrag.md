@@ -1,0 +1,3 @@
+# The Power of the Network An introduction to knowledge graphs, Cypher and GraphRAG
+
+In this session I start from a real clinical-laboratory question about antimicrobial resistance and ask it twice, once in SQL and once in Cypher. From there we build the property graph model from first principles, see why index-free adjacency keeps deep queries fast, and watch a knowledge graph being written live, including the classic CREATE-versus-MERGE mistake. We then look at where graphs changed outcomes, from the ICIJ's Panama Papers investigation to NASA's lessons-learned knowledge graph and industry case studies, and finish with GraphRAGgrounding a large language model in a knowledge graph so it can answer multi-hop questions and show its evidence.

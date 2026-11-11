@@ -1,0 +1,1621 @@
+{
+  "schemaVersion": 1,
+  "name": ".NET Conf 2026 Community Edition South Africa",
+  "sourceUrl": "https://cptmsdug.dev/dotnet-conf-2026.html",
+  "timeZone": "Africa/Johannesburg",
+  "cities": [
+    {
+      "id": "durban",
+      "name": "Durban",
+      "date": "2026-11-21",
+      "venueId": "richfield-campus-umhlanga",
+      "registrationUrl": "https://www.quicket.co.za/events/406763-data-ai-community-day-durban-encore-net-conf-community-edition-south-africa/?ref=link-campaign\u0026lc=msdug#/"
+    },
+    {
+      "id": "cape-town",
+      "name": "Cape Town",
+      "date": "2026-11-28",
+      "venueId": "bbd-cape-town",
+      "registrationUrl": "https://www.quicket.co.za/events/400517-net-conf-2026-community-edition-south-africa-cape-town/#/"
+    },
+    {
+      "id": "bloemfontein",
+      "name": "Bloemfontein",
+      "date": "2026-12-05",
+      "venueId": "central-university-of-technology-cut",
+      "registrationUrl": "https://www.quicket.co.za/events/400644-net-conf-2026-community-edition-south-africa-bloemfontein/#/"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "durban-registration-general-area",
+      "title": "Registration (general area)",
+      "cityId": "durban",
+      "start": "2026-11-21T08:00:00\u002B02:00",
+      "end": "2026-11-21T08:20:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/durban-registration-general-area.md"
+    },
+    {
+      "id": "durban-welcome-introduction-general-keynote",
+      "title": "Welcome, Introduction \u0026 General Keynote",
+      "cityId": "durban",
+      "start": "2026-11-21T08:30:00\u002B02:00",
+      "end": "2026-11-21T08:50:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/durban-welcome-introduction-general-keynote.md"
+    },
+    {
+      "id": "durban-keynote-welcome-to-net-11",
+      "title": "Keynote: Welcome to .NET 11",
+      "cityId": "durban",
+      "start": "2026-11-21T09:00:00\u002B02:00",
+      "end": "2026-11-21T09:50:00\u002B02:00",
+      "track": null,
+      "speakerIds": [
+        "allan-pead",
+        "matthew-leibowitz",
+        "niels-berglund"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": false,
+      "content": "sessions/durban-keynote-welcome-to-net-11.md"
+    },
+    {
+      "id": "durban-agents-building-agentic-apps-ai-goes-mobile-with-net-maui",
+      "title": "Agents Building Agentic Apps: AI Goes Mobile with .NET MAUI",
+      "cityId": "durban",
+      "start": "2026-11-21T10:00:00\u002B02:00",
+      "end": "2026-11-21T10:50:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "matthew-leibowitz"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-agents-building-agentic-apps-ai-goes-mobile-with-net-maui.md"
+    },
+    {
+      "id": "durban-spec-driven-development-with-github-copilot-coding-without-losing-the-plot",
+      "title": "Spec-Driven Development with GitHub Copilot, Coding without losing the Plot",
+      "cityId": "durban",
+      "start": "2026-11-21T10:00:00\u002B02:00",
+      "end": "2026-11-21T10:50:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "lawrance-reddy"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-spec-driven-development-with-github-copilot-coding-without-losing-the-plot.md"
+    },
+    {
+      "id": "durban-jeva-deep-dive-into-universal-classification",
+      "title": "Jev\u2014a deep dive into universal classification",
+      "cityId": "durban",
+      "start": "2026-11-21T10:00:00\u002B02:00",
+      "end": "2026-11-21T10:50:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "dean-martin"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-jeva-deep-dive-into-universal-classification.md"
+    },
+    {
+      "id": "durban-arduino-meets-its-sharper-half-an-edge-hmi-on-two-brains",
+      "title": "Arduino Meets Its Sharper Half: An Edge HMI on Two Brains",
+      "cityId": "durban",
+      "start": "2026-11-21T11:00:00\u002B02:00",
+      "end": "2026-11-21T11:50:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "allan-pead"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-arduino-meets-its-sharper-half-an-edge-hmi-on-two-brains.md"
+    },
+    {
+      "id": "durban-rise-of-the-outliers-what-to-build-when-you-can-build-anything",
+      "title": "Rise of the Outliers: What to Build When You Can Build Anything",
+      "cityId": "durban",
+      "start": "2026-11-21T11:00:00\u002B02:00",
+      "end": "2026-11-21T11:50:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "jonathan-pillay"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-rise-of-the-outliers-what-to-build-when-you-can-build-anything.md"
+    },
+    {
+      "id": "durban-dont-store-the-river-rethinking-analytics-for-real-time-data",
+      "title": "Don\u2019t Store the River: Rethinking Analytics for Real-Time Data",
+      "cityId": "durban",
+      "start": "2026-11-21T11:00:00\u002B02:00",
+      "end": "2026-11-21T11:50:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "james-mcgillivray"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-dont-store-the-river-rethinking-analytics-for-real-time-data.md"
+    },
+    {
+      "id": "durban-lunch",
+      "title": "Lunch",
+      "cityId": "durban",
+      "start": "2026-11-21T11:50:00\u002B02:00",
+      "end": "2026-11-21T12:55:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": "Lecture 4",
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/durban-lunch.md"
+    },
+    {
+      "id": "durban-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security",
+      "title": "The privacy firewall: keeping pastoral notes away from the finance office with row-level security",
+      "cityId": "durban",
+      "start": "2026-11-21T13:00:00\u002B02:00",
+      "end": "2026-11-21T13:20:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "wesley-sing"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security.md"
+    },
+    {
+      "id": "durban-bots-just-wanna-browse",
+      "title": "Bots Just Wanna Browse",
+      "cityId": "durban",
+      "start": "2026-11-21T13:00:00\u002B02:00",
+      "end": "2026-11-21T13:20:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "andrew-collier"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-bots-just-wanna-browse.md"
+    },
+    {
+      "id": "durban-the-power-of-the-network-an-introduction-to-knowledge-graphs-cypher-and-graphrag",
+      "title": "The Power of the Network An introduction to knowledge graphs, Cypher and GraphRAG",
+      "cityId": "durban",
+      "start": "2026-11-21T13:00:00\u002B02:00",
+      "end": "2026-11-21T13:20:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "lihle-gumede"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-the-power-of-the-network-an-introduction-to-knowledge-graphs-cypher-and-graphrag.md"
+    },
+    {
+      "id": "durban-developing-a-net-sports-predictor",
+      "title": "Developing A .NET Sports Predictor",
+      "cityId": "durban",
+      "start": "2026-11-21T13:30:00\u002B02:00",
+      "end": "2026-11-21T13:50:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "uvaan-covenden"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-developing-a-net-sports-predictor.md"
+    },
+    {
+      "id": "durban-producing-accurate-ai-workflows-without-trusting-the-model",
+      "title": "Producing accurate AI workflows without trusting the model",
+      "cityId": "durban",
+      "start": "2026-11-21T13:30:00\u002B02:00",
+      "end": "2026-11-21T13:50:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "nkosikhona-mlaba"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-producing-accurate-ai-workflows-without-trusting-the-model.md"
+    },
+    {
+      "id": "durban-wait-what-does-optimization-really-entail",
+      "title": "Wait, what does Optimization really entail?",
+      "cityId": "durban",
+      "start": "2026-11-21T13:30:00\u002B02:00",
+      "end": "2026-11-21T13:50:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "krishnarupa-sewsunker"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-wait-what-does-optimization-really-entail.md"
+    },
+    {
+      "id": "durban-a-practical-student-story-solar-car-telemetry-dashboard",
+      "title": "A Practical Student Story: Solar Car Telemetry Dashboard",
+      "cityId": "durban",
+      "start": "2026-11-21T14:00:00\u002B02:00",
+      "end": "2026-11-21T14:20:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "jacqui-muller"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-a-practical-student-story-solar-car-telemetry-dashboard.md"
+    },
+    {
+      "id": "durban-idp-in-corporate-environment",
+      "title": "IDP in Corporate environment",
+      "cityId": "durban",
+      "start": "2026-11-21T14:00:00\u002B02:00",
+      "end": "2026-11-21T14:20:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "murali-veeraragoo"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-idp-in-corporate-environment.md"
+    },
+    {
+      "id": "durban-giving-ai-agents-hands-without-giving-them-the-keys",
+      "title": "Giving AI Agents Hands Without Giving Them the Keys",
+      "cityId": "durban",
+      "start": "2026-11-21T14:00:00\u002B02:00",
+      "end": "2026-11-21T14:20:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "sisanda-lisa-masango"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-giving-ai-agents-hands-without-giving-them-the-keys.md"
+    },
+    {
+      "id": "durban-don-t-ask-watch-real-time-data-and-ai-with-net-11-and-foundry-local",
+      "title": "Don\u0027t Ask, Watch: Real-Time Data and AI with .NET 11 and Foundry Local",
+      "cityId": "durban",
+      "start": "2026-11-21T14:30:00\u002B02:00",
+      "end": "2026-11-21T15:20:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "niels-berglund"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-don-t-ask-watch-real-time-data-and-ai-with-net-11-and-foundry-local.md"
+    },
+    {
+      "id": "durban-a-workspace-is-not-an-architecture",
+      "title": "A Workspace is not an Architecture",
+      "cityId": "durban",
+      "start": "2026-11-21T14:30:00\u002B02:00",
+      "end": "2026-11-21T15:20:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "michael-johnson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-a-workspace-is-not-an-architecture.md"
+    },
+    {
+      "id": "durban-the-ladder-for-productive-agents",
+      "title": "The ladder for productive agents",
+      "cityId": "durban",
+      "start": "2026-11-21T14:30:00\u002B02:00",
+      "end": "2026-11-21T15:20:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "sheldon-williams"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-the-ladder-for-productive-agents.md"
+    },
+    {
+      "id": "durban-security-in-net-and-the-impact-on-user-experience",
+      "title": "Security in .NET and the impact on user experience",
+      "cityId": "durban",
+      "start": "2026-11-21T15:30:00\u002B02:00",
+      "end": "2026-11-21T16:20:00\u002B02:00",
+      "track": ".NET Conf \u2013 Lecture 1",
+      "speakerIds": [
+        "rendani-kruger"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-security-in-net-and-the-impact-on-user-experience.md"
+    },
+    {
+      "id": "durban-the-hidden-cost-of-just-call-the-llm-architecture-patterns-for-cost-efficient-genai",
+      "title": "The Hidden Cost of \u201CJust Call the LLM\u201D: Architecture Patterns for Cost-Efficient GenAI",
+      "cityId": "durban",
+      "start": "2026-11-21T15:30:00\u002B02:00",
+      "end": "2026-11-21T16:20:00\u002B02:00",
+      "track": "Auditorium",
+      "speakerIds": [
+        "fanie-ndlovu"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-the-hidden-cost-of-just-call-the-llm-architecture-patterns-for-cost-efficient-genai.md"
+    },
+    {
+      "id": "durban-claude-code-vs-the-chaos-button-a-practical-claude-code-masterclass",
+      "title": "Claude Code vs the Chaos Button - A practical Claude Code masterclass",
+      "cityId": "durban",
+      "start": "2026-11-21T15:30:00\u002B02:00",
+      "end": "2026-11-21T16:20:00\u002B02:00",
+      "track": "Lecture 5",
+      "speakerIds": [
+        "alisa-diya-thool",
+        "kalreen-govender"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/durban-claude-code-vs-the-chaos-button-a-practical-claude-code-masterclass.md"
+    },
+    {
+      "id": "durban-panel-discussion",
+      "title": "Panel Discussion",
+      "cityId": "durban",
+      "start": "2026-11-21T16:30:00\u002B02:00",
+      "end": "2026-11-21T17:20:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/durban-panel-discussion.md"
+    },
+    {
+      "id": "durban-closing-remarks-prize-giving",
+      "title": "Closing Remarks \u0026 Prize Giving",
+      "cityId": "durban",
+      "start": "2026-11-21T17:30:00\u002B02:00",
+      "end": "2026-11-21T18:00:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/durban-closing-remarks-prize-giving.md"
+    },
+    {
+      "id": "cape-town-arrival-registration",
+      "title": "Arrival \u0026 Registration",
+      "cityId": "cape-town",
+      "start": "2026-11-28T08:30:00\u002B02:00",
+      "end": "2026-11-28T09:30:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/cape-town-arrival-registration.md"
+    },
+    {
+      "id": "cape-town-keynote-welcome-to-net-11",
+      "title": "Keynote: Welcome to .NET 11",
+      "cityId": "cape-town",
+      "start": "2026-11-28T09:30:00\u002B02:00",
+      "end": "2026-11-28T10:15:00\u002B02:00",
+      "track": null,
+      "speakerIds": [
+        "allan-pead",
+        "matthew-leibowitz",
+        "neil-thompson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": false,
+      "content": "sessions/cape-town-keynote-welcome-to-net-11.md"
+    },
+    {
+      "id": "cape-town-agents-building-agentic-apps-ai-goes-mobile-with-net-maui",
+      "title": "Agents Building Agentic Apps: AI Goes Mobile with .NET MAUI",
+      "cityId": "cape-town",
+      "start": "2026-11-28T10:25:00\u002B02:00",
+      "end": "2026-11-28T11:10:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "matthew-leibowitz"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-agents-building-agentic-apps-ai-goes-mobile-with-net-maui.md"
+    },
+    {
+      "id": "cape-town-human-approved-ai-agents-in-production-architecture-lessons-from-a-working-crm",
+      "title": "Human-approved AI agents in production: architecture lessons from a working CRM",
+      "cityId": "cape-town",
+      "start": "2026-11-28T10:25:00\u002B02:00",
+      "end": "2026-11-28T11:10:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "wesley-sing"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-human-approved-ai-agents-in-production-architecture-lessons-from-a-working-crm.md"
+    },
+    {
+      "id": "cape-town-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework",
+      "title": "The Agent Is Just a Loop: Building AI Agents in C# With Microsoft Agent Framework",
+      "cityId": "cape-town",
+      "start": "2026-11-28T11:20:00\u002B02:00",
+      "end": "2026-11-28T12:05:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "niels-berglund"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework.md"
+    },
+    {
+      "id": "cape-town-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature",
+      "title": "When Your AI Agent Passes Every .NET Test but Builds the Wrong Feature",
+      "cityId": "cape-town",
+      "start": "2026-11-28T11:20:00\u002B02:00",
+      "end": "2026-11-28T12:05:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "shilpa-mitra"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature.md"
+    },
+    {
+      "id": "cape-town-rag-in-the-real-world-guardrails-semantic-caching-and-security-for-production-ai",
+      "title": "RAG in the Real World: Guardrails, Semantic Caching and Security for Production AI",
+      "cityId": "cape-town",
+      "start": "2026-11-28T12:15:00\u002B02:00",
+      "end": "2026-11-28T13:00:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "abed-matini"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-rag-in-the-real-world-guardrails-semantic-caching-and-security-for-production-ai.md"
+    },
+    {
+      "id": "cape-town-your-net-agent-found-the-evidence-should-it-answer",
+      "title": "Your .NET Agent Found the Evidence. Should It Answer?",
+      "cityId": "cape-town",
+      "start": "2026-11-28T12:15:00\u002B02:00",
+      "end": "2026-11-28T12:30:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "sromana-mukhopadhyay"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-your-net-agent-found-the-evidence-should-it-answer.md"
+    },
+    {
+      "id": "cape-town-second-brain-sharper-agent-feeding-your-net-knowledge-to-github-copilot-cli",
+      "title": "Second Brain, Sharper Agent: Feeding Your .NET Knowledge to GitHub Copilot CLI",
+      "cityId": "cape-town",
+      "start": "2026-11-28T12:30:00\u002B02:00",
+      "end": "2026-11-28T12:45:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "malachi-mathins"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-second-brain-sharper-agent-feeding-your-net-knowledge-to-github-copilot-cli.md"
+    },
+    {
+      "id": "cape-town-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security",
+      "title": "The privacy firewall: keeping pastoral notes away from the finance office with row-level security",
+      "cityId": "cape-town",
+      "start": "2026-11-28T12:45:00\u002B02:00",
+      "end": "2026-11-28T13:00:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "wesley-sing"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security.md"
+    },
+    {
+      "id": "cape-town-lunch",
+      "title": "Lunch",
+      "cityId": "cape-town",
+      "start": "2026-11-28T13:00:00\u002B02:00",
+      "end": "2026-11-28T14:00:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/cape-town-lunch.md"
+    },
+    {
+      "id": "cape-town-we-removed-the-agents-from-our-agentic-workflow-and-it-worked-better",
+      "title": "We Removed the Agents from Our Agentic Workflow, and It Worked Better",
+      "cityId": "cape-town",
+      "start": "2026-11-28T14:00:00\u002B02:00",
+      "end": "2026-11-28T14:45:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "richard-basson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-we-removed-the-agents-from-our-agentic-workflow-and-it-worked-better.md"
+    },
+    {
+      "id": "cape-town-your-ai-agent-has-database-access-now-what",
+      "title": "Your AI Agent Has Database Access. Now What?",
+      "cityId": "cape-town",
+      "start": "2026-11-28T14:00:00\u002B02:00",
+      "end": "2026-11-28T14:45:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "racheline-mouyana"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-your-ai-agent-has-database-access-now-what.md"
+    },
+    {
+      "id": "cape-town-beyond-the-prompt-exploring-ai-assisted-game-development-with-net",
+      "title": "Beyond the Prompt: Exploring AI-Assisted Game Development with .NET",
+      "cityId": "cape-town",
+      "start": "2026-11-28T14:55:00\u002B02:00",
+      "end": "2026-11-28T15:40:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "neil-thompson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-beyond-the-prompt-exploring-ai-assisted-game-development-with-net.md"
+    },
+    {
+      "id": "cape-town-building-observable-governable-ai-agents-with-net",
+      "title": "Building Observable, Governable AI Agents with .NET",
+      "cityId": "cape-town",
+      "start": "2026-11-28T14:55:00\u002B02:00",
+      "end": "2026-11-28T15:40:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "wayne-munro"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-building-observable-governable-ai-agents-with-net.md"
+    },
+    {
+      "id": "cape-town-bringing-the-edge-into-focus",
+      "title": "Bringing the Edge Into Focus",
+      "cityId": "cape-town",
+      "start": "2026-11-28T15:50:00\u002B02:00",
+      "end": "2026-11-28T16:35:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "allan-pead"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-bringing-the-edge-into-focus.md"
+    },
+    {
+      "id": "cape-town-if-ai-knows-everything-what-do-i-know",
+      "title": "If AI Knows Everything, What Do I Know?",
+      "cityId": "cape-town",
+      "start": "2026-11-28T15:50:00\u002B02:00",
+      "end": "2026-11-28T16:05:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "chiedza-kapfunde"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-if-ai-knows-everything-what-do-i-know.md"
+    },
+    {
+      "id": "cape-town-boxing-without-buttons-building-a-motion-controlled-browser-game",
+      "title": "Boxing Without Buttons: Building a Motion-Controlled Browser Game",
+      "cityId": "cape-town",
+      "start": "2026-11-28T16:05:00\u002B02:00",
+      "end": "2026-11-28T16:20:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "malachi-mathins",
+        "hayden-sassman"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-boxing-without-buttons-building-a-motion-controlled-browser-game.md"
+    },
+    {
+      "id": "cape-town-great-prompts-wrong-model-the-missing-half-for-getting-value-from-ai",
+      "title": "Great Prompts, Wrong Model: The Missing Half for Getting Value from AI",
+      "cityId": "cape-town",
+      "start": "2026-11-28T16:20:00\u002B02:00",
+      "end": "2026-11-28T16:35:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "ethan-buckle"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-great-prompts-wrong-model-the-missing-half-for-getting-value-from-ai.md"
+    },
+    {
+      "id": "cape-town-build-apps-where-your-data-lives-getting-started-with-microsoft-fabric-apps",
+      "title": "Build Apps Where Your Data Lives: Getting Started with Microsoft Fabric Apps",
+      "cityId": "cape-town",
+      "start": "2026-11-28T16:45:00\u002B02:00",
+      "end": "2026-11-28T17:30:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "huguette-mbuyu"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-build-apps-where-your-data-lives-getting-started-with-microsoft-fabric-apps.md"
+    },
+    {
+      "id": "cape-town-a-case-study-in-sovereignty-the-illusion-of-control",
+      "title": "A Case Study in Sovereignty: The Illusion of Control",
+      "cityId": "cape-town",
+      "start": "2026-11-28T16:45:00\u002B02:00",
+      "end": "2026-11-28T17:30:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "nicolas-blank"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/cape-town-a-case-study-in-sovereignty-the-illusion-of-control.md"
+    },
+    {
+      "id": "bloemfontein-arrival-registration",
+      "title": "Arrival \u0026 Registration",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T08:30:00\u002B02:00",
+      "end": "2026-12-05T09:30:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-arrival-registration.md"
+    },
+    {
+      "id": "bloemfontein-keynote-welcome-to-net-11",
+      "title": "Keynote: Welcome to .NET 11",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T09:30:00\u002B02:00",
+      "end": "2026-12-05T10:15:00\u002B02:00",
+      "track": null,
+      "speakerIds": [
+        "allan-pead",
+        "matthew-leibowitz",
+        "neil-thompson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-keynote-welcome-to-net-11.md"
+    },
+    {
+      "id": "bloemfontein-agents-building-agentic-apps-ai-goes-mobile-with-net-maui",
+      "title": "Agents Building Agentic Apps: AI Goes Mobile with .NET MAUI",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T10:25:00\u002B02:00",
+      "end": "2026-12-05T11:10:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "matthew-leibowitz"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-agents-building-agentic-apps-ai-goes-mobile-with-net-maui.md"
+    },
+    {
+      "id": "bloemfontein-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature",
+      "title": "When Your AI Agent Passes Every .NET Test but Builds the Wrong Feature",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T10:25:00\u002B02:00",
+      "end": "2026-12-05T11:10:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "shilpa-mitra"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature.md"
+    },
+    {
+      "id": "bloemfontein-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework",
+      "title": "The Agent Is Just a Loop: Building AI Agents in C# With Microsoft Agent Framework",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T11:20:00\u002B02:00",
+      "end": "2026-12-05T12:05:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "niels-berglund"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework.md"
+    },
+    {
+      "id": "bloemfontein-stop-shipping-agents-on-vibes-continuous-quality-monitoring-for-net-ai-agents-with-amazon-bedrock",
+      "title": "Stop Shipping Agents on Vibes: Continuous Quality Monitoring for .NET AI Agents with Amazon Bedrock",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T11:20:00\u002B02:00",
+      "end": "2026-12-05T12:05:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "adeline-makokha"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-stop-shipping-agents-on-vibes-continuous-quality-monitoring-for-net-ai-agents-with-amazon-bedrock.md"
+    },
+    {
+      "id": "bloemfontein-bringing-the-edge-into-focus",
+      "title": "Bringing the Edge Into Focus",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T12:15:00\u002B02:00",
+      "end": "2026-12-05T13:00:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "allan-pead"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-bringing-the-edge-into-focus.md"
+    },
+    {
+      "id": "bloemfontein-mcp-is-not-a-magic-word-what-it-means-for-software-architecture",
+      "title": "MCP is not a magic word: What it means for Software Architecture",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T12:15:00\u002B02:00",
+      "end": "2026-12-05T13:00:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "felicia-sephodi"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-mcp-is-not-a-magic-word-what-it-means-for-software-architecture.md"
+    },
+    {
+      "id": "bloemfontein-lunch",
+      "title": "Lunch",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T13:00:00\u002B02:00",
+      "end": "2026-12-05T14:00:00\u002B02:00",
+      "track": null,
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-lunch.md"
+    },
+    {
+      "id": "bloemfontein-contributing-to-open-source-as-a-net-developer",
+      "title": "Contributing to open source as a .NET developer",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T14:00:00\u002B02:00",
+      "end": "2026-12-05T14:45:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "veliswa-boya"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-contributing-to-open-source-as-a-net-developer.md"
+    },
+    {
+      "id": "bloemfontein-human-approved-ai-agents-in-production-architecture-lessons-from-a-working-crm",
+      "title": "Human-approved AI agents in production: architecture lessons from a working CRM",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T14:00:00\u002B02:00",
+      "end": "2026-12-05T14:45:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "wesley-sing"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-human-approved-ai-agents-in-production-architecture-lessons-from-a-working-crm.md"
+    },
+    {
+      "id": "bloemfontein-beyond-the-prompt-exploring-ai-assisted-game-development-with-net",
+      "title": "Beyond the Prompt: Exploring AI-Assisted Game Development with .NET",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T14:55:00\u002B02:00",
+      "end": "2026-12-05T15:40:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [
+        "neil-thompson"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-beyond-the-prompt-exploring-ai-assisted-game-development-with-net.md"
+    },
+    {
+      "id": "bloemfontein-security-in-net-and-the-impact-on-user-experience",
+      "title": "Security in .NET and the impact on user experience",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T14:55:00\u002B02:00",
+      "end": "2026-12-05T15:40:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "rendani-kruger"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-security-in-net-and-the-impact-on-user-experience.md"
+    },
+    {
+      "id": "bloemfontein-session-to-be-announced",
+      "title": "Session to be announced",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T15:50:00\u002B02:00",
+      "end": "2026-12-05T16:35:00\u002B02:00",
+      "track": "Track 1",
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-session-to-be-announced.md"
+    },
+    {
+      "id": "bloemfontein-your-net-agent-found-the-evidence-should-it-answer",
+      "title": "Your .NET Agent Found the Evidence. Should It Answer?",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T15:50:00\u002B02:00",
+      "end": "2026-12-05T16:05:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "sromana-mukhopadhyay"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-your-net-agent-found-the-evidence-should-it-answer.md"
+    },
+    {
+      "id": "bloemfontein-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security",
+      "title": "The privacy firewall: keeping pastoral notes away from the finance office with row-level security",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T16:05:00\u002B02:00",
+      "end": "2026-12-05T16:20:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [
+        "wesley-sing"
+      ],
+      "note": null,
+      "kind": "session",
+      "hasAbstract": true,
+      "content": "sessions/bloemfontein-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security.md"
+    },
+    {
+      "id": "bloemfontein-open-q-a-with-the-lightning-speakers",
+      "title": "Open Q\u0026A with the lightning speakers",
+      "cityId": "bloemfontein",
+      "start": "2026-12-05T16:20:00\u002B02:00",
+      "end": "2026-12-05T16:35:00\u002B02:00",
+      "track": "Track 2",
+      "speakerIds": [],
+      "note": null,
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-open-q-a-with-the-lightning-speakers.md"
+    }
+  ],
+  "speakers": [
+    {
+      "id": "abed-matini",
+      "name": "Abed Matini",
+      "tagline": "Senior Backend Developer at Ogilvy",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://x.com/abedmatini",
+        "https://www.linkedin.com/in/matini/",
+        "http://abedmatini.com/"
+      ],
+      "hasBio": true,
+      "content": "speakers/abed-matini.md",
+      "image": "speakers/abed-matini.png"
+    },
+    {
+      "id": "adeline-makokha",
+      "name": "Adeline Makokha",
+      "tagline": "AWS UserGroup Kenya Leader, AWS Community Builder, Software Quality Engineer at Safaricom PLC",
+      "cityIds": [
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/adeline_makokha",
+        "https://www.linkedin.com/in/adeline-makokha/",
+        "https://dev.to/aws-builders/aurora-4cja"
+      ],
+      "hasBio": true,
+      "content": "speakers/adeline-makokha.md",
+      "image": "speakers/adeline-makokha.jpg"
+    },
+    {
+      "id": "alisa-diya-thool",
+      "name": "Alisa Diya Thool",
+      "tagline": "A Junior Software developer exploring the skills of modern day science",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/alisa-diya-thool.md",
+      "image": "speakers/alisa-diya-thool.png"
+    },
+    {
+      "id": "allan-pead",
+      "name": "Allan Pead",
+      "tagline": "CTO, developer, lecturer, Microsoft Internet of Things MVP, Microsoft Dev Technologies MVP, Microsoft Azure MVP",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/adpead",
+        "https://www.linkedin.com/in/adpead/",
+        "https://explorationspace.co.za/"
+      ],
+      "hasBio": true,
+      "content": "speakers/allan-pead.md",
+      "image": "speakers/allan-pead.png"
+    },
+    {
+      "id": "andrew-collier",
+      "name": "Andrew Collier",
+      "tagline": "Data Scientist / R \u0026 Open Source Enthusiast",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/andrew-collier.md",
+      "image": "speakers/andrew-collier.jpg"
+    },
+    {
+      "id": "chiedza-kapfunde",
+      "name": "Chiedza Kapfunde",
+      "tagline": "Python Tutor \u0026 Junior Software Developer",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/chiedza-kapfunde-2154b7258/"
+      ],
+      "hasBio": true,
+      "content": "speakers/chiedza-kapfunde.md",
+      "image": "speakers/chiedza-kapfunde.jpg"
+    },
+    {
+      "id": "dean-martin",
+      "name": "Dean Martin",
+      "tagline": "Your friendly neighborhood AI Architect, MagicOrange",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/dean-martin.md",
+      "image": "speakers/dean-martin.jpg"
+    },
+    {
+      "id": "ethan-buckle",
+      "name": "Ethan Buckle",
+      "tagline": "AI developer, robotics world champion, UCT engineering student",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/ethan-b-6bbb5429a/"
+      ],
+      "hasBio": true,
+      "content": "speakers/ethan-buckle.md",
+      "image": "speakers/ethan-buckle.png"
+    },
+    {
+      "id": "fanie-ndlovu",
+      "name": "Fanie Ndlovu",
+      "tagline": "Tech Coach",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/fanie-ndlovu.md",
+      "image": "speakers/fanie-ndlovu.jpg"
+    },
+    {
+      "id": "felicia-sephodi",
+      "name": "Felicia Sephodi",
+      "tagline": "Software Engineer",
+      "cityIds": [
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/feliciasephodi",
+        "https://www.linkedin.com/in/feliciasephodi/",
+        "https://hashnode.com/@feliciasephodi"
+      ],
+      "hasBio": true,
+      "content": "speakers/felicia-sephodi.md",
+      "image": "speakers/felicia-sephodi.jpg"
+    },
+    {
+      "id": "hayden-sassman",
+      "name": "Hayden Sassman",
+      "tagline": "Web Developer and Instructional Designer, building ambitious interactive experiences.",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/hayden-sassman-7466b1161/"
+      ],
+      "hasBio": true,
+      "content": "speakers/hayden-sassman.md",
+      "image": "speakers/hayden-sassman.jpg"
+    },
+    {
+      "id": "huguette-mbuyu",
+      "name": "Huguette Mbuyu",
+      "tagline": "Cloud South Architect (Microsoft)",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/huguette-mbuyu.md",
+      "image": "speakers/huguette-mbuyu.jpg"
+    },
+    {
+      "id": "jacqui-muller",
+      "name": "Jacqui Muller",
+      "tagline": "UiPath MVP | Industry Coordinator @ Belgium Campus | Director @ JPanda \u0026 Tegnika | PhD Student @ NWU | Data Analysis \u0026 Visualisation Expert @ BRICS Skills Development | Freelance Consultant",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/jacqui-muller.md",
+      "image": "speakers/jacqui-muller.jpg"
+    },
+    {
+      "id": "james-mcgillivray",
+      "name": "James McGillivray",
+      "tagline": "Director of Content Creation and Customer Delivery, Cobalt Analytics",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/james-mcgillivray.md",
+      "image": "speakers/james-mcgillivray.jpg"
+    },
+    {
+      "id": "jonathan-pillay",
+      "name": "Jonathan Pillay",
+      "tagline": "Senior Dev, Resident Outlier",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/jonathan-pillay.md",
+      "image": "speakers/jonathan-pillay.png"
+    },
+    {
+      "id": "kalreen-govender",
+      "name": "Kalreen Govender",
+      "tagline": "Derivco - software Engineer",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/kalreen-govender.md",
+      "image": "speakers/kalreen-govender.jpg"
+    },
+    {
+      "id": "krishnarupa-sewsunker",
+      "name": "Krishnarupa Sewsunker",
+      "tagline": "Data Science Teacher (Online), BSc. Mathematics \u0026 Computer Science (USA)",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/krishnarupa-sewsunker.md",
+      "image": "speakers/krishnarupa-sewsunker.png"
+    },
+    {
+      "id": "lawrance-reddy",
+      "name": "Lawrance Reddy",
+      "tagline": "Cloud CTO @Vaxowave",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/lawrance-reddy.md",
+      "image": "speakers/lawrance-reddy.jpg"
+    },
+    {
+      "id": "lihle-gumede",
+      "name": "Lihle Gumede",
+      "tagline": "Neo4j, Community Lead | Data Scientist | Biomedical Technologist",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/lihle-gumede.md",
+      "image": "speakers/lihle-gumede.png"
+    },
+    {
+      "id": "malachi-mathins",
+      "name": "Malachi Mathins",
+      "tagline": "Full Stack .NET Developer building civic tech for Cape Town",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/malakaimathins/",
+        "https://malachimathins.vercel.app/"
+      ],
+      "hasBio": true,
+      "content": "speakers/malachi-mathins.md",
+      "image": "speakers/malachi-mathins.jpg"
+    },
+    {
+      "id": "matthew-leibowitz",
+      "name": "Matthew Leibowitz",
+      "tagline": "Principal Software Engineer at Microsoft building .NET MAUI",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/mattleibow",
+        "https://www.linkedin.com/in/mattleibow/",
+        "https://dotnetdevaddict.co.za/"
+      ],
+      "hasBio": true,
+      "content": "speakers/matthew-leibowitz.md",
+      "image": "speakers/matthew-leibowitz.jpg"
+    },
+    {
+      "id": "michael-johnson",
+      "name": "Michael Johnson",
+      "tagline": "SQL User group lead and Microsoft data platform MVP",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/michael-johnson.md",
+      "image": "speakers/michael-johnson.png"
+    },
+    {
+      "id": "murali-veeraragoo",
+      "name": "Murali Veeraragoo",
+      "tagline": "Standard Bank, Lead AI specialist",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/murali-veeraragoo.md",
+      "image": "speakers/murali-veeraragoo.png"
+    },
+    {
+      "id": "neil-thompson",
+      "name": "Neil Thompson",
+      "tagline": "Principal at Accso",
+      "cityIds": [
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/neil-thompson-0a79aa10a/",
+        "https://thompsontechblog.co.za/"
+      ],
+      "hasBio": true,
+      "content": "speakers/neil-thompson.md",
+      "image": "speakers/neil-thompson.jpg"
+    },
+    {
+      "id": "nicolas-blank",
+      "name": "Nicolas Blank",
+      "tagline": "NBConsult, Group CEO, M365 Apps \u0026 Services, Microsoft Azure",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://x.com/nicolasblank",
+        "https://www.linkedin.com/in/nicolasblank/",
+        "https://www.blankmanblog.com/"
+      ],
+      "hasBio": true,
+      "content": "speakers/nicolas-blank.md",
+      "image": "speakers/nicolas-blank.jpg"
+    },
+    {
+      "id": "niels-berglund",
+      "name": "Niels Berglund",
+      "tagline": "Software/AI Architect Lead, Derivco | Microsoft AI MVP",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/nielsberglund",
+        "https://www.linkedin.com/in/nielsberglund/",
+        "https://nielsberglund.com/"
+      ],
+      "hasBio": true,
+      "content": "speakers/niels-berglund.md",
+      "image": "speakers/niels-berglund.jpg"
+    },
+    {
+      "id": "nkosikhona-mlaba",
+      "name": "Nkosikhona Mlaba",
+      "tagline": "Module Demonstrator @ University of KwaZulu-Natal | IT Consultant @ Enactus UKZN | System Administrator @ Tech Horizons | DevOps intern @ Future Foundation",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/nkosikhona-mlaba.md",
+      "image": "speakers/nkosikhona-mlaba.jpg"
+    },
+    {
+      "id": "racheline-mouyana",
+      "name": "Racheline Mouyana",
+      "tagline": "Data \u0026 Analytiics Engineer",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/racheline-mouyana/"
+      ],
+      "hasBio": true,
+      "content": "speakers/racheline-mouyana.md",
+      "image": "speakers/racheline-mouyana.jpg"
+    },
+    {
+      "id": "rendani-kruger",
+      "name": "Rendani Kruger",
+      "tagline": "Director",
+      "cityIds": [
+        "durban",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/rendani-maarten-kruger-phd-9b8565b5/"
+      ],
+      "hasBio": true,
+      "content": "speakers/rendani-kruger.md",
+      "image": "speakers/rendani-kruger.jpg"
+    },
+    {
+      "id": "richard-basson",
+      "name": "Richard Basson",
+      "tagline": "Practice Lead: Software Engineering - DVT",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/richard-basson-42b46b131/"
+      ],
+      "hasBio": true,
+      "content": "speakers/richard-basson.md",
+      "image": "speakers/richard-basson.png"
+    },
+    {
+      "id": "sheldon-williams",
+      "name": "Sheldon Williams",
+      "tagline": "SGW Systems Engineers - Lead Software Engineer | Applied AI",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/sheldon-williams.md",
+      "image": "speakers/sheldon-williams.jpg"
+    },
+    {
+      "id": "shilpa-mitra",
+      "name": "Shilpa Mitra",
+      "tagline": "Co-founder \u0026 CEO, FlowStacks | Building infrastructure and developer tools for AI agents",
+      "cityIds": [
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/shilpa-mitra-7223b2b1/",
+        "https://webafterai.substack.com/"
+      ],
+      "hasBio": true,
+      "content": "speakers/shilpa-mitra.md",
+      "image": "speakers/shilpa-mitra.jpg"
+    },
+    {
+      "id": "sisanda-lisa-masango",
+      "name": "Sisanda Lisa Masango",
+      "tagline": "Cybersecurity innovator| AI Security Explorer | Helping Developers \u0026 Small Businesses Build Safer Systems",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/sisanda-lisa-masango.md",
+      "image": "speakers/sisanda-lisa-masango.png"
+    },
+    {
+      "id": "sromana-mukhopadhyay",
+      "name": "Sromana Mukhopadhyay",
+      "tagline": "Co-founder \u0026 Principal Researcher, BlockQuest Labs Inc. | AI Evaluation \u0026 Agent Reliability",
+      "cityIds": [
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/sromana-mukhopadhyay-02b3b3b1/"
+      ],
+      "hasBio": true,
+      "content": "speakers/sromana-mukhopadhyay.md",
+      "image": "speakers/sromana-mukhopadhyay.png"
+    },
+    {
+      "id": "uvaan-covenden",
+      "name": "Uvaan Covenden",
+      "tagline": "Aspiring iGaming , Software Engineer , Pixi JS currently a junior PHP laravel , mysql developer",
+      "cityIds": [
+        "durban"
+      ],
+      "links": [],
+      "hasBio": true,
+      "content": "speakers/uvaan-covenden.md",
+      "image": "speakers/uvaan-covenden.png"
+    },
+    {
+      "id": "veliswa-boya",
+      "name": "Veliswa Boya",
+      "tagline": "Developer Advocate at AWS",
+      "cityIds": [
+        "bloemfontein"
+      ],
+      "links": [
+        "https://x.com/Vel12171",
+        "https://www.linkedin.com/in/veliswa-boya/",
+        "https://dev.to/vel12171"
+      ],
+      "hasBio": true,
+      "content": "speakers/veliswa-boya.md",
+      "image": "speakers/veliswa-boya.jpg"
+    },
+    {
+      "id": "wayne-munro",
+      "name": "Wayne Munro",
+      "tagline": "Enterprise AI Architect \u00B7 Microsoft Certified Trainer \u00B7 Building Trustable AI Economies",
+      "cityIds": [
+        "cape-town"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/wayne-m-4880617/"
+      ],
+      "hasBio": true,
+      "content": "speakers/wayne-munro.md",
+      "image": "speakers/wayne-munro.png"
+    },
+    {
+      "id": "wesley-sing",
+      "name": "Wesley Sing",
+      "tagline": "Founder, Appetite Technology. Builds Naya CRM.",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/wesley-sing-73b0ab31/"
+      ],
+      "hasBio": true,
+      "content": "speakers/wesley-sing.md",
+      "image": "speakers/wesley-sing.png"
+    }
+  ],
+  "venues": [
+    {
+      "id": "richfield-campus-umhlanga",
+      "name": "Richfield Campus Umhlanga",
+      "cityId": "durban",
+      "address": "Centenary Boulevard, Park Square, 5-9 Park Avenue, Umhlanga",
+      "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=Richfield\u002BCampus\u002BUmhlanga\u002BPark\u002BAvenue",
+      "content": "venues/richfield-campus-umhlanga.md",
+      "image": "venues/richfield-campus-umhlanga.png"
+    },
+    {
+      "id": "bbd-cape-town",
+      "name": "BBD Cape Town",
+      "cityId": "cape-town",
+      "address": "3rd Floor, Northbank Building, No. 1 N Bank Ln, Century City, Cape Town, 7441",
+      "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=BBD\u002BCape\u002BTown\u002BNorthbank\u002BBuilding\u002BCentury\u002BCity",
+      "content": "venues/bbd-cape-town.md",
+      "image": "venues/bbd-cape-town.png"
+    },
+    {
+      "id": "central-university-of-technology-cut",
+      "name": "Central University of Technology (CUT)",
+      "cityId": "bloemfontein",
+      "address": "20 President Brand Street, Westdene, Bloemfontein, 9300",
+      "mapUrl": "https://www.google.com/maps/search/?api=1\u0026query=Central\u002BUniversity\u002Bof\u002BTechnology\u002BBloemfontein\u002BCampus",
+      "content": "venues/central-university-of-technology-cut.md",
+      "image": "venues/central-university-of-technology-cut.jpg"
+    }
+  ],
+  "sponsors": [
+    {
+      "id": "accso-cape-town-bloemfontein",
+      "name": "Accso",
+      "tier": "GOLD - 2 CITY (CAPE TOWN, BLOEMFONTEIN)",
+      "cityIds": [
+        "cape-town",
+        "bloemfontein"
+      ],
+      "url": "https://accso.com/about-us/locations/cape-town",
+      "content": "sponsors/accso-cape-town-bloemfontein.md",
+      "image": "sponsors/accso-cape-town-bloemfontein.jpg"
+    },
+    {
+      "id": "offerzen-durban-cape-town-bloemfontein",
+      "name": "OfferZen",
+      "tier": "GOLD SWAG - 3 CITY (DURBAN, CAPE TOWN, BLOEMFONTEIN)",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "url": "https://www.offerzen.com/",
+      "content": "sponsors/offerzen-durban-cape-town-bloemfontein.md",
+      "image": "sponsors/offerzen-durban-cape-town-bloemfontein.png"
+    },
+    {
+      "id": "richfield-durban",
+      "name": "Richfield",
+      "tier": "GOLD VENUE - DURBAN",
+      "cityIds": [
+        "durban"
+      ],
+      "url": "https://www.richfield.ac.za/",
+      "content": "sponsors/richfield-durban.md",
+      "image": "sponsors/richfield-durban.jpg"
+    },
+    {
+      "id": "bbd-cape-town",
+      "name": "BBD",
+      "tier": "GOLD VENUE - CAPE TOWN",
+      "cityIds": [
+        "cape-town"
+      ],
+      "url": "https://bbdsoftware.com/",
+      "content": "sponsors/bbd-cape-town.md",
+      "image": "sponsors/bbd-cape-town.png"
+    },
+    {
+      "id": "central-university-of-technology-cut-bloemfontein",
+      "name": "Central University of Technology (CUT)",
+      "tier": "GOLD VENUE - BLOEMFONTEIN",
+      "cityIds": [
+        "bloemfontein"
+      ],
+      "url": "https://www.cut.ac.za/",
+      "content": "sponsors/central-university-of-technology-cut-bloemfontein.md",
+      "image": "sponsors/central-university-of-technology-cut-bloemfontein.jpg"
+    },
+    {
+      "id": "microsoft-cape-town",
+      "name": "Microsoft",
+      "tier": "SILVER - 1 CITY (CAPE TOWN)",
+      "cityIds": [
+        "cape-town"
+      ],
+      "url": "https://www.microsoft.com/",
+      "content": "sponsors/microsoft-cape-town.md",
+      "image": "sponsors/microsoft-cape-town.png"
+    }
+  ]
+}

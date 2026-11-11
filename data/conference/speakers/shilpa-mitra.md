@@ -1,0 +1,3 @@
+# Shilpa Mitra
+
+Shilpa Mitra is the co-founder and CEO of FlowStacks, where she works on AI-agent reliability, verification, and developer tooling. She has more than 15 years of software development experience and over eight years of experience building AI-based systems. She previously co-founded ShufflUp, a VC-funded Estonian AI trading startup. Her current work focuses on verification methods for agentic software, including open-source approaches to finding hidden assumptions and gaps in AI-generated tests. She also contributes to the AI research community as a reviewer focused on agents, evaluation, and reliability.
