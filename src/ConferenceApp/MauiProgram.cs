@@ -2,8 +2,8 @@ using Microsoft.Extensions.Logging;
 using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;
-#if IOS || MACCATALYST
 using Microsoft.Extensions.AI;
+#if IOS || MACCATALYST
 using Microsoft.Maui.Essentials.AI;
 #endif
 #if DEBUG
@@ -14,6 +14,14 @@ namespace ConferenceApp;
 
 public static class MauiProgram
 {
+	// Set to true to compare the bundled model with Apple's sentence embeddings.
+	public const bool UseOnnxOnApple = false;
+#if IOS || MACCATALYST
+	public const int EmbeddingDimensions = UseOnnxOnApple ? 384 : 512;
+#else
+	public const int EmbeddingDimensions = 384;
+#endif
+
 	public static MauiApp CreateMauiApp()
 	{
 		var builder = MauiApp.CreateBuilder();
@@ -29,10 +37,13 @@ public static class MauiProgram
 		builder.Services.AddSingleton<CityService>();
 #if IOS || MACCATALYST
 #pragma warning disable MAUIAI0001
-		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, NLEmbeddingGenerator>();
+		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(_ =>
+			UseOnnxOnApple ? new OnnxEmbeddingGenerator() : new NLEmbeddingGenerator());
 #pragma warning restore MAUIAI0001
-		builder.Services.AddSingleton<SemanticSessionSearch>();
+#else
+		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, OnnxEmbeddingGenerator>();
 #endif
+		builder.Services.AddSingleton<SemanticSessionSearch>();
 		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddSingleton<NearbyCityService>();
 		builder.Services.AddSingleton<FavoritesService>();

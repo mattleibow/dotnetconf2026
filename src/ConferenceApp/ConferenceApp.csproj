@@ -45,6 +45,12 @@
 		<CodesignEntitlements>Platforms/MacCatalyst/Entitlements.Debug.plist</CodesignEntitlements>
 	</PropertyGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<!-- ONNX Runtime references optional custom ops and its static CoreML code needs SQLite. -->
+		<ReferenceNativeSymbol Include="RegisterCustomOps" SymbolType="Function" SymbolMode="Ignore" />
+		<LinkerArgument Include="-lsqlite3" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<!-- App Icon -->
 		<MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#512BD4" />
@@ -61,6 +67,7 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+		<MauiAsset Include="..\..\models\all-MiniLM-L6-v2\*" LogicalName="models/all-MiniLM-L6-v2/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -68,6 +75,8 @@
 		<PackageReference Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.1" />
+		<PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26421.1" Condition="'$(Configuration)' == 'Debug'" />
 		<PackageReference Include="Microsoft.Maui.Essentials.AI" Version="11.0.0-preview.8.26555.2" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
 	</ItemGroup>

@@ -1,4 +1,3 @@
-#if IOS || MACCATALYST
 using System.Text.RegularExpressions;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
@@ -34,10 +33,11 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
         }
         catch (NotSupportedException ex)
         {
-            logger.LogWarning(ex, "Apple sentence embeddings are unavailable; using keyword search.");
+            logger.LogWarning(ex, "Sentence embeddings are unavailable; using keyword search.");
             IsInitialized = true;
             return;
         }
+        logger.LogInformation("Semantic search using {Generator}", generator.GetType().Name);
         var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
         var index = store.GetCollection<string, SessionChunk>("sessions");
         await index.EnsureCollectionExistsAsync();
@@ -92,7 +92,6 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
         [VectorStoreKey] public string Key { get; set; } = "";
         [VectorStoreData] public string SessionId { get; set; } = "";
         [VectorStoreData] public string Excerpt { get; set; } = "";
-        [VectorStoreVector(512)] public string Text { get; set; } = "";
+        [VectorStoreVector(MauiProgram.EmbeddingDimensions)] public string Text { get; set; } = "";
     }
 }
-#endif

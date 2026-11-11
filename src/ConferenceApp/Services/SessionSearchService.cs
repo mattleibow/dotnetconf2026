@@ -6,7 +6,6 @@ public sealed class SessionSearchService
 {
     private readonly ConferenceService data;
     private readonly CityService city;
-#if IOS || MACCATALYST
     private readonly SemanticSessionSearch semantic;
 
     public SessionSearchService(ConferenceService data, CityService city, SemanticSessionSearch semantic)
@@ -18,18 +17,8 @@ public sealed class SessionSearchService
 
     public Task InitializeAsync() => semantic.InitializeAsync();
     public string SearchMode => !semantic.IsInitialized ? "Preparing on-device search..." : semantic.IsAvailable
-        ? "Apple on-device semantic and keyword search"
-        : "Keyword search only · Apple sentence model unavailable";
-#else
-    public SessionSearchService(ConferenceService data, CityService city)
-    {
-        this.data = data;
-        this.city = city;
-    }
-
-    public Task InitializeAsync() => Task.CompletedTask;
-    public string SearchMode => "Keyword search";
-#endif
+        ? "On-device semantic and keyword search"
+        : "Keyword search only · sentence model unavailable";
 
     public async Task<IReadOnlyList<SessionSearchResult>> SearchSessionsAsync(string? query)
     {
@@ -57,10 +46,8 @@ public sealed class SessionSearchService
                 : null;
         }));
         var keywords = results.OfType<SessionSearchResult>().ToList();
-#if IOS || MACCATALYST
         var matchedIds = keywords.Select(r => r.Session.Id).ToHashSet();
         keywords.AddRange(await semantic.SearchAsync(term, cityId, matchedIds));
-#endif
         return keywords;
     }
 
