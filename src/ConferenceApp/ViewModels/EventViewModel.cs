@@ -1,13 +1,24 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class EventViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
+public partial class EventViewModel : ObservableObject, IRecipient<CityChangedMessage>
 {
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+
+    public EventViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    {
+        this.database = database;
+        this.preferences = preferences;
+        WeakReferenceMessenger.Default.RegisterAll(this);
+    }
+
     public ObservableCollection<Sponsor> Sponsors { get; } = [];
 
     [ObservableProperty]
@@ -18,6 +29,9 @@ public partial class EventViewModel(ConferenceDatabase database, UserPreferences
 
     [ObservableProperty]
     public partial string Description { get; set; } = "";
+
+    public void Receive(CityChangedMessage message) =>
+        _ = LoadAsync();
 
     [RelayCommand]
     private async Task LoadAsync()

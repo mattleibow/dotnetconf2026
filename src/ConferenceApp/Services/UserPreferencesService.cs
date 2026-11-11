@@ -1,14 +1,15 @@
+using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Models;
 
 namespace ConferenceApp.Services;
+
+public record CityChangedMessage;
+public record FavoritesChangedMessage;
 
 public class UserPreferencesService
 {
     private const string CityKey = "city";
     private const string FavoritesKey = "favorites";
-
-    public event EventHandler? CityChanged;
-    public event EventHandler? FavoritesChanged;
 
     public string? SelectedCityId
     {
@@ -21,7 +22,7 @@ public class UserPreferencesService
                 Preferences.Remove(CityKey);
             else
                 Preferences.Set(CityKey, value);
-            CityChanged?.Invoke(this, EventArgs.Empty);
+            WeakReferenceMessenger.Default.Send(new CityChangedMessage());
         }
     }
 
@@ -52,6 +53,6 @@ public class UserPreferencesService
         if (isFavorite ? !ids.Add(sessionId) : !ids.Remove(sessionId))
             return;
         Preferences.Set(FavoritesKey, string.Join(',', ids));
-        FavoritesChanged?.Invoke(this, EventArgs.Empty);
+        WeakReferenceMessenger.Default.Send(new FavoritesChangedMessage());
     }
 }

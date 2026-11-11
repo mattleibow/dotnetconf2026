@@ -1,13 +1,26 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
+public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMessage>
 {
+    private readonly ChatService chat;
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+
+    public ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences)
+    {
+        this.chat = chat;
+        this.database = database;
+        this.preferences = preferences;
+        WeakReferenceMessenger.Default.RegisterAll(this);
+    }
+
     public ObservableCollection<ChatItem> Messages { get; } = [];
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
 
@@ -19,6 +32,9 @@ public partial class ChatViewModel(ChatService chat, ConferenceDatabase database
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
+
+    public void Receive(CityChangedMessage message) =>
+        _ = LoadAsync();
 
     [RelayCommand]
     private async Task LoadAsync() =>

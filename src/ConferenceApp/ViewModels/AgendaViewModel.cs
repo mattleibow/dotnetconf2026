@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 
@@ -8,8 +9,18 @@ namespace ConferenceApp.ViewModels;
 
 public record SessionItem(Session Session, string Speakers);
 
-public partial class AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
+public partial class AgendaViewModel : ObservableObject, IRecipient<CityChangedMessage>, IRecipient<FavoritesChangedMessage>
 {
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+
+    public AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    {
+        this.database = database;
+        this.preferences = preferences;
+        WeakReferenceMessenger.Default.RegisterAll(this);
+    }
+
     public ObservableCollection<SessionItem> Sessions { get; } = [];
 
     [ObservableProperty]
@@ -22,6 +33,12 @@ public partial class AgendaViewModel(ConferenceDatabase database, UserPreference
     public string FilterText => ShowFavoritesOnly ? "Showing: Favourites" : "Showing: All Sessions";
 
     partial void OnShowFavoritesOnlyChanged(bool value) =>
+        _ = LoadAsync();
+
+    public void Receive(CityChangedMessage message) =>
+        _ = LoadAsync();
+
+    public void Receive(FavoritesChangedMessage message) =>
         _ = LoadAsync();
 
     [RelayCommand]
