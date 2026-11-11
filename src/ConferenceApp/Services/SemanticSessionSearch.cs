@@ -1,17 +1,18 @@
-using System.Text.RegularExpressions;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Services;
 
-public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvider services, ILogger<SemanticSessionSearch> logger)
+public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvider services, ILogger<SemanticSessionSearch> logger) : IDisposable
 {
     private readonly Lock sync = new();
     private Task? initialization;
-    private VectorStoreCollection<string, SessionChunk>? collection;
+    private IngestionPipeline<string>? pipeline;
+    private VectorStoreCollection<object, Dictionary<string, object?>>? collection;
     private Dictionary<string, Session> sessions = [];
     private int chunkCount;
     public bool IsAvailable { get; private set; }
@@ -38,32 +39,41 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
             return;
         }
         logger.LogInformation("Semantic search using {Generator}", generator.GetType().Name);
-        var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
-        var index = store.GetCollection<string, SessionChunk>("sessions");
-        await index.EnsureCollectionExistsAsync();
-        var records = new List<SessionChunk>();
+        var directory = Path.Combine(FileSystem.AppDataDirectory, "session-search");
+        Directory.CreateDirectory(directory);
+        var documents = new Dictionary<string, Session>();
         foreach (var session in conference.Sessions.Where(s => s.Kind != "general"))
         {
-            var content = await data.GetContentAsync(session.Content);
-            var sentences = Regex.Split(Regex.Replace(content, @"\s+", " ").Trim(), @"(?<=[.!?])\s+")
-                .Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
-            for (var i = 0; i < sentences.Length; i += 2)
-            {
-                var excerpt = string.Join(" ", sentences.Skip(i).Take(2));
-                records.Add(new SessionChunk
-                {
-                    Key = $"{session.Id}:{i}",
-                    SessionId = session.Id,
-                    Text = $"{session.Title}. {excerpt}",
-                    Excerpt = excerpt
-                });
-            }
+            var path = Path.Combine(directory, Path.GetFileName(session.Content));
+            using var source = await FileSystem.OpenAppPackageFileAsync($"conference/{session.Content}");
+            using var destination = File.Create(path);
+            await source.CopyToAsync(destination);
+            documents.Add(path, session);
         }
 
-        await index.UpsertAsync(records);
-        sessions = conference.Sessions.ToDictionary(s => s.Id);
-        chunkCount = records.Count;
-        collection = index;
+        var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
+        var writer = new VectorStoreWriter<string>(store, MauiProgram.EmbeddingDimensions,
+            new() { CollectionName = "sessions", IncrementalIngestion = false });
+        var chunker = new SessionChunker(documents);
+        var ingestion = new IngestionPipeline<string>(new MarkdownReader(), chunker, writer);
+        try
+        {
+            await foreach (var result in ingestion.ProcessAsync(documents.Keys.Select(path => new FileInfo(path))))
+            {
+                if (!result.Succeeded)
+                    throw new InvalidOperationException($"Failed to index session document '{result.DocumentId}'.", result.Exception);
+            }
+        }
+        catch
+        {
+            ingestion.Dispose();
+            throw;
+        }
+
+        sessions = documents;
+        chunkCount = chunker.ChunkCount;
+        collection = chunkCount > 0 ? writer.VectorStoreCollection : null;
+        pipeline = ingestion;
         IsAvailable = true;
         IsInitialized = true;
     }
@@ -77,21 +87,15 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
         var matches = new List<(SessionSearchResult Result, double Score)>();
         await foreach (var result in collection!.SearchAsync(query, chunkCount))
         {
-            var session = sessions[result.Record.SessionId];
+            var session = sessions[(string)result.Record["documentid"]!];
             if (session.CityId != cityId || result.Score is null || keywordIds.Contains(session.Id))
                 continue;
-            matches.Add((new SessionSearchResult(session, $"Semantic · {result.Record.Excerpt}", true), result.Score.Value));
+            matches.Add((new SessionSearchResult(session, $"Semantic · {result.Record["context"]}", true), result.Score.Value));
         }
         return matches.OrderByDescending(m => m.Score)
             .DistinctBy(m => m.Result.Session.Id)
             .Take(5).Select(m => m.Result).ToList();
     }
 
-    public sealed class SessionChunk
-    {
-        [VectorStoreKey] public string Key { get; set; } = "";
-        [VectorStoreData] public string SessionId { get; set; } = "";
-        [VectorStoreData] public string Excerpt { get; set; } = "";
-        [VectorStoreVector(MauiProgram.EmbeddingDimensions)] public string Text { get; set; } = "";
-    }
+    public void Dispose() => pipeline?.Dispose();
 }

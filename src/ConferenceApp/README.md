@@ -4,6 +4,8 @@ The app bundles the `data/conference/` snapshot under `Resources/Raw/conference/
 
 Search builds an in-memory index of session abstracts using on-device sentence embeddings: Apple's NaturalLanguage model on iOS and Mac Catalyst, and the bundled all-MiniLM-L6-v2 ONNX model on Android and Windows. Set `MauiProgram.UseOnnxOnApple` to `true` to compare ONNX on Apple devices. Exact keyword matches appear first, followed by up to five semantic matches ranked by their best abstract chunk. Semantic matches are ranked without a relevance cutoff, so even unrelated queries can return results. If the Apple sentence model is unavailable, the app shows that it is using keyword search instead. The index is rebuilt each time the app starts and no search content is sent to a service.
 
+For indexing, the bundled session Markdown is copied into app data and processed by a Data Ingestion pipeline with a Markdown reader, two-sentence chunker and in-memory vector-store writer. The copies are refreshed from the snapshot whenever the index is rebuilt.
+
 Build one target at a time with a compatible .NET 11 SDK and MAUI workload:
 
 ```sh
