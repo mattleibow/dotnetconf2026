@@ -47,6 +47,15 @@ public partial class AgendaViewModel(ConferenceService conference) : ObservableO
     }
 
     [RelayCommand]
+    private async Task PickCityAsync()
+    {
+        var names = Cities.Select(c => c.Name).ToArray();
+        var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
+        if (Cities.FirstOrDefault(c => c.Name == choice) is { } city)
+            SelectedCity = city;
+    }
+
+    [RelayCommand]
     private Task OpenSessionAsync(SessionItem item) =>
         Shell.Current.GoToAsync($"session?id={item.Session.Id}");
 }

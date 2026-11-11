@@ -5,11 +5,10 @@
              x:DataType="vm:AgendaViewModel"
              Title="Agenda">
     <Grid RowDefinitions="Auto,*" Padding="10" RowSpacing="10">
-        <Picker AutomationId="city-picker"
-                Title="City"
-                ItemsSource="{Binding Cities}"
-                ItemDisplayBinding="{Binding Name, x:DataType=m:City}"
-                SelectedItem="{Binding SelectedCity}" />
+        <Button AutomationId="city-picker"
+                Text="{Binding SelectedCity.Name, StringFormat='City: {0}', FallbackValue='Select City'}"
+                Command="{Binding PickCityCommand}"
+                HorizontalOptions="Start" />
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="vm:SessionItem">
