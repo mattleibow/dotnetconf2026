@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:Class="ConferenceApp.Views.AgendaPage" x:DataType="vm:AgendaViewModel"
+             Shell.NavBarIsVisible="False" BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#1A1A2E}">
+    <Grid RowDefinitions="Auto,*">
+        <VerticalStackLayout Padding="24,28,24,16" Spacing="12">
+            <VerticalStackLayout.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#512BD4" Offset="0"/>
+                    <GradientStop Color="#E63888" Offset="1"/>
+                </LinearGradientBrush>
+            </VerticalStackLayout.Background>
+            <Label Text=".NET CONF 2026  •  SOUTH AFRICA" TextColor="White" FontSize="12" FontFamily="OpenSansSemibold"/>
+            <Label Text="Your conference agenda" TextColor="White" FontSize="28" FontFamily="OpenSansSemibold"/>
+            <Label Text="{Binding Date}" TextColor="White" FontSize="14"/>
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Durban" Command="{Binding SelectCityCommand}" CommandParameter="durban" AutomationId="city-durban"/>
+                <Button Text="Cape Town" Command="{Binding SelectCityCommand}" CommandParameter="cape-town" AutomationId="city-cape-town"/>
+                <Button Text="Bloemfontein" Command="{Binding SelectCityCommand}" CommandParameter="bloemfontein" AutomationId="city-bloemfontein"/>
+            </HorizontalStackLayout>
+            <Button Text="Find nearest city" Command="{Binding FindNearestCommand}" AutomationId="nearest-city" HorizontalOptions="Start"/>
+        </VerticalStackLayout>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <CollectionView ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8">
+                <CollectionView.GroupHeaderTemplate>
+                    <DataTemplate x:DataType="vm:SessionGroup">
+                        <Grid Padding="4,16,4,8">
+                            <Label Text="{Binding Title}" FontFamily="OpenSansSemibold" FontSize="18"/>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.GroupHeaderTemplate>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SessionItem">
+                        <Border StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16" Margin="0,0,0,8" BackgroundColor="{AppThemeBinding Light=White, Dark=#292940}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}"/></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" AutomationId="{Binding AutomationId}">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Track}" TextColor="#8454E4" FontSize="12" FontFamily="OpenSansSemibold"/>
+                                    <Label Text="{Binding Title}" FontSize="17" FontFamily="OpenSansSemibold"/>
+                                    <Label Text="{Binding Speakers}" FontSize="13"/>
+                                    <Label Text="{Binding Time}" FontSize="12"/>
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Text="{Binding Heart}" IsVisible="{Binding IsSession}" Command="{Binding FavoriteCommand}" AutomationId="favorite-button" FontSize="22" BackgroundColor="Transparent" TextColor="#E63888"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

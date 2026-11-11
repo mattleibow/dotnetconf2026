@@ -1,0 +1,3 @@
+# Beyond the Prompt: Exploring AI-Assisted Game Development with .NET
+
+How can developers use AI to explore an unfamiliar domain such as game development? This session will follow a small game-development experiment using C#, .NET, Visual Studio Code, Unity, and accessible cloud-based AI tools. The focus will be on the development process: defining a specification, guiding an AI agent, shaping the architecture, reviewing generated code, and validating the result. Along the way, we will connect these practices to web development and other areas of software engineering. No prior game-development experience is required; the session is an exploration of how AI can help developers learn, experiment, and build beyond their usual areas of expertise.

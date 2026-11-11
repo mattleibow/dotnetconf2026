@@ -1,11 +1,6 @@
-<Shell
-    x:Class="ConferenceApp.AppShell"
-    xmlns:local="clr-namespace:ConferenceApp"
-    Title="ConferenceApp">
-
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
+<Shell x:Class="ConferenceApp.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:views="clr-namespace:ConferenceApp.Views">
+    <ShellContent Title="Agenda" Route="agenda" ContentTemplate="{DataTemplate views:AgendaPage}" />
 </Shell>
