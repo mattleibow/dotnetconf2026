@@ -67,6 +67,7 @@ Use the template's Open Sans fonts. One type ramp, defined once as styles:
 - **Speaker page.** A large photo, name in `Title`, tagline in `Caption`, then the bio and their sessions as cards.
 - **Sponsors.** Logos centred on white tiles (also white in dark mode, so logos stay legible), grouped by tier.
 - **Venue.** The venue photo full-width with rounded corners, the name and address, and an "Open in Maps" button.
+- **Assistant.** Suggested question chips at the top, a scrollable message list (user messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards), and a pinned bottom input bar with an `Entry` and `Primary` send button.
 - **Empty, loading and error states.** A short friendly sentence and, where it helps, a single action. Never a blank screen.
 
 ## Icons
@@ -78,7 +79,7 @@ Use the template's Open Sans fonts. One type ramp, defined once as styles:
 
 The same app must look right on a phone in portrait and in a large desktop window.
 
-- **Phones:** bottom tabs (Agenda, Speakers, Favourites, Venue), single-column lists, full-width cards.
+- **Phones:** bottom tabs (Agenda, Speakers, Favourites, Venue, Assistant), single-column lists, full-width cards.
 - **Wide windows (about 800 px and up):** multi-column card grids, content centred with a maximum width of about 1,100 px, and two-column detail pages (header and speakers on one side, the abstract on the other).
 - Switch layouts in one place per page with `AdaptiveTrigger` visual states or the window width, not per control.
 

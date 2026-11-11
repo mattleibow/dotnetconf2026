@@ -8,6 +8,7 @@
         <ShellContent Title="Speakers" Route="speakers" ContentTemplate="{DataTemplate views:SpeakersPage}" />
         <ShellContent Title="Favourites" Route="favourites" ContentTemplate="{DataTemplate views:FavoritesPage}" />
         <ShellContent Title="Venue" Route="venue" ContentTemplate="{DataTemplate views:VenuePage}" />
+        <ShellContent Title="Assistant" Route="assistant" ContentTemplate="{DataTemplate views:ChatPage}" />
     </TabBar>
 
 </Shell>

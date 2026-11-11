@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="ConferenceApp.Views.ChatPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             xmlns:m="clr-namespace:ConferenceApp.Models"
+             x:DataType="vm:ChatViewModel"
+             Title="Assistant">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="10" RowSpacing="10">
+        <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="x:String">
+                    <Button Text="{Binding .}"
+                            Command="{Binding BindingContext.AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                            CommandParameter="{Binding .}" />
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </HorizontalStackLayout>
+
+        <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="m:ChatItem">
+                    <VerticalStackLayout Padding="0,6">
+                        <Label Text="{Binding Text}" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Entry AutomationId="chat-input"
+                   Placeholder="Ask about sessions, speakers, or your schedule..."
+                   Text="{Binding Prompt}"
+                   ReturnCommand="{Binding SendCommand}" />
+            <Button Grid.Column="1"
+                    AutomationId="chat-send"
+                    Text="Send"
+                    Command="{Binding SendCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>

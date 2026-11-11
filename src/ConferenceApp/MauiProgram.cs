@@ -23,11 +23,13 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<ConferenceDatabase>();
 		builder.Services.AddSingleton<UserPreferencesService>();
+		builder.Services.AddSingleton<ChatService>();
 
 		builder.Services.AddTransient<AgendaPage>().AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<SpeakersPage>().AddTransient<SpeakersViewModel>();
 		builder.Services.AddTransient<FavoritesPage>().AddTransient<FavoritesViewModel>();
 		builder.Services.AddTransient<VenuePage>().AddTransient<VenueViewModel>();
+		builder.Services.AddTransient<ChatPage>().AddTransient<ChatViewModel>();
 		builder.Services.AddTransient<SessionPage>().AddTransient<SessionViewModel>();
 		builder.Services.AddTransient<SpeakerPage>().AddTransient<SpeakerViewModel>();
 
