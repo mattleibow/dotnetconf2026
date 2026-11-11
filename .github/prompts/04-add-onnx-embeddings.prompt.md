@@ -8,4 +8,4 @@ Bring semantic search to Android and Windows with the small ONNX model in `model
 - Use it everywhere except Apple, and add a constant in `MauiProgram` to switch Apple to it too, so I can compare the two.
 - Nothing else in search should need to change.
 
-Use DevFlow on Android, and on Apple with the constant switched, to try "saving money on AI" and "hardware projects". Tell me which generator actually ran.
+Use DevFlow on Mac Catalyst with the constant switched both ways to try "saving money on AI" and "hardware projects" in Durban, and "making games" in Cape Town. Compare the two models' top results in a small table, and tell me which generator actually ran. Build Android too.

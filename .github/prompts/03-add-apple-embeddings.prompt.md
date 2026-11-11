@@ -2,7 +2,7 @@
 description: Make search understand meaning on Apple
 ---
 
-Make search understand meaning, not just words: in Durban, "saving money on AI" should find the talk on the hidden cost of calling LLMs, and "hardware projects" should find the Arduino and solar car talks. Start with Apple.
+Make search understand meaning, not just words: in Durban, "saving money on AI" should bring up the talk on the hidden cost of calling LLMs, and "hardware projects" the Arduino and solar car talks. Start with Apple's built-in sentence model. It's small, so results will be rough; that's fine, the next step brings a better model.
 
 - Use `NLEmbeddingGenerator` from `Microsoft.Maui.Essentials.AI`, through `IEmbeddingGenerator<string, Embedding<float>>`.
 - At startup, split each abstract into two-sentence chunks that start with the session title, and add them to an in-memory vector store from `CommunityToolkit.VectorData.InMemory`. Give the store the embedding generator so it does the embedding for us.
