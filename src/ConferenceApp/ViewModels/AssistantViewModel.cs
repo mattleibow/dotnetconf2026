@@ -73,7 +73,7 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
             if (string.IsNullOrWhiteSpace(answer.Text))
                 throw new InvalidOperationException("The model returned an empty response.");
             history.Add(new ChatMessage(ChatRole.User, question));
-            history.Add(new ChatMessage(ChatRole.Assistant, answer.Text.Length <= 600 ? answer.Text : answer.Text[..600]));
+            history.Add(new ChatMessage(ChatRole.Assistant, answer.Text));
             if (history.Count > 4)
                 history.RemoveRange(0, history.Count - 4);
         }

@@ -8,7 +8,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
-public sealed class AssistantService(ConferenceService data, CityService city, FavoritesService favorites, IServiceProvider services)
+public sealed class AssistantService(ConferenceService data, CityService city, FavoritesService favorites, SemanticSessionSearch search, IServiceProvider services)
 {
     public string SelectedCityId => city.SelectedId;
     public async Task<string> GetCityLabelAsync()
@@ -29,11 +29,37 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
         var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
         if (status.Availability != ChatModelAvailability.Available)
             return "The on-device model isn't ready. Check Apple Intelligence in your device settings and try again.";
-        client ??= services.GetRequiredService<IChatClient>();
+        client ??= services.GetRequiredService<IChatClient>().AsBuilder()
+            .Use(async (messages, options, next, cancellationToken) =>
+            {
+                var prompt = messages.ToList();
+                var questionIndex = prompt.FindLastIndex(message => message.Role == ChatRole.User);
+                if (questionIndex >= 0)
+                {
+                    var question = prompt[questionIndex].Text;
+                    var previousAnswer = prompt.Take(questionIndex).LastOrDefault(message => message.Role == ChatRole.Assistant)?.Text;
+                    var query = string.Join(" ", new[] { question, previousAnswer }.Where(text => !string.IsNullOrWhiteSpace(text)));
+                    var matches = await search.SearchAsync(query, city.SelectedId, new HashSet<string>(), cancellationToken);
+                    if (!search.IsAvailable)
+                        throw new InvalidOperationException("On-device semantic search is unavailable.");
+                    var context = new StringBuilder("Relevant conference session abstracts for the next question:");
+                    foreach (var match in matches.Take(3))
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        context.AppendLine().AppendLine(match.Session.Title);
+                        context.AppendLine(await data.GetContentAsync(match.Session.Content));
+                    }
+                    if (matches.Count > 0)
+                        prompt.Insert(questionIndex, new ChatMessage(ChatRole.User, context.ToString()));
+                }
+                await next(prompt, options, cancellationToken);
+            })
+            .Build();
 #pragma warning restore MAUIAI0001
         return null;
 #else
         _ = services;
+        _ = search;
         await Task.CompletedTask;
         return "On-device chat isn't available on this platform yet. Your conference data stays on this device.";
 #endif

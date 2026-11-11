@@ -90,14 +90,14 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
         IsInitialized = true;
     }
 
-    public async Task<IReadOnlyList<SessionSearchResult>> SearchAsync(string query, string cityId, IReadOnlySet<string> keywordIds)
+    public async Task<IReadOnlyList<SessionSearchResult>> SearchAsync(string query, string cityId, IReadOnlySet<string> keywordIds, CancellationToken cancellationToken = default)
     {
-        await InitializeAsync();
+        await InitializeAsync().WaitAsync(cancellationToken);
         if (!IsAvailable || chunkCount == 0)
             return [];
 
         var matches = new List<(SessionSearchResult Result, double Score)>();
-        await foreach (var result in collection!.SearchAsync(query, chunkCount))
+        await foreach (var result in collection!.SearchAsync(query, chunkCount, cancellationToken: cancellationToken))
         {
             var session = sessions[(string)result.Record["documentid"]!];
             if (session.CityId != cityId || result.Score is null || keywordIds.Contains(session.Id))

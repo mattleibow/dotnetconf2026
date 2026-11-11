@@ -17,3 +17,5 @@ dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-android
 Debug builds include the MAUI DevFlow agent. When updating the conference snapshot, copy `data/conference/` into `Resources/Raw/conference/` again.
 
 The assistant uses `Microsoft.Maui.Essentials.AI` and `IChatClient` with Apple Intelligence on supported iOS and Mac Catalyst devices. It sends the selected city's compact agenda, current time and favourites to the on-device model, not to the cloud. Speaker biographies are not included. Other platforms show an unavailable message; no models are downloaded by the app. In Debug builds, the assistant can use a chosen time on the selected event day.
+
+Before each assistant response, on-device semantic search uses the latest question and previous answer to retrieve up to three distinct session abstracts for the selected city. These abstracts are added only to that model request, not the conversation history. As with agenda search, results have no relevance cutoff.
