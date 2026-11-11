@@ -18,13 +18,22 @@ dotnet run data/ImportConference.cs
 
 ## Copy the prompts
 
-Run these in order, one at a time:
+Run these in order, one at a time. Each builds on the last:
 
-1. [Build the conference app](.github/prompts/01-build-conference-app.prompt.md) - from the offline demo data.
-2. [Add semantic search](.github/prompts/02-add-semantic-search.prompt.md) - Apple embeddings on Apple, a small ONNX model elsewhere.
-3. [Add local chat](.github/prompts/03-add-local-chat.prompt.md) - a grounded, on-device assistant.
-4. [Add assistant actions](.github/prompts/04-add-assistant-actions.prompt.md) - navigation and favourites, with approval.
-5. [Route to the cloud](.github/prompts/05-add-cloud-routing.prompt.md) - optional: send complex questions to a cloud model.
+| # | Prompt | Adds |
+|---|---|---|
+| 01 | [Create the app](.github/prompts/01-create-app.prompt.md) | `dotnet new maui`, then the conference app from the offline data |
+| 02 | [Keyword search](.github/prompts/02-add-keyword-search.prompt.md) | A search box and one small search service |
+| 03 | [Apple embeddings](.github/prompts/03-add-apple-embeddings.prompt.md) | Semantic search on Apple, with an in-memory vector store |
+| 04 | [ONNX embeddings](.github/prompts/04-add-onnx-embeddings.prompt.md) | The same on Android and Windows with a small ONNX model |
+| 05 | [Ingestion](.github/prompts/05-add-ingestion.prompt.md) | A DataIngestion pipeline instead of the indexing loop |
+| 06 | [Enrichment](.github/prompts/06-add-enrichment.prompt.md) | Topics from embeddings and summaries from the local model |
+| 07 | [Local chat](.github/prompts/07-add-local-chat.prompt.md) | An on-device assistant primed with the agenda |
+| 08 | [Chat RAG](.github/prompts/08-add-chat-rag.prompt.md) | Full abstracts via simple RAG middleware |
+| 09 | [Chat tools](.github/prompts/09-add-chat-tools.prompt.md) | Read-only tools the model can call |
+| 10 | [Chat actions](.github/prompts/10-add-chat-actions.prompt.md) | Navigation and favourites, with approval |
+| 11 | [Plan my day](.github/prompts/11-add-plan-my-day.prompt.md) | An Agent Framework workflow |
+| 12 | [Cloud routing](.github/prompts/12-add-cloud-routing.prompt.md) | Optional: send complex questions to a cloud model |
 
 The [Copilot instructions](.github/copilot-instructions.md) provide shared .NET 11, MAUI 11, design, and DevFlow guidance.
 

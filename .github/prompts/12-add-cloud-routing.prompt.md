@@ -4,11 +4,10 @@ description: Send complex questions to a cloud model
 
 Keep simple questions on the device, but send harder ones, like "plan my day around AI and performance talks with no clashes", to a cloud model.
 
-Use the new routing chat clients in `Microsoft.Extensions.AI` (`SemanticRoutingChatClient`, or `RoutingChatClient` with a simple rule). They're experimental, so check the docs first. Ask me which cloud service and model to use.
+Use `SemanticRoutingChatClient` from `Microsoft.Extensions.AI` with the embedding generator we already have. It's experimental, so check the docs first. Ask me which cloud service and model to use.
 
 - Never commit or bundle an API key. For the demo, enter a short-lived key at runtime; without one, stay local.
 - Cloud is opt-in, and show which model answered.
-- Pick the route once per question and keep it through any tool calls and approvals.
 - Keep the same tools and approval rules on both routes, including the Apple setup.
 - No automatic retries for actions that change state.
 
