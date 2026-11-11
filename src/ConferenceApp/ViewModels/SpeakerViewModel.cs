@@ -6,7 +6,7 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakerViewModel(ConferenceService conference) : ObservableObject, IQueryAttributable
+public partial class SpeakerViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject, IQueryAttributable
 {
     public ObservableCollection<Session> Sessions { get; } = [];
 
@@ -18,12 +18,12 @@ public partial class SpeakerViewModel(ConferenceService conference) : Observable
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        Speaker = await conference.GetSpeakerAsync((string)query["id"]);
+        Speaker = await database.GetSpeakerAsync((string)query["id"]);
         if (Speaker is null)
             return;
-        Bio = await conference.GetTextAsync(Speaker.Content);
+        Bio = await database.GetTextAsync(Speaker.Content);
         Sessions.Clear();
-        foreach (var session in await conference.GetSessionsForSpeakerAsync(Speaker.Id))
+        foreach (var session in await database.GetSessionsForSpeakerAsync(preferences.SelectedCityId, Speaker.Id))
             Sessions.Add(session);
     }
 

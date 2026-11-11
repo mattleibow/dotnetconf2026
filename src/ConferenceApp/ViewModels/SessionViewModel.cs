@@ -6,7 +6,7 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SessionViewModel(ConferenceService conference, FavoritesService favorites) : ObservableObject, IQueryAttributable
+public partial class SessionViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject, IQueryAttributable
 {
     public ObservableCollection<Speaker> Speakers { get; } = [];
 
@@ -24,13 +24,13 @@ public partial class SessionViewModel(ConferenceService conference, FavoritesSer
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        Session = await conference.GetSessionAsync((string)query["id"]);
+        Session = await database.GetSessionAsync((string)query["id"]);
         if (Session is null)
             return;
-        Description = await conference.GetTextAsync(Session.Content);
-        IsFavorite = favorites.IsFavorite(Session.Id);
+        Description = await database.GetTextAsync(Session.Content);
+        IsFavorite = preferences.IsFavorite(Session.Id);
         Speakers.Clear();
-        foreach (var speaker in await conference.GetSpeakersForSessionAsync(Session))
+        foreach (var speaker in await database.GetSpeakersForSessionAsync(Session))
             Speakers.Add(speaker);
     }
 
@@ -40,7 +40,7 @@ public partial class SessionViewModel(ConferenceService conference, FavoritesSer
         if (Session is null)
             return;
         IsFavorite = !IsFavorite;
-        favorites.SetFavorite(Session.Id, IsFavorite);
+        preferences.SetFavorite(Session.Id, IsFavorite);
     }
 
     [RelayCommand]

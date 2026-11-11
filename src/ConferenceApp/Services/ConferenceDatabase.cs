@@ -3,24 +3,10 @@ using ConferenceApp.Models;
 
 namespace ConferenceApp.Services;
 
-public class ConferenceService
+public class ConferenceDatabase
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
     private Conference? conference;
-
-    public event EventHandler? CityChanged;
-
-    public string SelectedCityId
-    {
-        get => Preferences.Get("city", "durban");
-        set
-        {
-            if (value == SelectedCityId)
-                return;
-            Preferences.Set("city", value);
-            CityChanged?.Invoke(this, EventArgs.Empty);
-        }
-    }
 
     public async Task<Conference> GetConferenceAsync()
     {
@@ -36,17 +22,17 @@ public class ConferenceService
     public async Task<IReadOnlyList<City>> GetCitiesAsync() =>
         (await GetConferenceAsync()).Cities;
 
-    public async Task<City> GetSelectedCityAsync() =>
-        (await GetConferenceAsync()).Cities.First(c => c.Id == SelectedCityId);
+    public async Task<City> GetCityAsync(string cityId) =>
+        (await GetConferenceAsync()).Cities.First(c => c.Id == cityId);
 
-    public async Task<IReadOnlyList<Session>> GetSessionsAsync() =>
-        [.. (await GetConferenceAsync()).Sessions.Where(s => s.CityId == SelectedCityId).OrderBy(s => s.Start)];
+    public async Task<IReadOnlyList<Session>> GetSessionsAsync(string cityId) =>
+        [.. (await GetConferenceAsync()).Sessions.Where(s => s.CityId == cityId).OrderBy(s => s.Start)];
 
     public async Task<Session?> GetSessionAsync(string id) =>
         (await GetConferenceAsync()).Sessions.FirstOrDefault(s => s.Id == id);
 
-    public async Task<IReadOnlyList<Speaker>> GetSpeakersAsync() =>
-        [.. (await GetConferenceAsync()).Speakers.Where(s => s.CityIds.Contains(SelectedCityId)).OrderBy(s => s.Name)];
+    public async Task<IReadOnlyList<Speaker>> GetSpeakersAsync(string cityId) =>
+        [.. (await GetConferenceAsync()).Speakers.Where(s => s.CityIds.Contains(cityId)).OrderBy(s => s.Name)];
 
     public async Task<Speaker?> GetSpeakerAsync(string id) =>
         (await GetConferenceAsync()).Speakers.FirstOrDefault(s => s.Id == id);
@@ -57,18 +43,18 @@ public class ConferenceService
         return [.. session.SpeakerIds.Select(id => speakers.First(s => s.Id == id))];
     }
 
-    public async Task<IReadOnlyList<Session>> GetSessionsForSpeakerAsync(string speakerId) =>
-        [.. (await GetSessionsAsync()).Where(s => s.SpeakerIds.Contains(speakerId))];
+    public async Task<IReadOnlyList<Session>> GetSessionsForSpeakerAsync(string cityId, string speakerId) =>
+        [.. (await GetSessionsAsync(cityId)).Where(s => s.SpeakerIds.Contains(speakerId))];
 
-    public async Task<Venue> GetVenueAsync()
+    public async Task<Venue> GetVenueAsync(string cityId)
     {
         var data = await GetConferenceAsync();
-        var city = await GetSelectedCityAsync();
+        var city = await GetCityAsync(cityId);
         return data.Venues.First(v => v.Id == city.VenueId);
     }
 
-    public async Task<IReadOnlyList<Sponsor>> GetSponsorsAsync() =>
-        [.. (await GetConferenceAsync()).Sponsors.Where(s => s.CityIds.Contains(SelectedCityId))];
+    public async Task<IReadOnlyList<Sponsor>> GetSponsorsAsync(string cityId) =>
+        [.. (await GetConferenceAsync()).Sponsors.Where(s => s.CityIds.Contains(cityId))];
 
     // Session, speaker and venue descriptions are Markdown files that start with a "# Title" line.
     public async Task<string> GetTextAsync(string path)

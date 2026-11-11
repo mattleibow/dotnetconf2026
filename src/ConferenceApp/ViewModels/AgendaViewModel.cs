@@ -8,7 +8,7 @@ namespace ConferenceApp.ViewModels;
 
 public record SessionItem(Session Session, string Speakers);
 
-public partial class AgendaViewModel(ConferenceService conference) : ObservableObject
+public partial class AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
     public ObservableCollection<City> Cities { get; } = [];
     public ObservableCollection<SessionItem> Sessions { get; } = [];
@@ -18,9 +18,9 @@ public partial class AgendaViewModel(ConferenceService conference) : ObservableO
 
     partial void OnSelectedCityChanged(City? value)
     {
-        if (value is null || value.Id == conference.SelectedCityId)
+        if (value is null || value.Id == preferences.SelectedCityId)
             return;
-        conference.SelectedCityId = value.Id;
+        preferences.SelectedCityId = value.Id;
         _ = LoadSessionsAsync();
     }
 
@@ -29,19 +29,19 @@ public partial class AgendaViewModel(ConferenceService conference) : ObservableO
     {
         if (Cities.Count == 0)
         {
-            foreach (var city in await conference.GetCitiesAsync())
+            foreach (var city in await database.GetCitiesAsync())
                 Cities.Add(city);
         }
-        SelectedCity = await conference.GetSelectedCityAsync();
+        SelectedCity = await database.GetCityAsync(preferences.SelectedCityId);
         await LoadSessionsAsync();
     }
 
     private async Task LoadSessionsAsync()
     {
         Sessions.Clear();
-        foreach (var session in await conference.GetSessionsAsync())
+        foreach (var session in await database.GetSessionsAsync(preferences.SelectedCityId))
         {
-            var speakers = await conference.GetSpeakersForSessionAsync(session);
+            var speakers = await database.GetSpeakersForSessionAsync(session);
             Sessions.Add(new SessionItem(session, string.Join(", ", speakers.Select(s => s.Name))));
         }
     }

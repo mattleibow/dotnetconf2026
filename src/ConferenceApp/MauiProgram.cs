@@ -21,8 +21,8 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
-		builder.Services.AddSingleton<ConferenceService>();
-		builder.Services.AddSingleton<FavoritesService>();
+		builder.Services.AddSingleton<ConferenceDatabase>();
+		builder.Services.AddSingleton<UserPreferencesService>();
 
 		builder.Services.AddTransient<AgendaPage>().AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<SpeakersPage>().AddTransient<SpeakersViewModel>();

@@ -6,7 +6,7 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class VenueViewModel(ConferenceService conference) : ObservableObject
+public partial class VenueViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
     public ObservableCollection<Sponsor> Sponsors { get; } = [];
 
@@ -19,10 +19,11 @@ public partial class VenueViewModel(ConferenceService conference) : ObservableOb
     [RelayCommand]
     private async Task LoadAsync()
     {
-        Venue = await conference.GetVenueAsync();
-        Description = await conference.GetTextAsync(Venue.Content);
+        var cityId = preferences.SelectedCityId;
+        Venue = await database.GetVenueAsync(cityId);
+        Description = await database.GetTextAsync(Venue.Content);
         Sponsors.Clear();
-        foreach (var sponsor in await conference.GetSponsorsAsync())
+        foreach (var sponsor in await database.GetSponsorsAsync(cityId))
             Sponsors.Add(sponsor);
     }
 

@@ -5,7 +5,7 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class FavoritesViewModel(ConferenceService conference, FavoritesService favorites) : ObservableObject
+public partial class FavoritesViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
     public ObservableCollection<SessionItem> Sessions { get; } = [];
 
@@ -13,10 +13,10 @@ public partial class FavoritesViewModel(ConferenceService conference, FavoritesS
     private async Task LoadAsync()
     {
         Sessions.Clear();
-        var ids = favorites.GetFavoriteIds();
-        foreach (var session in (await conference.GetSessionsAsync()).Where(s => ids.Contains(s.Id)))
+        var ids = preferences.GetFavoriteIds();
+        foreach (var session in (await database.GetSessionsAsync(preferences.SelectedCityId)).Where(s => ids.Contains(s.Id)))
         {
-            var speakers = await conference.GetSpeakersForSessionAsync(session);
+            var speakers = await database.GetSpeakersForSessionAsync(session);
             Sessions.Add(new SessionItem(session, string.Join(", ", speakers.Select(s => s.Name))));
         }
     }

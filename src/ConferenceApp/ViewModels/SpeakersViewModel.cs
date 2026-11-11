@@ -6,7 +6,7 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakersViewModel(ConferenceService conference) : ObservableObject
+public partial class SpeakersViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
 {
     public ObservableCollection<Speaker> Speakers { get; } = [];
 
@@ -14,7 +14,7 @@ public partial class SpeakersViewModel(ConferenceService conference) : Observabl
     private async Task LoadAsync()
     {
         Speakers.Clear();
-        foreach (var speaker in await conference.GetSpeakersAsync())
+        foreach (var speaker in await database.GetSpeakersAsync(preferences.SelectedCityId))
             Speakers.Add(speaker);
     }
 
