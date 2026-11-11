@@ -13,15 +13,6 @@
             <Label Text=".NET Conf 2026 South Africa" FontAttributes="Bold" />
             <Label Text="{Binding SelectedCity.Date, StringFormat='{0:D}'}" />
 
-            <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
-            <Label Text="{Binding Venue.Address}" />
-            <Map x:Name="VenueMap"
-                 AutomationId="venue-map"
-                 HeightRequest="240"
-                 IsShowingUser="False" />
-            <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
-            <Label Text="{Binding Description}" />
-
             <Label Text="Sponsors" FontAttributes="Bold" />
             <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
                 <BindableLayout.ItemTemplate>
@@ -37,6 +28,15 @@
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
+
+            <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
+            <Label Text="{Binding Venue.Address}" />
+            <Map x:Name="VenueMap"
+                 AutomationId="venue-map"
+                 HeightRequest="240"
+                 IsShowingUser="False" />
+            <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
+            <Label Text="{Binding Description}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
