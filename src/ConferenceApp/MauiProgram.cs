@@ -28,6 +28,15 @@ public static class MauiProgram
 		builder.Services.AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<AgendaPage>();
 		builder.Services.AddTransient<SessionDetailPage>();
+		builder.Services.AddTransient<SessionDetailViewModel>();
+		builder.Services.AddTransient<SpeakerDetailPage>();
+		builder.Services.AddTransient<SpeakerDetailViewModel>();
+		builder.Services.AddTransient<SpeakersPage>();
+		builder.Services.AddTransient<SpeakersViewModel>();
+		builder.Services.AddTransient<FavoritesPage>();
+		builder.Services.AddTransient<FavoritesViewModel>();
+		builder.Services.AddTransient<VenuePage>();
+		builder.Services.AddTransient<VenueViewModel>();
 		builder.Services.AddSingleton<AppShell>();
 		return builder.Build();
 	}

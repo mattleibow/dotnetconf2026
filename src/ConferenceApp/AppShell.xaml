@@ -2,5 +2,10 @@
        xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
        xmlns:views="clr-namespace:ConferenceApp.Views">
-    <ShellContent Title="Agenda" Route="agenda" ContentTemplate="{DataTemplate views:AgendaPage}" />
+    <TabBar>
+        <ShellContent Title="Agenda" Icon="tab_agenda.png" Route="agenda" ContentTemplate="{DataTemplate views:AgendaPage}" />
+        <ShellContent Title="Speakers" Icon="tab_speakers.png" Route="speakers" ContentTemplate="{DataTemplate views:SpeakersPage}" />
+        <ShellContent Title="Favourites" Icon="tab_favorites.png" Route="favourites" ContentTemplate="{DataTemplate views:FavoritesPage}" />
+        <ShellContent Title="Venue" Icon="tab_venue.png" Route="venue" ContentTemplate="{DataTemplate views:VenuePage}" />
+    </TabBar>
 </Shell>

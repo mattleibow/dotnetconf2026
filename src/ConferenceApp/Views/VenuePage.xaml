@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels" x:Class="ConferenceApp.Views.VenuePage"
+             x:DataType="vm:VenueViewModel" Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Background="{StaticResource BrandGradient}">
+        <VerticalStackLayout Padding="24,28,24,24" Spacing="8" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <Label Text=".NET CONF 2026  •  SOUTH AFRICA" TextColor="White" Style="{StaticResource CaptionText}"/>
+            <Label Text="Venue &amp; sponsors" TextColor="White" Style="{StaticResource DisplayText}"/>
+            <Label Text="{Binding City}" TextColor="White" Style="{StaticResource BodyText}"/>
+        </VerticalStackLayout>
+        </Grid>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Margin="16">
+            <CollectionView ItemsSource="{Binding Sponsors}" AutomationId="sponsors-list">
+                <CollectionView.Header>
+                    <VerticalStackLayout Spacing="12" Padding="0,0,0,16">
+                        <Border Style="{StaticResource Card}" Padding="0">
+                            <VerticalStackLayout Spacing="12" Padding="16">
+                                <Image Source="{Binding Photo}" HeightRequest="200" Aspect="AspectFill" SemanticProperties.Description="Venue photograph"/>
+                                <Label Text="{Binding Name}" Style="{StaticResource TitleText}"/>
+                                <Label Text="{Binding Address}" Style="{StaticResource BodyText}"/>
+                                <Button Text="Open map" Command="{Binding OpenMapCommand}" AutomationId="open-map" HorizontalOptions="Start"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <Label Text="Thanks to our sponsors" Style="{StaticResource TitleText}" Margin="0,16,0,0"/>
+                    </VerticalStackLayout>
+                </CollectionView.Header>
+                <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="2" HorizontalItemSpacing="8" VerticalItemSpacing="8"/></CollectionView.ItemsLayout>
+                <CollectionView.EmptyView><Label Text="No sponsors listed for this city." Margin="16"/></CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SponsorItem">
+                        <Border Style="{StaticResource Card}" BackgroundColor="White">
+                            <VerticalStackLayout Spacing="8">
+                                <Image Source="{Binding Logo}" HeightRequest="80" Aspect="AspectFit" SemanticProperties.Description="{Binding Name}"/>
+                                <Label Text="{Binding Name}" TextColor="Black" Style="{StaticResource SubtitleText}"/>
+                                <Label Text="{Binding Tier}" TextColor="#404040" Style="{StaticResource CaptionText}"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

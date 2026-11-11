@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels" x:Class="ConferenceApp.Views.SpeakersPage"
+             x:DataType="vm:SpeakersViewModel" Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Background="{StaticResource BrandGradient}">
+        <VerticalStackLayout Padding="24,28,24,24" Spacing="8" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <Label Text=".NET CONF 2026  •  SOUTH AFRICA" TextColor="White" Style="{StaticResource CaptionText}"/>
+            <Label Text="Meet the speakers" TextColor="White" Style="{StaticResource DisplayText}"/>
+            <Label Text="{Binding City, StringFormat='Speakers in {0}'}" TextColor="White" Style="{StaticResource BodyText}"/>
+        </VerticalStackLayout>
+        </Grid>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Margin="16">
+            <CollectionView ItemsSource="{Binding Speakers}" AutomationId="speakers-list">
+                <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="1" VerticalItemSpacing="8" HorizontalItemSpacing="8"/></CollectionView.ItemsLayout>
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="Layout">
+                        <VisualState x:Name="Narrow"><VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0"/></VisualState.StateTriggers></VisualState>
+                        <VisualState x:Name="Wide"><VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="800"/></VisualState.StateTriggers>
+                            <VisualState.Setters><Setter Property="ItemsLayout"><Setter.Value><GridItemsLayout Orientation="Vertical" Span="2" VerticalItemSpacing="8" HorizontalItemSpacing="8"/></Setter.Value></Setter></VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+                <CollectionView.EmptyView><Label Text="No speakers found for this city." Margin="16"/></CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SpeakerItem">
+                        <Border Style="{StaticResource Card}" AutomationId="{Binding AutomationId}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}"/></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="64,*" ColumnSpacing="16">
+                                <Grid WidthRequest="64" HeightRequest="64">
+                                    <Border IsVisible="{Binding ShowInitials}" BackgroundColor="{StaticResource BrandSecondary}" StrokeThickness="0" StrokeShape="RoundRectangle 32">
+                                        <Label Text="{Binding Initials}" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" Style="{StaticResource SubtitleText}"/>
+                                    </Border>
+                                    <Image Source="{Binding Photo}" IsVisible="{Binding HasPhoto}" Aspect="AspectFill">
+                                        <Image.Clip><EllipseGeometry Center="32,32" RadiusX="32" RadiusY="32"/></Image.Clip>
+                                    </Image>
+                                </Grid>
+                                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                    <Label Text="{Binding Name}" Style="{StaticResource SubtitleText}"/>
+                                    <Label Text="{Binding Tagline}" Style="{StaticResource BodyText}"/>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

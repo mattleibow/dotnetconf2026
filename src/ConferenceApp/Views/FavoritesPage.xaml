@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels" x:Class="ConferenceApp.Views.FavoritesPage"
+             x:DataType="vm:FavoritesViewModel" Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Grid Background="{StaticResource BrandGradient}">
+        <VerticalStackLayout Padding="24,28,24,24" Spacing="8" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <Label Text=".NET CONF 2026  •  SOUTH AFRICA" TextColor="White" Style="{StaticResource CaptionText}"/>
+            <Label Text="Your favourites" TextColor="White" Style="{StaticResource DisplayText}"/>
+            <Label Text="{Binding City, StringFormat='Saved sessions in {0}'}" TextColor="White" Style="{StaticResource BodyText}"/>
+        </VerticalStackLayout>
+        </Grid>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Margin="16">
+            <CollectionView ItemsSource="{Binding Sessions}" AutomationId="favorites-list">
+                <CollectionView.EmptyView><Label Text="No favourites yet. Save sessions from the agenda to find them here." Margin="16"/></CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SessionItem">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8" AutomationId="{Binding AutomationId}">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}"/></Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Time}" Style="{StaticResource MetadataText}"/>
+                                    <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                                    <Label Text="{Binding Speakers}" Style="{StaticResource BodyText}"/>
+                                    <Label Text="{Binding Track}" Style="{StaticResource CaptionText}"/>
+                                </VerticalStackLayout>
+                                <ImageButton Grid.Column="1" Source="{Binding Heart}" Command="{Binding FavoriteCommand}" AutomationId="{Binding FavoriteAutomationId}"
+                                             WidthRequest="48" HeightRequest="48" Padding="12" VerticalOptions="Center" BackgroundColor="Transparent" SemanticProperties.Description="{Binding FavoriteDescription}"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+        </Grid>
+    </Grid>
+</ContentPage>

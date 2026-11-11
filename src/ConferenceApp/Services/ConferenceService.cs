@@ -40,7 +40,11 @@ public sealed class ConferenceService
     }
 
     public ImageSource? Image(string? path) => path is null ? null :
-        ImageSource.FromStream(() => FileSystem.OpenAppPackageFileAsync($"conference/{path}").GetAwaiter().GetResult());
+        ImageSource.FromStream(async cancellationToken =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return await FileSystem.OpenAppPackageFileAsync($"conference/{path}");
+        });
 
     public bool IsFavorite(string id) => Preferences.Default.Get($"favorite-{id}", false);
 

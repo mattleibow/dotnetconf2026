@@ -13,6 +13,9 @@ public partial class AgendaViewModel(ConferenceService service) : ObservableObje
     [ObservableProperty] public partial string Error { get; set; } = "";
     [ObservableProperty] public partial bool IsBusy { get; set; }
     public ObservableCollection<SessionGroup> Groups { get; } = [];
+    public bool IsDurban => service.CityId == "durban";
+    public bool IsCapeTown => service.CityId == "cape-town";
+    public bool IsBloemfontein => service.CityId == "bloemfontein";
 
     public async Task LoadAsync()
     {
@@ -24,6 +27,9 @@ public partial class AgendaViewModel(ConferenceService service) : ObservableObje
             var city = data.Cities.First(c => c.Id == service.CityId);
             CityName = city.Name;
             Date = city.Date.ToString("dddd, d MMMM yyyy");
+            OnPropertyChanged(nameof(IsDurban));
+            OnPropertyChanged(nameof(IsCapeTown));
+            OnPropertyChanged(nameof(IsBloemfontein));
             Groups.Clear();
             foreach (var group in data.Sessions.Where(s => s.CityId == city.Id).OrderBy(s => s.Start).GroupBy(s => s.Start))
                 Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(s => new SessionItem(s, data, service))));
@@ -56,9 +62,13 @@ public partial class AgendaViewModel(ConferenceService service) : ObservableObje
             service.CityId = cities.MinBy(c => Location.CalculateDistance(location.Latitude, location.Longitude, c.Item2, c.Item3, DistanceUnits.Kilometers)).Item1;
             await LoadAsync();
         }
-        catch (Exception ex) when (ex is PermissionException or FeatureNotEnabledException or FeatureNotSupportedException or TimeoutException)
+        catch (PermissionException)
         {
-            await Shell.Current.DisplayAlertAsync("Location unavailable", "Please choose a city manually.", "OK");
+            await Shell.Current.DisplayAlertAsync("Location unavailable", "Location permission was denied. Please choose a city manually.", "OK");
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Location unavailable", $"Please choose a city manually. {ex.Message}", "OK");
         }
     }
 }
@@ -72,19 +82,26 @@ public partial class SessionItem : ObservableObject
 {
     private readonly Session session;
     private readonly ConferenceService service;
+    private readonly Action<SessionItem>? favoriteChanged;
     public string Title => session.Title;
     public string Time => $"{session.Start:HH:mm} – {session.End:HH:mm}";
     public string Track => session.Track ?? "Main session";
     public string Speakers { get; }
+    public List<SpeakerItem> SpeakerItems { get; }
+    public bool IsGeneral => !IsSession;
     public bool IsSession => session.Kind == "session";
     public string AutomationId => $"session-{session.Id}";
-    public string Heart => service.IsFavorite(session.Id) ? "♥" : "♡";
+    public string FavoriteAutomationId => $"favorite-{session.Id}";
+    public string FavoriteDescription => service.IsFavorite(session.Id) ? $"Remove {session.Title} from favourites" : $"Add {session.Title} to favourites";
+    public string Heart => service.IsFavorite(session.Id) ? "heart_filled.png" : "heart_outline.png";
 
-    public SessionItem(Session session, Conference data, ConferenceService service)
+    public SessionItem(Session session, Conference data, ConferenceService service, Action<SessionItem>? favoriteChanged = null)
     {
         this.session = session;
         this.service = service;
+        this.favoriteChanged = favoriteChanged;
         Speakers = string.Join(", ", data.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => s.Name));
+        SpeakerItems = data.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => new SpeakerItem(s, service)).ToList();
     }
 
     [RelayCommand]
@@ -95,5 +112,7 @@ public partial class SessionItem : ObservableObject
     {
         service.ToggleFavorite(session.Id);
         OnPropertyChanged(nameof(Heart));
+        OnPropertyChanged(nameof(FavoriteDescription));
+        favoriteChanged?.Invoke(this);
     }
 }

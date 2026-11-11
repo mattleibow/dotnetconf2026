@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels" x:Class="ConferenceApp.Views.SpeakerDetailPage"
+             x:DataType="vm:SpeakerDetailViewModel" Title="Speaker"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <ScrollView>
+        <VerticalStackLayout Spacing="0">
+            <Grid Background="{StaticResource BrandGradient}">
+            <Grid Padding="24,32" ColumnDefinitions="96,*" ColumnSpacing="20" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+                <Grid WidthRequest="96" HeightRequest="96">
+                    <Border BackgroundColor="{StaticResource BrandSecondary}" StrokeThickness="0" StrokeShape="RoundRectangle 48">
+                        <Label Text="{Binding Initials}" TextColor="White" HorizontalOptions="Center" VerticalOptions="Center" Style="{StaticResource TitleText}"/>
+                    </Border>
+                    <Image Source="{Binding Photo}" IsVisible="{Binding HasPhoto}" Aspect="AspectFill" SemanticProperties.Description="{Binding Name}">
+                        <Image.Clip><EllipseGeometry Center="48,48" RadiusX="48" RadiusY="48"/></Image.Clip>
+                    </Image>
+                </Grid>
+                <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                    <Label Text=".NET CONF 2026  •  SPEAKER" TextColor="White" Style="{StaticResource CaptionText}"/>
+                    <Label Text="{Binding Name}" TextColor="White" Style="{StaticResource DisplayText}"/>
+                    <Label Text="{Binding Tagline}" TextColor="White" Style="{StaticResource BodyText}"/>
+                    <Label Text="{Binding City}" TextColor="White" Style="{StaticResource CaptionText}"/>
+                </VerticalStackLayout>
+            </Grid>
+            </Grid>
+            <Grid MaximumWidthRequest="1100" HorizontalOptions="Fill" Padding="24,24,24,112" RowDefinitions="Auto,Auto" ColumnDefinitions="*" RowSpacing="24" ColumnSpacing="32">
+                <VisualStateManager.VisualStateGroups>
+                    <VisualStateGroup x:Name="Layout">
+                        <VisualState x:Name="Narrow"><VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="0"/></VisualState.StateTriggers></VisualState>
+                        <VisualState x:Name="Wide"><VisualState.StateTriggers><AdaptiveTrigger MinWindowWidth="800"/></VisualState.StateTriggers>
+                            <VisualState.Setters>
+                                <Setter Property="ColumnDefinitions" Value="2*,*"/>
+                                <Setter TargetName="Talks" Property="Grid.Row" Value="0"/>
+                                <Setter TargetName="Talks" Property="Grid.Column" Value="1"/>
+                            </VisualState.Setters>
+                        </VisualState>
+                    </VisualStateGroup>
+                </VisualStateManager.VisualStateGroups>
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="About" Style="{StaticResource TitleText}"/>
+                    <Label Text="{Binding Bio}" Style="{StaticResource BodyText}"/>
+                    <Label Text="{Binding Error}"/>
+                </VerticalStackLayout>
+                <VerticalStackLayout x:Name="Talks" Grid.Row="1" Spacing="12">
+                    <Label Text="Sessions" Style="{StaticResource TitleText}"/>
+                    <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Sessions}">
+                      <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SessionItem">
+                            <Border Style="{StaticResource Card}" AutomationId="{Binding AutomationId}">
+                                <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}"/></Border.GestureRecognizers>
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Time}" Style="{StaticResource MetadataText}"/>
+                                    <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                                    <Label Text="{Binding Track}" Style="{StaticResource BodyText}"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </DataTemplate>
+                      </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Grid>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
