@@ -64,35 +64,33 @@ public sealed class AssistantService(ConferenceService conferenceService, IServi
 
     public IChatClient? Client => services.GetService<IChatClient>();
 
-    public async Task<ToolSession?> CreateToolSessionAsync(string cityId)
+    public async Task<ToolSession> CreateToolSessionAsync(string cityId)
     {
-#if IOS || MACCATALYST
-        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+        var scope = services.CreateScope();
+        try
         {
-#pragma warning disable MAUIAI0001
-            var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
-            if (status.Capabilities?.Contains(ChatModelCapability.ToolCalling) == true)
+            var tools = scope.ServiceProvider.GetRequiredService<ConferenceTools>();
+            tools.CityId = cityId;
+            IChatClient? client = null;
+#if IOS || MACCATALYST
+            if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
             {
-                var scope = services.CreateScope();
-                try
-                {
-                    var tools = scope.ServiceProvider.GetRequiredService<ConferenceTools>();
-                    tools.CityId = cityId;
-                    var client = new AppleIntelligenceChatClient(
+#pragma warning disable MAUIAI0001
+                var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
+                if (status.Capabilities?.Contains(ChatModelCapability.ToolCalling) == true)
+                    client = new AppleIntelligenceChatClient(
                         loggerFactory: scope.ServiceProvider.GetRequiredService<ILoggerFactory>(),
                         functionInvocationServices: scope.ServiceProvider);
-                    return new ToolSession(scope, client, tools);
-                }
-                catch
-                {
-                    scope.Dispose();
-                    throw;
-                }
-            }
 #pragma warning restore MAUIAI0001
-        }
+            }
 #endif
-        return null;
+            return new ToolSession(scope, client, tools);
+        }
+        catch
+        {
+            scope.Dispose();
+            throw;
+        }
     }
 
     public async Task<(string Instructions, string ConversationKey)> BuildInstructionsAsync(TimeSpan? eventTime = null, bool useTools = false)
@@ -140,13 +138,14 @@ public sealed class AssistantService(ConferenceService conferenceService, IServi
         return (instructions, conversationKey);
     }
 
-    public sealed class ToolSession(IServiceScope scope, IChatClient client, ConferenceTools tools) : IDisposable
+    public sealed class ToolSession(IServiceScope scope, IChatClient? client, ConferenceTools tools) : IDisposable
     {
-        public IChatClient Client { get; } = client;
+        public IChatClient? Client { get; } = client;
         public ConferenceTools Tools { get; } = tools;
+        public IServiceProvider Services => scope.ServiceProvider;
         public void Dispose()
         {
-            Client.Dispose();
+            Client?.Dispose();
             scope.Dispose();
         }
     }

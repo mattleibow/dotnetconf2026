@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AssistantViewModel(AssistantService assistant, DayPlannerService planner, ConferenceService conference, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
+public partial class AssistantViewModel(AssistantService assistant, DayPlannerService planner, CloudRoutingService routing, ConferenceService conference, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
 {
     public FavoriteApproval Approval { get; } = approval;
     private CancellationTokenSource? cancellation;
@@ -23,12 +23,27 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
     [ObservableProperty] public partial bool ShowDebugClock { get; set; }
     [ObservableProperty] public partial bool UseEventTime { get; set; }
     [ObservableProperty] public partial TimeSpan EventTime { get; set; } = new(13, 0, 0);
+    [ObservableProperty] public partial bool CloudEnabled { get; set; }
+    [ObservableProperty] public partial bool ShowCloudSettings { get; set; } = true;
+    [ObservableProperty] public partial string CloudKey { get; set; } = "";
+    [ObservableProperty] public partial string CloudEndpoint { get; set; } = CloudRoutingService.DefaultEndpoint;
+    [ObservableProperty] public partial string CloudModel { get; set; } = CloudRoutingService.DefaultModel;
     public bool CanSend => IsAvailable && !IsBusy && !string.IsNullOrWhiteSpace(Input);
     public bool CanCancel => IsBusy;
 
     partial void OnInputChanged(string value) => OnPropertyChanged(nameof(CanSend));
     partial void OnIsAvailableChanged(bool value) => OnPropertyChanged(nameof(CanSend));
     partial void OnIsBusyChanged(bool value) { OnPropertyChanged(nameof(CanSend)); OnPropertyChanged(nameof(CanCancel)); }
+    partial void OnCloudEnabledChanged(bool value)
+    {
+        if (!value) CloudKey = "";
+        else ShowCloudSettings = true;
+    }
+    public string CloudSettingsButtonText => ShowCloudSettings ? "Hide cloud settings" : "Show cloud settings";
+    partial void OnShowCloudSettingsChanged(bool value) => OnPropertyChanged(nameof(CloudSettingsButtonText));
+
+    [RelayCommand]
+    private void ToggleCloudSettings() => ShowCloudSettings = !ShowCloudSettings;
 
     public async Task CheckAvailabilityAsync()
     {
@@ -61,11 +76,17 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
         Messages.Add(new AssistantMessage("You", question));
         var reply = new AssistantMessage("Assistant", "");
         Messages.Add(reply);
+        var route = "Apple Intelligence (on device)";
+        var useCloud = CloudEnabled && !string.IsNullOrWhiteSpace(CloudKey);
+        using var requestCancellation = CancellationTokenSource.CreateLinkedTokenSource(source.Token);
+        var toolGuard = new ToolErrorGuard(requestCancellation);
         try
         {
             var cityId = conference.CityId;
             using var toolSession = await assistant.CreateToolSessionAsync(cityId);
-            var (instructions, conversationKey) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null, toolSession is not null);
+            if (useCloud && toolSession.Client is null)
+                throw new InvalidOperationException("Cloud routing requires on-device tool support so both models use the same tools.");
+            var (instructions, conversationKey) = await assistant.BuildInstructionsAsync(UseEventTime ? EventTime : null, toolSession.Client is not null);
             if (conference.CityId != cityId)
                 throw new InvalidOperationException("The selected city changed while preparing the answer.");
             source.Token.ThrowIfCancellationRequested();
@@ -78,15 +99,25 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
             if (history.Count >= 2)
                 request.AddRange(history.TakeLast(2));
             request.Add(new ChatMessage(ChatRole.User, question));
-            var options = toolSession is null ? null : new ChatOptions { Tools = [.. ConferenceToolContext.Default.Tools] };
-            await foreach (var update in (toolSession?.Client ?? client).GetStreamingResponseAsync(request, options, source.Token))
+            // Favourite tools perform their own shared approval before changing state.
+            var options = toolSession.Client is null ? null : new ChatOptions
+            {
+                Tools = [.. ConferenceToolContext.Default.Tools.Select(toolGuard.Wrap)],
+                AllowMultipleToolCalls = false
+            };
+            using var routed = useCloud ? routing.Create(toolSession.Client!, toolSession.Services, CloudKey.Trim(), CloudEndpoint.Trim(), CloudModel.Trim(),
+                name => { route = name; reply.Author = name; }) : null;
+            if (!useCloud) reply.Author = route;
+            await foreach (var update in (routed?.Client ?? toolSession.Client ?? client).GetStreamingResponseAsync(request, options, requestCancellation.Token))
             {
                 if (version != conversationVersion) return;
                 reply.Text += update.Text;
             }
+            if (toolGuard.Failed)
+                throw new InvalidOperationException("A tool failed.");
             if (string.IsNullOrWhiteSpace(reply.Text))
-                throw new InvalidOperationException("The on-device model returned an empty response.");
-            if (toolSession is not null)
+                throw new InvalidOperationException("The model returned an empty response.");
+            if (toolSession.Client is not null)
             {
                 var data = await conference.GetConferenceAsync();
                 foreach (var session in toolSession.Tools.ReturnedSessions)
@@ -95,6 +126,12 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
             history.Add(new ChatMessage(ChatRole.User, question));
             history.Add(new ChatMessage(ChatRole.Assistant, reply.Text));
         }
+        catch (Exception) when (toolGuard.Failed && !source.IsCancellationRequested)
+        {
+            logger.LogWarning("A conference tool failed; the request was stopped.");
+            if (version == conversationVersion)
+                reply.Text = "A tool couldn't complete the request. The assistant stopped without retrying.";
+        }
         catch (OperationCanceledException) when (source.IsCancellationRequested)
         {
             if (version == conversationVersion)
@@ -102,9 +139,14 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "On-device chat failed.");
+            if (useCloud)
+                logger.LogWarning("Cloud chat failed; the request was not retried.");
+            else
+                logger.LogWarning(ex, "Assistant chat failed.");
             if (version == conversationVersion)
-                reply.Text = "Sorry, the on-device model couldn't answer. Please try again.";
+                reply.Text = route.StartsWith("GitHub Models:", StringComparison.Ordinal)
+                    ? "The cloud model couldn't answer. Check the endpoint, model, key, and connection. Nothing was retried."
+                    : "The assistant couldn't answer. Check the on-device model and cloud settings, then try again.";
         }
         finally
         {
@@ -209,9 +251,10 @@ public partial class AssistantViewModel(AssistantService assistant, DayPlannerSe
 
 public partial class AssistantMessage(string author, string text) : ObservableObject
 {
-    public string Author { get; } = author;
+    [ObservableProperty] public partial string Author { get; set; } = author;
     public ObservableCollection<SessionItem> Sessions { get; } = [];
     [ObservableProperty] public partial string Text { get; set; } = text;
     public bool IsVisible => Author != "Assistant" || !string.IsNullOrEmpty(Text);
     partial void OnTextChanged(string value) => OnPropertyChanged(nameof(IsVisible));
+    partial void OnAuthorChanged(string value) => OnPropertyChanged(nameof(IsVisible));
 }

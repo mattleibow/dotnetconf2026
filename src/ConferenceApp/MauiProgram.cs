@@ -62,6 +62,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<FavoriteApproval>();
 		builder.Services.AddScoped<ConferenceTools>();
 		builder.Services.AddSingleton<AssistantService>();
+		builder.Services.AddSingleton<CloudRoutingService>();
 		builder.Services.AddSingleton<DayPlannerService>();
 		builder.Services.AddSingleton<AssistantViewModel>();
 		builder.Services.AddTransient<AssistantPage>();

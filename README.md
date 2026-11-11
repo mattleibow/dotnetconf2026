@@ -48,6 +48,7 @@ Tips:
 - Commit after each step, so you can go back if a step goes wrong.
 - Start each step in a fresh agent session; the prompts are written to stand alone.
 - The AI packages are experimental. If a step fails because an API changed, tell the agent to check the linked docs.
+- After step 12, enable cloud routing in Assistant and enter a short-lived GitHub Models key at runtime. The endpoint and model are editable; turning cloud off clears the key. Without a key, questions stay on device. The separate **Plan my day** button continues to run its on-device workflow; use **Send** for semantically routed questions.
 
 ## Refreshing the data and model
 

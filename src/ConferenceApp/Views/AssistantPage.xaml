@@ -13,7 +13,7 @@
                 <Button Grid.Column="1" Text="New chat" Command="{Binding NewChatCommand}" AutomationId="assistant-new-chat" VerticalOptions="Center"/>
             </Grid>
         </Grid>
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="16" MaximumWidthRequest="800" HorizontalOptions="Fill" RowSpacing="8">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" Margin="16" MaximumWidthRequest="800" HorizontalOptions="Fill" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="{Binding Notice}" Style="{StaticResource BodyText}" AutomationId="assistant-status" VerticalOptions="Center"/>
                 <Button x:Name="DebugClockButton" Grid.Column="1" Text="Debug clock" Command="{Binding ToggleDebugClockCommand}" AutomationId="assistant-clock" IsVisible="False"/>
@@ -24,7 +24,22 @@
                 <TimePicker Time="{Binding EventTime}" AutomationId="assistant-clock-time"/>
             </HorizontalStackLayout>
             <Label Grid.Row="2" Text="Debug: simulating event-day time" IsVisible="{Binding UseEventTime}" Style="{StaticResource MetadataText}" AutomationId="assistant-clock-active"/>
-            <CollectionView x:Name="MessageList" Grid.Row="3" ItemsSource="{Binding Messages}" ItemsUpdatingScrollMode="KeepLastItemInView" AutomationId="assistant-messages">
+            <VerticalStackLayout Grid.Row="3" Spacing="4">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="Allow cloud for complex questions" Style="{StaticResource BodyText}" VerticalOptions="Center"/>
+                    <Switch IsToggled="{Binding CloudEnabled}" AutomationId="assistant-cloud-enabled" SemanticProperties.Description="Allow cloud for complex questions"/>
+                </HorizontalStackLayout>
+                <VerticalStackLayout IsVisible="{Binding CloudEnabled}" Spacing="4">
+                    <Button Text="{Binding CloudSettingsButtonText}" Command="{Binding ToggleCloudSettingsCommand}" AutomationId="assistant-cloud-settings" HorizontalOptions="Start"/>
+                    <VerticalStackLayout IsVisible="{Binding ShowCloudSettings}" Spacing="4">
+                        <Label Text="Questions and tool results may be sent to the cloud. The key stays in memory only; without one, answers stay on device." Style="{StaticResource CaptionText}"/>
+                        <Entry Placeholder="Short-lived GitHub Models key" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" IsPassword="True" Text="{Binding CloudKey}" AutomationId="assistant-cloud-key" SemanticProperties.Description="Short-lived GitHub Models key"/>
+                        <Entry Placeholder="HTTPS endpoint" Text="{Binding CloudEndpoint}" AutomationId="assistant-cloud-endpoint" SemanticProperties.Description="Cloud HTTPS endpoint"/>
+                        <Entry Placeholder="Model" Text="{Binding CloudModel}" AutomationId="assistant-cloud-model" SemanticProperties.Description="Cloud model"/>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+            <CollectionView x:Name="MessageList" Grid.Row="4" ItemsSource="{Binding Messages}" ItemsUpdatingScrollMode="KeepLastItemInView" AutomationId="assistant-messages">
                 <CollectionView.EmptyView>
                     <Border Style="{StaticResource Card}">
                         <VerticalStackLayout Spacing="8">
@@ -64,7 +79,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <Border Grid.Row="4" Style="{StaticResource Card}" Stroke="{StaticResource BrandGradient}" StrokeThickness="2"
+            <Border Grid.Row="5" Style="{StaticResource Card}" Stroke="{StaticResource BrandGradient}" StrokeThickness="2"
                     IsVisible="{Binding Approval.IsPending}" AutomationId="favorite-approval-card">
                 <VerticalStackLayout Spacing="8">
                     <Label Text="Approval required" Style="{StaticResource SubtitleText}"/>
@@ -79,7 +94,7 @@
                     </HorizontalStackLayout>
                 </VerticalStackLayout>
             </Border>
-            <Grid Grid.Row="5" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+            <Grid Grid.Row="6" RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8" RowSpacing="8">
                 <Entry Placeholder="Ask a question or describe your day" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" Text="{Binding Input}" IsEnabled="{Binding IsAvailable}" AutomationId="assistant-input" ReturnCommand="{Binding SendCommand}" SemanticProperties.Description="Ask a question or describe your interests and departure time"/>
                 <Button Grid.Column="1" Text="Send" Command="{Binding SendCommand}" IsEnabled="{Binding CanSend}" AutomationId="assistant-send"/>
                 <Button Grid.Column="2" Text="Stop" Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" AutomationId="assistant-stop"/>
