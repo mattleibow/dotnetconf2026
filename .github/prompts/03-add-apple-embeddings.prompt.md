@@ -12,6 +12,6 @@ Make search understand meaning, not just words: "making my app faster" should fi
 These packages are new or preview, so check the docs first:
 
 - [Microsoft.Maui.Essentials.AI](https://github.com/dotnet/maui-labs/blob/main/src/AI/Microsoft.Maui.Essentials.AI/README.md)
-- [CommunityToolkit AI](https://github.com/CommunityToolkit/AI)
+- [Vector stores in .NET](https://learn.microsoft.com/dotnet/ai/vector-stores/overview) (the toolkit's in-memory store implements these APIs)
 
 Use DevFlow on Mac Catalyst or iOS to try "making my app faster", a speaker's name, and a query with no results.
