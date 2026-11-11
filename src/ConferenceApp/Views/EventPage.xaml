@@ -14,10 +14,7 @@
     <ScrollView>
         <VerticalStackLayout Padding="10" Spacing="10">
             <Label Text=".NET Conf 2026 South Africa" FontAttributes="Bold" />
-            <Button AutomationId="event-city-button"
-                    Text="{Binding SelectedCity.Name, StringFormat='City: {0}', FallbackValue='Select City'}"
-                    Command="{Binding PickCityCommand}"
-                    HorizontalOptions="Start" />
+            <Label Text="{Binding SelectedCity.Date, StringFormat='{0:D}'}" />
 
             <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
             <Label Text="{Binding Venue.Address}" />

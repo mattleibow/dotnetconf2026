@@ -162,8 +162,8 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 ## Components
 
 ### Event Page, Hero Header & City Switcher
-- **Event Page (Tab 1):** Starts with the 135° `Primary`-to-`Accent` hero banner displaying `.NET Conf 2026 South Africa` in `Display`, the selected city and date in `Label`, and the three city pill chips (**Durban**, **Cape Town**, **Bloemfontein**) directly underneath, followed by the Venue section (venue photo, name, address, description, embedded native `Map` with pin, and "Open in Maps" button) and the Sponsors section (logos centred on white tiles grouped by tier).
-- **Global City Pill:** Every tab (Event, Agenda, Speakers, Assistant) also exposes a city switcher pill or toolbar item in the top corner showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet so users can see and switch the active city from anywhere in the app.
+- **Event Page (Tab 1):** Starts with the 135° `Primary`-to-`Accent` hero banner displaying `.NET Conf 2026 South Africa` in `Display` and the selected city and date in `Label`, followed by the Venue section (venue photo, name, address, description, embedded native `Map` with pin, and "Open in Maps" button) and the Sponsors section (logos centred on white tiles grouped by tier).
+- **Global City Switcher:** Every tab (Event, Agenda, Speakers, Assistant) exposes the city switcher in the top-right toolbar showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet—do not put a second city picker inside the page body.
 
 ### Agenda & Session Cards
 - **Agenda Filter:** Segmented pill toggle at the top of Agenda switching between **All Sessions** and **Favourites** (`AutomationId="favorites-filter"`).
