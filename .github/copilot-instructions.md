@@ -92,14 +92,27 @@ The .NET Conf 2026 brand, from the event website:
 
 - Give interactive and important elements a stable, kebab-case `AutomationId`, such as `session-list`, `favorite-button`, and `sponsors-tab`.
 - Make list items tappable with a tap gesture or command on the item, and give each item a stable `AutomationId`; `CollectionView` selection is awkward to drive from automation.
-- Build one target framework at a time (`dotnet build -f net11.0-maccatalyst`, then run). Parallel builds of different target frameworks share `obj/` and corrupt each other. Build before `-t:Run`; `-t:Run` on its own may launch a stale or missing app.
-- If a simulator screenshot shows the wrong device or the home screen, use `xcrun simctl io <UDID> screenshot <file>` for the simulator running your app.
-- When driving the app with the `maui devflow` CLI, prefer `batch` for several steps and pass the agent port explicitly; separate concurrent CLI calls can conflict. The broker may list agents from other apps, so pick yours by app name and process.
-- After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a wide desktop window (Mac Catalyst at about 1200 px wide). Fix what you see; don't stop at "it compiles."
-- **Design review.** When a screen is done, take phone and desktop screenshots and ask a second reviewer to critique them: a rubber-duck or code-review sub-agent, ideally on a stronger model than the one building. Give it the screenshots, the style guide above, and what the screen is for. Ask for the top issues in functionality, layout, visual polish and accessibility, then fix the ones that matter. One review round per screen is enough.
+- Work in small loops on Mac Catalyst: change, build, run, check. Build iOS and Android once at the end. Don't re-check the SDK, workloads or Xcode unless a build fails.
+- Build one target framework at a time; parallel builds share `obj/` and corrupt each other. A fresh worktree has no `obj/`, so don't use `--no-restore` on its first build.
+- Run the Mac app with `dotnet build -f net11.0-maccatalyst -t:Run` after a normal build (`-t:Run` alone may launch a stale app). For iOS, install the `.app` from `bin/Debug/net11.0-ios/iossimulator-arm64/` on an already booted simulator with `xcrun simctl install` and `launch`.
+- Drive the app with `maui devflow` without reading `--help` first. Find your app and its agent port with `maui devflow list` (match the app name and process; other apps may be listed), then pipe steps to `batch`:
+
+  ```bash
+  printf '%s\n' \
+    'MAUI navigate //agenda' \
+    'MAUI fill --automationId agenda-search maui' \
+    'MAUI tap --automationId session-card-1' \
+    'MAUI query --automationId session-title --format compact' \
+    'MAUI tree --depth 3' \
+    'MAUI screenshot --output files/agenda.png' \
+    | maui devflow batch --agent-port <port> --delay 500
+  ```
+
+  `maui devflow ui resize <width> <height>` sets the desktop window size, and `maui devflow logs --agent-port <port> --limit 50` shows app logs. Keep `query` and `tree` output small with `--format compact` and `--depth`. If a simulator screenshot shows the wrong device, use `xcrun simctl io <UDID> screenshot <file>`.
+- Check what you changed, not everything: run the steps in the prompt, take a phone and a desktop screenshot of the changed screens, and look at them yourself. Fix anything broken, clipped or off-brand. A second reviewer isn't needed unless I ask for one.
 - Apple's on-device model is small: keep structured-output types flat with no nullable properties (use an empty string instead), and keep tool sets small with clearly distinct names.
 - Reuse a booted simulator instead of creating new ones. When you're done, quit the apps you launched and shut down any simulator you booted, so the machine isn't left full of running copies.
-- Verify SDK/workload/Xcode compatibility before a long build. Don't change shared toolchain settings or install workloads without approval. If device or model execution is blocked, report the blocker and what remains unverified; don't claim success or retry indefinitely.
+- Don't change shared toolchain settings or install workloads without approval. If device or model execution is blocked, report the blocker and what remains unverified; don't claim success or retry indefinitely.
 - Use available skills when relevant:
   - **dotnet-maui**: `dotnet-maui-doctor`, `maui-shell-navigation`, `maui-collectionview`, `maui-data-binding`, `maui-theming`, `maui-safe-area`, `maui-dependency-injection`, and `maui-app-lifecycle`.
   - **MAUI DevFlow**: `maui-devflow-onboard` and `maui-devflow-debug`.
