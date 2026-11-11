@@ -75,6 +75,7 @@
 		<PackageReference Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
 		<PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.28.0" />
 		<PackageReference Include="Microsoft.Agents.AI.Workflows.Generators" Version="1.28.0" />
+		<PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="11.0.0" />
 		<PackageReference Include="Microsoft.Extensions.DataIngestion" Version="11.0.0-preview.1.26560.3" />
 		<PackageReference Include="Microsoft.Extensions.DataIngestion.Markdig" Version="11.0.0-preview.1.26560.3" />
 		<PackageReference Include="Microsoft.Maui.AI.Attributes" Version="0.1.0-preview.14.26555.2" />
@@ -84,6 +85,7 @@
 		<PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.12.26421.1" Condition="'$(Configuration)' == 'Debug'" />
 		<PackageReference Include="Microsoft.Maui.Essentials.AI" Version="11.0.0-preview.8.26555.2" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'" />
+		<PackageReference Include="OpenAI" Version="2.15.0" />
 	</ItemGroup>
 
 </Project>

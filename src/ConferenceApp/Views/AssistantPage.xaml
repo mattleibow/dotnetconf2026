@@ -9,13 +9,25 @@
             <Grid ColumnDefinitions="*,Auto" MaximumWidthRequest="1100" ColumnSpacing="12">
                 <VerticalStackLayout Spacing="4">
                     <Label Text="Conference assistant" Style="{StaticResource HeaderTitle}" />
-                    <Label Text="Answers stay on your device" Style="{StaticResource HeaderText}" />
+                    <Label Text="On-device by default · cloud is optional" Style="{StaticResource HeaderText}" />
                 </VerticalStackLayout>
                 <Button Grid.Column="1" Text="New chat" Style="{StaticResource CityButton}" AutomationId="assistant-new-chat" Command="{Binding NewChatCommand}" />
             </Grid>
         </Border>
         <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Padding="16" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
-            <Label Text="{Binding Status}" AutomationId="assistant-status" Style="{StaticResource SearchMatchText}" />
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding Status}" AutomationId="assistant-status" Style="{StaticResource SearchMatchText}" />
+                <Button Text="{Binding CloudSettingsLabel}" AutomationId="assistant-cloud-settings" Style="{StaticResource SecondaryButton}" HorizontalOptions="Start" Command="{Binding ToggleCloudSettingsCommand}" />
+                <VerticalStackLayout IsVisible="{Binding ShowCloudSettings}" Spacing="4">
+                    <Label Text="{Binding CloudStatus}" AutomationId="assistant-cloud-status" Style="{StaticResource SearchMatchText}" />
+                    <VerticalStackLayout IsVisible="{Binding IsCloudDisabled}" Spacing="4">
+                        <Label Text="Short-lived GitHub Models key" Style="{StaticResource SearchMatchText}" />
+                        <Entry Placeholder="Enter key" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}" IsPassword="True" IsSpellCheckEnabled="False" IsTextPredictionEnabled="False" AutomationId="assistant-cloud-key" SemanticProperties.Description="Short-lived GitHub Models key, kept in memory only" Text="{Binding CloudKey}" />
+                        <Button Text="Enable cloud" AutomationId="assistant-cloud-enable" Command="{Binding EnableCloudCommand}" />
+                    </VerticalStackLayout>
+                    <Button Text="Turn off cloud" IsVisible="{Binding IsCloudEnabled}" HorizontalOptions="Start" AutomationId="assistant-cloud-disable" Command="{Binding DisableCloudCommand}" />
+                </VerticalStackLayout>
+            </VerticalStackLayout>
             <HorizontalStackLayout Grid.Row="1" IsVisible="{Binding IsDebug}" Spacing="8">
                 <Switch AutomationId="assistant-simulated-time-enabled" IsToggled="{Binding UseSimulatedTime}" SemanticProperties.Description="Use a simulated time on event day" />
                 <Label Text="Debug: event day time" VerticalOptions="Center" />

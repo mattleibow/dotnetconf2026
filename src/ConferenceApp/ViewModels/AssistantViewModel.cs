@@ -17,15 +17,65 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
     [ObservableProperty] public partial string Input { get; set; } = "";
     [ObservableProperty] public partial string Status { get; set; } = "Checking the on-device model...";
     [ObservableProperty] public partial bool IsAvailable { get; set; }
-    [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EnableCloudCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DisableCloudCommand))]
+    public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial bool ShowCloudSettings { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCloudDisabled))]
+    [NotifyPropertyChangedFor(nameof(CloudSettingsLabel))]
+    [NotifyCanExecuteChangedFor(nameof(EnableCloudCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DisableCloudCommand))]
+    public partial bool IsCloudEnabled { get; set; }
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(EnableCloudCommand))]
+    public partial string CloudKey { get; set; } = "";
+    [ObservableProperty] public partial string CloudStatus { get; set; } = "Cloud is off. If enabled, complex questions, recent chat, conference data and favourites may be sent to GitHub.";
     [ObservableProperty] public partial bool UseSimulatedTime { get; set; }
     [ObservableProperty] public partial TimeSpan SimulatedTime { get; set; } = new(13, 0, 0);
     public ObservableCollection<AssistantMessage> Messages { get; } = [];
+    public bool IsCloudDisabled => !IsCloudEnabled;
+    public string CloudSettingsLabel => IsCloudEnabled ? "Cloud settings · On" : "Cloud settings · Off";
 #if DEBUG
     public bool IsDebug => true;
 #else
     public bool IsDebug => false;
 #endif
+
+    [RelayCommand]
+    private void ToggleCloudSettings() => ShowCloudSettings = !ShowCloudSettings;
+
+    private bool CanEnableCloud() => !IsBusy && !IsCloudEnabled && !string.IsNullOrWhiteSpace(CloudKey);
+    private bool CanDisableCloud() => !IsBusy && IsCloudEnabled;
+
+    [RelayCommand(CanExecute = nameof(CanEnableCloud))]
+    private void EnableCloud()
+    {
+        if (IsBusy || string.IsNullOrWhiteSpace(CloudKey))
+        {
+            CloudStatus = "Enter a short-lived key to enable cloud routing.";
+            return;
+        }
+        assistant.ConfigureCloud(CloudKey);
+        CloudKey = "";
+        IsCloudEnabled = assistant.CloudEnabled;
+        CloudStatus = IsCloudEnabled
+            ? $"Cloud routing is on · GitHub Models · {AssistantService.CloudModel}. Simple questions stay on-device; complex questions, recent chat, conference data and favourites may be sent to GitHub."
+            : "Cloud routing isn't available on this platform.";
+        ShowCloudSettings = !IsCloudEnabled;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDisableCloud))]
+    private void DisableCloud()
+    {
+        if (IsBusy)
+            return;
+        assistant.ConfigureCloud(null);
+        CloudKey = "";
+        IsCloudEnabled = false;
+        CloudStatus = "Cloud is off. If enabled, complex questions, recent chat, conference data and favourites may be sent to GitHub.";
+    }
 
     public async Task CheckAvailabilityAsync()
     {
@@ -62,6 +112,18 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
         Messages.Add(new AssistantMessage("You", question));
         var answer = new AssistantMessage("Assistant", "Thinking...");
         Messages.Add(answer);
+        string? selectedModel = null;
+        var responseComplete = false;
+        void SelectedModel(string model)
+        {
+            selectedModel = model;
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                if (!responseComplete)
+                    answer.Role = $"Routing · {model}";
+            });
+        }
+        assistant.ModelSelected += SelectedModel;
         var hasResponseText = false;
         void ApprovalChanged(object? sender, PropertyChangedEventArgs args)
         {
@@ -78,6 +140,8 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
             await foreach (var update in assistant.StreamAsync(prompt, request.Token))
             {
                 request.Token.ThrowIfCancellationRequested();
+                if (update.Contents.Any(content => content is ToolApprovalRequestContent or FunctionCallContent))
+                    logger.LogWarning("Assistant returned an unhandled tool or approval request.");
                 if (!string.IsNullOrEmpty(update.Text))
                 {
                     if (!hasResponseText)
@@ -90,6 +154,9 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
             answer.Text = Approval.GetResults() ?? answer.Text;
             if (!hasResponseText && Approval.GetResults() is null)
                 throw new InvalidOperationException("The model returned an empty response.");
+            responseComplete = true;
+            if (selectedModel is not null)
+                answer.Role = $"Assistant · {selectedModel}";
             var mentioned = await assistant.FindMentionedSessionsAsync(answer.Text, requestCityId);
             request.Token.ThrowIfCancellationRequested();
             foreach (var session in mentioned)
@@ -108,14 +175,15 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "On-device assistant request failed.");
+            logger.LogWarning(ex, "Assistant request failed.");
             answer.Text = Approval.GetResults() is { } result
                 ? result + "\n\nThe assistant couldn't finish its response."
-                : "Sorry, I couldn't answer on this device. Please try again.";
+                : "Sorry, the selected model couldn't answer. Please try again.";
         }
         finally
         {
             Approval.PropertyChanged -= ApprovalChanged;
+            assistant.ModelSelected -= SelectedModel;
             if (currentRequest == request)
             {
                 currentRequest = null;
@@ -205,7 +273,7 @@ public sealed partial class AssistantViewModel(AssistantService assistant, DayPl
 
 public sealed partial class AssistantMessage(string role, string text) : ObservableObject
 {
-    public string Role { get; } = role;
+    [ObservableProperty] public partial string Role { get; set; } = role;
     [ObservableProperty] public partial string Text { get; set; } = text;
     public ObservableCollection<AssistantSessionLink> Sessions { get; } = [];
 }

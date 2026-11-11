@@ -1,7 +1,10 @@
 using System.Text;
+using System.ClientModel;
+using System.ClientModel.Primitives;
 using ConferenceApp.Models;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
+using OpenAI;
 #if IOS || MACCATALYST
 using Microsoft.Maui.Essentials.AI;
 #endif
@@ -10,6 +13,9 @@ namespace ConferenceApp.Services;
 
 public sealed class AssistantService(ConferenceService data, CityService city, FavoritesService favorites, SessionSearchService search, IServiceProvider services)
 {
+    public const string CloudModel = "openai/gpt-4.1-mini";
+    public const string CloudEndpoint = "https://models.github.ai/inference";
+    public event Action<string>? ModelSelected;
     public string SelectedCityId => city.SelectedId;
     public async Task<string> GetCityLabelAsync()
     {
@@ -18,6 +24,80 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
     }
 #if IOS || MACCATALYST
     private IChatClient? client;
+    private IChatClient? localClient;
+    private IChatClient? router;
+    private IChatClient? routedClient;
+    private IChatClient? cloudClient;
+#endif
+    public bool CloudEnabled { get; private set; }
+
+    public void ConfigureCloud(string? key)
+    {
+#if IOS || MACCATALYST
+        router?.Dispose();
+        router = null;
+        routedClient = null;
+        cloudClient?.Dispose();
+        cloudClient = null;
+        CloudEnabled = !string.IsNullOrWhiteSpace(key);
+        if (!CloudEnabled)
+            return;
+
+        var sdk = new OpenAIClient(new ApiKeyCredential(key!.Trim()), new OpenAIClientOptions
+        {
+            Endpoint = new Uri(CloudEndpoint),
+            RetryPolicy = new ClientRetryPolicy(0)
+        });
+        var cloud = sdk.GetChatClient(CloudModel).AsIChatClient().AsBuilder()
+            .Use(async (messages, options, next, cancellationToken) =>
+            {
+                ModelSelected?.Invoke($"GitHub Models · {CloudModel}");
+                await next(messages, options, cancellationToken);
+            })
+            .ConfigureOptions(options =>
+            {
+                // These two generated tools enforce approval inside ConferenceTools on both routes.
+                options.Tools = AssistantTools.Default.Tools.Select(tool =>
+                    tool is ApprovalRequiredAIFunction required &&
+                    required.Name is "add_favourite" or "remove_favourite"
+                        ? new AppApprovedFunction(required) : tool).ToList();
+                options.AllowMultipleToolCalls = false;
+            })
+            .UseFunctionInvocation(configure: invocation => invocation.MaximumConsecutiveErrorsPerRequest = 1)
+            .Build(services);
+        cloudClient = cloud;
+        var local = GetLocalClient();
+#pragma warning disable MEAI001
+        router = new SemanticRoutingChatClient(
+            services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
+            new Dictionary<IChatClient, IReadOnlyList<string>>
+            {
+                [local] = ["What time does the event start?", "Who is speaking?", "Where is the venue?", "What sessions are after lunch?", "Show my favourites."],
+                [cloud] = ["Plan my day around AI agents and data talks with no clashes", "Create a schedule with no overlapping talks for my interests", "Compare several sessions and make a detailed itinerary", "Plan a full day of talks with constraints and add a session to my favourites", "Build an agenda that balances multiple topics and avoids conflicts"]
+            },
+            defaultClient: local, scoreThreshold: 0.3f, leaveOpen: true);
+#pragma warning restore MEAI001
+        routedClient = CreatePreparedClient(router);
+#else
+        CloudEnabled = false;
+#endif
+    }
+
+#if IOS || MACCATALYST
+    // The function itself prompts through FavoriteApproval; avoid a second middleware approval protocol.
+    private sealed class AppApprovedFunction(AIFunction inner) : DelegatingAIFunction(inner)
+    {
+        public override object? GetService(Type serviceType, object? serviceKey = null) =>
+            serviceType == typeof(ApprovalRequiredAIFunction) ? null : base.GetService(serviceType, serviceKey);
+    }
+
+    private IChatClient GetLocalClient() => localClient ??= services.GetRequiredService<IChatClient>().AsBuilder()
+        .Use(async (messages, options, next, cancellationToken) =>
+        {
+            ModelSelected?.Invoke("Apple Intelligence · on-device");
+            await next(messages, options, cancellationToken);
+        })
+        .Build();
 #endif
 
     public async Task<string?> GetUnavailableReasonAsync()
@@ -29,7 +109,20 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
         var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
         if (status.Availability != ChatModelAvailability.Available)
             return "The on-device model isn't ready. Check Apple Intelligence in your device settings and try again.";
-        client ??= new ChatClientBuilder(services.GetRequiredService<IChatClient>())
+        client ??= CreatePreparedClient(GetLocalClient());
+#pragma warning restore MAUIAI0001
+        return null;
+#else
+        _ = services;
+        _ = search;
+        await Task.CompletedTask;
+        return "On-device chat isn't available on this platform yet. Your conference data stays on this device.";
+#endif
+    }
+
+#if IOS || MACCATALYST
+    private IChatClient CreatePreparedClient(IChatClient inner) =>
+        new ChatClientBuilder(inner)
             .ConfigureOptions(options => options.Tools = [.. AssistantTools.Default.Tools])
             .Use(async (messages, options, next, cancellationToken) =>
             {
@@ -55,15 +148,7 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
                 await next(prompt, options, cancellationToken);
             })
             .Build();
-#pragma warning restore MAUIAI0001
-        return null;
-#else
-        _ = services;
-        _ = search;
-        await Task.CompletedTask;
-        return "On-device chat isn't available on this platform yet. Your conference data stays on this device.";
 #endif
-    }
 
     public async Task<string> BuildInstructionsAsync(TimeSpan? simulatedTime = null)
     {
@@ -114,7 +199,8 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
     public IAsyncEnumerable<ChatResponseUpdate> StreamAsync(IEnumerable<ChatMessage> messages, CancellationToken cancellationToken)
     {
 #if IOS || MACCATALYST
-        return (client ?? throw new InvalidOperationException("The on-device model is unavailable."))
+        var prepared = routedClient ?? client ?? throw new InvalidOperationException("The on-device model is unavailable.");
+        return prepared
             .GetStreamingResponseAsync(messages, cancellationToken: cancellationToken);
 #else
         throw new PlatformNotSupportedException("On-device chat is unavailable on this platform.");
