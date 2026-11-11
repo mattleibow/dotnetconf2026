@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="ConferenceApp.Views.SpeakersPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             xmlns:m="clr-namespace:ConferenceApp.Models"
+             x:DataType="vm:SpeakersViewModel"
+             Title="Speakers">
+    <CollectionView AutomationId="speaker-list" Margin="10" ItemsSource="{Binding Speakers}">
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="m:Speaker">
+                <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{Binding Id, StringFormat='speaker-{0}'}">
+                    <Label Text="{Binding Name}" FontAttributes="Bold" />
+                    <Label Text="{Binding Tagline}" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding BindingContext.OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                                              CommandParameter="{Binding .}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentPage>

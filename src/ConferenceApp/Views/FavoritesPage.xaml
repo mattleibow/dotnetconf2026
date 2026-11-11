@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="ConferenceApp.Views.FavoritesPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:FavoritesViewModel"
+             Title="Favourites">
+    <CollectionView AutomationId="favorite-list" Margin="10" ItemsSource="{Binding Sessions}">
+        <CollectionView.EmptyView>
+            <Label Text="No favourites yet." />
+        </CollectionView.EmptyView>
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="vm:SessionItem">
+                <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='favorite-{0}'}">
+                    <Label Text="{Binding Session.Time}" />
+                    <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
+                    <Label Text="{Binding Speakers}" />
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding BindingContext.OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                                              CommandParameter="{Binding .}" />
+                    </VerticalStackLayout.GestureRecognizers>
+                </VerticalStackLayout>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentPage>
