@@ -28,9 +28,8 @@ There's no app code yet. You create it.
   copilot plugin marketplace add dotnet/maui-labs
   copilot plugin install dotnet-maui@dotnet-maui-labs
   copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
-  copilot plugin marketplace add dotnet/skills
-  copilot plugin install dotnet-maui@dotnet-agent-skills
-  copilot plugin install dotnet11@dotnet-agent-skills
+  copilot plugin install dotnet/skills:plugins/dotnet
+  copilot plugin install dotnet/skills:plugins/dotnet-maui
   ```
 - **For on-device AI** (steps 03 and 06 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
 

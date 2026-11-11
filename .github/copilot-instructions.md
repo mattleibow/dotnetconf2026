@@ -51,7 +51,7 @@ Follow [`docs/design.md`](../docs/design.md) for colours, type, spacing, compone
 Use the installed skills rather than guessing. Load the ones that match the task before writing code:
 
 - **MAUI Labs** ([dotnet/maui-labs](https://github.com/dotnet/maui-labs)): `maui-project-structure`, `maui-app-architecture`, `maui-ui-patterns`, `maui-localization-theming`, `maui-accessibility`, `maui-current-apis`, `maui-app-assets-lifecycle`, `maui-device-capabilities`; DevFlow: `maui-devflow-onboard` and `maui-devflow-debug` (its `references/batch.md` covers driving several UI steps at once).
-- **.NET skills** ([dotnet/skills](https://github.com/dotnet/skills)): `maui-shell-navigation`, `maui-collectionview`, `maui-data-binding`, `maui-theming`, `maui-safe-area` and `dotnet11`, when installed.
+- **.NET skills** ([dotnet/skills](https://github.com/dotnet/skills)): `maui-theming`, `maui-shell-navigation`, `maui-collectionview`, `maui-data-binding` and `maui-safe-area` from `dotnet-maui`, and `csharp-expert` and `msbuild` from `dotnet`.
 - **In-app AI, only when asked:** `maui-essentials-ai` and `maui-ai-tool-bindings`. These APIs are experimental, so check the linked MAUI Labs docs too.
 
 ## Agent workflow
