@@ -8,7 +8,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
-public sealed class AssistantService(ConferenceService data, CityService city, FavoritesService favorites, IServiceProvider services)
+public sealed class AssistantService(ConferenceService data, CityService city, FavoritesService favorites, SessionSearchService search, IServiceProvider services)
 {
     public string SelectedCityId => city.SelectedId;
     public async Task<string> GetCityLabelAsync()
@@ -29,11 +29,36 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
         var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
         if (status.Availability != ChatModelAvailability.Available)
             return "The on-device model isn't ready. Check Apple Intelligence in your device settings and try again.";
-        client ??= services.GetRequiredService<IChatClient>();
+        client ??= new ChatClientBuilder(services.GetRequiredService<IChatClient>())
+            .Use(async (messages, options, next, cancellationToken) =>
+            {
+                var prompt = messages.ToList();
+                var questionIndex = prompt.FindLastIndex(message => message.Role == ChatRole.User);
+                if (questionIndex >= 0)
+                {
+                    var question = prompt[questionIndex].Text;
+                    var previousAnswer = prompt.Take(questionIndex).LastOrDefault(message => message.Role == ChatRole.Assistant)?.Text;
+                    var results = await search.SearchSessionsAsync($"{question} {previousAnswer}".Trim());
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var conference = await data.GetConferenceAsync();
+                    var context = new StringBuilder("Relevant session details:\n");
+                    foreach (var result in results.Take(3))
+                    {
+                        var session = result.Session;
+                        var speakers = string.Join(", ", conference.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => s.Name));
+                        var abstractText = await data.GetContentAsync(session.Content);
+                        context.AppendLine($"{session.Title} | {session.Start:HH:mm}-{session.End:HH:mm} | {speakers}\n{abstractText}\n");
+                    }
+                    prompt.Insert(questionIndex, new ChatMessage(ChatRole.User, context.ToString()));
+                }
+                await next(prompt, options, cancellationToken);
+            })
+            .Build();
 #pragma warning restore MAUIAI0001
         return null;
 #else
         _ = services;
+        _ = search;
         await Task.CompletedTask;
         return "On-device chat isn't available on this platform yet. Your conference data stays on this device.";
 #endif

@@ -15,7 +15,7 @@ namespace ConferenceApp;
 public static class MauiProgram
 {
 	// Set to true to compare the bundled model with Apple's sentence embeddings.
-	public static readonly bool UseOnnxOnApple = false;
+	public static readonly bool UseOnnxOnApple = true;
 
 	public static MauiApp CreateMauiApp()
 	{
