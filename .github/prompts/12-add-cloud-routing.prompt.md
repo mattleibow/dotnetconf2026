@@ -2,7 +2,7 @@
 description: Send complex questions to a cloud model
 ---
 
-Keep simple questions on the device, but send harder ones, like "plan my day around AI and performance talks with no clashes", to a cloud model.
+Keep simple questions on the device, but send harder ones, like "plan my day around AI agents and data talks with no clashes", to a cloud model.
 
 Use `SemanticRoutingChatClient` from `Microsoft.Extensions.AI` with the embedding generator we already have. It's experimental, so check the docs first. Ask me which cloud service and model to use.
 

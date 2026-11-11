@@ -25,4 +25,4 @@ From the repository root, with the .NET 11 SDK:
 dotnet run models/DownloadModels.cs
 ```
 
-It downloads the files, checks their SHA-256 hashes, and runs a quick test: "making my app faster" must score closer to a performance talk than to lunch. `DownloadModels.cs` is also a short working example of the embedding code the app needs.
+It downloads the files, checks their SHA-256 hashes, and runs a quick test: "saving money on AI" must score closer to a talk on cost-efficient GenAI than to lunch. `DownloadModels.cs` is also a short working example of the embedding code the app needs.

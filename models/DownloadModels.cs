@@ -65,8 +65,8 @@ using (var http = new HttpClient())
 var tokenizer = BertTokenizer.Create(Path.Combine(folder, "vocab.txt"));
 using var session = new InferenceSession(Path.Combine(folder, "model.onnx"));
 
-var query = Embed("making my app faster");
-var related = Embed("Performance tips for .NET MAUI apps");
+var query = Embed("saving money on AI");
+var related = Embed("The hidden cost of just calling the LLM: architecture patterns for cost-efficient GenAI");
 var unrelated = Embed("Lunch and networking");
 
 var relatedScore = Dot(query, related);

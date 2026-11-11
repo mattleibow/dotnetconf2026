@@ -13,4 +13,4 @@ Put what it needs to know in the system instructions: the event, the selected ci
 
 Docs: [local chat clients](https://github.com/dotnet/maui-labs/blob/main/src/AI/Microsoft.Maui.Essentials.AI/README.md).
 
-Use DevFlow to ask "When is Matthew's talk?", "What's on after lunch?", "Anything on performance?", and "What's Niels' background?" (it should admit it doesn't know).
+Use DevFlow to ask "When is Matthew's talk?", "What's on after lunch?", "Anything on AI agents?", and "What's Niels' background?" (it should admit it doesn't know).
