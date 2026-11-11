@@ -174,8 +174,8 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 - **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards.
 
 ### Venue & Sponsors
-- **Venue:** Full-width venue photo with 16pt rounded corners, venue name, address, description, and a primary "Open in Maps" button.
-- **Sponsors:** Logos centred on white tiles grouped by tier.
+- **Venue:** Full-width venue photo with 16pt rounded corners, venue name, address, description, an embedded native `Map` (`Microsoft.Maui.Controls.Maps`) with a pin on the venue's coordinates, and a primary "Open in Maps" button.
+- **Sponsors:** Dedicated Sponsors tab showing sponsor logos centred on white tiles grouped by tier.
 
 ### Assistant
 - **Suggestion Chips:** Horizontal scrollable pill chips at the top (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke).
