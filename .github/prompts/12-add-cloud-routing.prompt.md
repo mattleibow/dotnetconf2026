@@ -8,7 +8,7 @@ Use `SemanticRoutingChatClient` from `Microsoft.Extensions.AI` with the embeddin
 
 - Never commit or bundle an API key. For the demo, enter a short-lived key at runtime; without one, stay local.
 - Cloud is opt-in, and show which model answered.
-- Keep the same tools and approval rules on both routes, including the Apple setup.
+- Keep the same tools and approval rules on both routes, including the Apple setup. The favourite tools already ask for approval in app code, so make sure the cloud route doesn't ask twice or block them.
 - No automatic retries for actions that change state, and stop after the first tool error.
 
 Docs: [Routing and failover for Microsoft.Extensions.AI](https://devblogs.microsoft.com/dotnet/routing-and-failover-for-microsoft-extensions-ai/).
