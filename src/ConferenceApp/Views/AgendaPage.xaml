@@ -1,5 +1,6 @@
 <ContentPage x:Class="ConferenceApp.Views.AgendaPage"
              xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             xmlns:views="clr-namespace:ConferenceApp.Views"
              x:DataType="vm:AgendaViewModel"
              x:Name="Page"
              Title="Agenda"
@@ -41,53 +42,22 @@
                             <Grid HeightRequest="52">
                                 <Label Text="{Binding Time}" Style="{StaticResource TitleText}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
                             </Grid>
-                            <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="SpaceBetween" BindableLayout.ItemsSource="{Binding .}">
+                            <VerticalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Rows}">
                                 <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:SessionCard">
-                                        <Border Style="{StaticResource Card}" AutomationId="{Binding AutomationId}" FlexLayout.Basis="100%" Margin="0,0,0,8">
-                                            <Border.Triggers>
-                                                <DataTrigger TargetType="Border" Binding="{Binding IsGeneral}" Value="True"><Setter Property="Style" Value="{StaticResource GeneralCard}" /></DataTrigger>
-                                                <DataTrigger TargetType="Border" Binding="{Binding UseHalfWidth}" Value="True"><Setter Property="FlexLayout.Basis" Value="49%" /></DataTrigger>
-                                            </Border.Triggers>
-                                            <Border.GestureRecognizers>
-                                                <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}" CommandParameter="{Binding .}" />
-                                            </Border.GestureRecognizers>
-                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                                                <VerticalStackLayout Spacing="6">
-                                                    <Border Style="{StaticResource TrackChip}">
-                                                        <Border.Triggers>
-                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Track 2"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
-                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Auditorium"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
-                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Lecture 5"><Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" /></DataTrigger>
-                                                        </Border.Triggers>
-                                                        <Label Text="{Binding Track}" Style="{StaticResource ChipText}" />
-                                                    </Border>
-                                    <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
-                                    <Label Text="{Binding Time}" />
-                                    <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Speakers}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:SpeakerCard">
-                                                <Border StrokeShape="RoundRectangle 16" HeightRequest="32" WidthRequest="32" Padding="0" SemanticProperties.Description="{Binding Name}">
-                                                    <Grid>
-                                                        <Label Text="{Binding Initials}" HorizontalOptions="Center" VerticalOptions="Center" />
-                                                        <Image Source="{Binding Photo}" Aspect="AspectFill" />
-                                                    </Grid>
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </HorizontalStackLayout>
-                                    <Label Text="{Binding SpeakerNames}" />
-                                    <Label Text="{Binding Match}" IsVisible="{Binding HasMatch}" Style="{StaticResource SearchMatchText}" MaxLines="2" LineBreakMode="TailTruncation" AutomationId="search-match" />
-                                </VerticalStackLayout>
-                                <Button Grid.Column="1" Text="{Binding Heart}" Style="{StaticResource HeartButton}" AutomationId="{Binding FavoriteAutomationId}"
-                                        SemanticProperties.Description="{Binding FavoriteDescription}"
-                                        Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}"
-                                        CommandParameter="{Binding .}" />
-                            </Grid>
-                        </Border>
+                                    <DataTemplate x:DataType="vm:SessionRow">
+                                        <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                                            <views:SessionCardView BindingContext="{Binding First}">
+                                                <views:SessionCardView.Triggers>
+                                                    <DataTrigger TargetType="views:SessionCardView" Binding="{Binding HasSecond, Source={RelativeSource AncestorType={x:Type vm:SessionRow}}, x:DataType=vm:SessionRow}" Value="False">
+                                                        <Setter Property="Grid.ColumnSpan" Value="2" />
+                                                    </DataTrigger>
+                                                </views:SessionCardView.Triggers>
+                                            </views:SessionCardView>
+                                            <views:SessionCardView Grid.Column="1" BindingContext="{Binding Second}" IsVisible="{Binding HasSecond, Source={RelativeSource AncestorType={x:Type vm:SessionRow}}, x:DataType=vm:SessionRow}" />
+                                        </Grid>
                                     </DataTemplate>
                                 </BindableLayout.ItemTemplate>
-                            </FlexLayout>
+                            </VerticalStackLayout>
                         </VerticalStackLayout>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

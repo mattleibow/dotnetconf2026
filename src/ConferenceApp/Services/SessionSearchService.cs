@@ -58,9 +58,8 @@ public sealed class SessionSearchService
         }));
         var keywords = results.OfType<SessionSearchResult>().ToList();
 #if IOS || MACCATALYST
-        var semanticResults = await semantic.SearchAsync(term, cityId);
         var matchedIds = keywords.Select(r => r.Session.Id).ToHashSet();
-        keywords.AddRange(semanticResults.Where(r => !matchedIds.Contains(r.Session.Id)));
+        keywords.AddRange(await semantic.SearchAsync(term, cityId, matchedIds));
 #endif
         return keywords;
     }

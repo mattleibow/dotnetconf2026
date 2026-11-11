@@ -68,22 +68,23 @@ public sealed class SemanticSessionSearch(ConferenceService data, IServiceProvid
         IsInitialized = true;
     }
 
-    public async Task<IReadOnlyList<SessionSearchResult>> SearchAsync(string query, string cityId)
+    public async Task<IReadOnlyList<SessionSearchResult>> SearchAsync(string query, string cityId, IReadOnlySet<string> keywordIds)
     {
         await InitializeAsync();
         if (!IsAvailable || chunkCount == 0)
             return [];
 
         var matches = new List<(SessionSearchResult Result, double Score)>();
-        var found = new HashSet<string>();
         await foreach (var result in collection!.SearchAsync(query, chunkCount))
         {
             var session = sessions[result.Record.SessionId];
-            if (session.CityId != cityId || result.Score is not >= 0.38 || !found.Add(session.Id))
+            if (session.CityId != cityId || result.Score is null || keywordIds.Contains(session.Id))
                 continue;
             matches.Add((new SessionSearchResult(session, $"Semantic · {result.Record.Excerpt}", true), result.Score.Value));
         }
-        return matches.OrderByDescending(m => m.Score).Select(m => m.Result).ToList();
+        return matches.OrderByDescending(m => m.Score)
+            .DistinctBy(m => m.Result.Session.Id)
+            .Take(5).Select(m => m.Result).ToList();
     }
 
     public sealed class SessionChunk

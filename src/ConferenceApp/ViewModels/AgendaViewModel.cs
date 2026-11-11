@@ -93,13 +93,13 @@ public partial class AgendaViewModel : ObservableObject
             {
                 foreach (var group in results.OrderBy(r => r.Session.Start).GroupBy(r => r.Session.Start))
                     Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(r =>
-                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), match: r.Match)), IsWide));
             }
             else
             {
                 foreach (var group in results.GroupBy(r => r.IsSemantic))
                     Groups.Add(new SessionGroup(group.Key ? "Semantic matches" : "Keyword matches", group.Select(r =>
-                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), IsWide && group.Count() > 1, match: r.Match))));
+                        new SessionCard(r.Session, conference.Speakers, favorites.Contains(r.Session.Id), match: r.Match)), IsWide));
             }
             Status = Groups.Count == 0
                 ? (string.IsNullOrWhiteSpace(query) ? "No sessions available for this city." : "No sessions match your search.")
@@ -147,9 +147,23 @@ public partial class AgendaViewModel : ObservableObject
         Shell.Current.GoToAsync($"session?id={Uri.EscapeDataString(card.Session.Id)}");
 }
 
-public sealed class SessionGroup(string time, IEnumerable<SessionCard> sessions) : ObservableCollection<SessionCard>(sessions)
+public sealed class SessionGroup
 {
-    public string Time { get; } = time;
+    public SessionGroup(string time, IEnumerable<SessionCard> sessions, bool isWide)
+    {
+        Time = time;
+        Rows = sessions.Chunk(isWide ? 2 : 1)
+            .Select(cards => new SessionRow(cards[0], cards.Length > 1 ? cards[1] : null))
+            .ToList();
+    }
+
+    public string Time { get; }
+    public List<SessionRow> Rows { get; }
+}
+
+public sealed record SessionRow(SessionCard First, SessionCard? Second)
+{
+    public bool HasSecond => Second is not null;
 }
 
 public sealed class SessionCard(Session session, IEnumerable<Speaker> speakers, bool favorite, bool useHalfWidth = false, string cityName = "", string match = "")

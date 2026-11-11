@@ -1,0 +1,46 @@
+<ContentView x:Class="ConferenceApp.Views.SessionCardView"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:SessionCard">
+    <Border Style="{StaticResource Card}" AutomationId="{Binding AutomationId}">
+        <Border.Triggers>
+            <DataTrigger TargetType="Border" Binding="{Binding IsGeneral}" Value="True">
+                <Setter Property="Style" Value="{StaticResource GeneralCard}" />
+            </DataTrigger>
+        </Border.Triggers>
+        <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}" CommandParameter="{Binding .}" />
+        </Border.GestureRecognizers>
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <VerticalStackLayout Spacing="6">
+                <Border Style="{StaticResource TrackChip}">
+                    <Border.Triggers>
+                        <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Track 2"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Auditorium"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
+                        <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Lecture 5"><Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" /></DataTrigger>
+                    </Border.Triggers>
+                    <Label Text="{Binding Track}" Style="{StaticResource ChipText}" />
+                </Border>
+                <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
+                <Label Text="{Binding Time}" />
+                <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Speakers}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="vm:SpeakerCard">
+                            <Border StrokeShape="RoundRectangle 16" HeightRequest="32" WidthRequest="32" Padding="0" SemanticProperties.Description="{Binding Name}">
+                                <Grid>
+                                    <Label Text="{Binding Initials}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                    <Image Source="{Binding Photo}" Aspect="AspectFill" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+                <Label Text="{Binding SpeakerNames}" />
+                <Label Text="{Binding Match}" IsVisible="{Binding HasMatch}" Style="{StaticResource SearchMatchText}" MaxLines="2" LineBreakMode="TailTruncation" AutomationId="search-match" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1" Text="{Binding Heart}" Style="{StaticResource HeartButton}" AutomationId="{Binding FavoriteAutomationId}"
+                    SemanticProperties.Description="{Binding FavoriteDescription}"
+                    Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}"
+                    CommandParameter="{Binding .}" />
+        </Grid>
+    </Border>
+</ContentView>
