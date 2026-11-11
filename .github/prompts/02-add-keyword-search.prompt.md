@@ -2,7 +2,7 @@
 description: Add keyword search to the agenda
 ---
 
-Add a search box to the agenda.
+Add a search box to the agenda, using a `SearchBar` (its built-in clear button is enough).
 
 Put the search in one small service with `SearchSessionsAsync(query)`, so other features can use it later. For now, a case-insensitive match over the title, abstract, speaker names and track is enough, limited to the selected city. Show the matching bit of text under each result, and restore the normal agenda when the box is empty.
 
