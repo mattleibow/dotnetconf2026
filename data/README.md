@@ -27,22 +27,6 @@ Each file is an `# H1` with the title or name, then the published abstract, bio 
 
 Some files are only a heading, because the website has no text for them (for example, lunch). `hasAbstract` and `hasBio` in the JSON say which ones have text.
 
-## Brand
-
-From the event website's stylesheet:
-
-| Token | Colour | Use |
-|---|---|---|
-| Primary | `#512BD4` | .NET purple: headers, primary buttons, Track 1 |
-| Secondary | `#6C3DD8` | Gradients, Track 2 |
-| Light | `#8454E4` | Highlights on dark backgrounds |
-| Dark | `#3B1F99` | Pressed states, dark headers |
-| Accent | `#E63888` | Pink accent: favourites, Track 3, calls to action |
-| Dark background | `#1A1A2E` | Dark mode surfaces |
-| Light background | `#F8F9FA` | Light mode page background |
-
-The signature look is a 135° gradient from primary purple to pink, white cards with 15px corners, and soft purple shadows. City icons are in the website, not in this snapshot.
-
 ## Refreshing
 
 From the repository root, with the .NET 11 SDK:

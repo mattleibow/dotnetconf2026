@@ -46,7 +46,28 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 
 The app should look like a professional, shipping conference app from the first build.
 
-- **Theme first.** Put the brand colours from `data/README.md` in `Resources/Styles/Colors.xaml`, and a small type ramp (display, title, subtitle, body, caption), spacing and card styles in `Styles.xaml`. Pages use these resources, never raw colours or font sizes. Support light and dark mode with `AppThemeBinding` in the resources.
+### Style guide
+
+The .NET Conf 2026 brand, from the event website:
+
+| Token | Colour | Use |
+|---|---|---|
+| Primary | `#512BD4` | .NET purple: headers, primary buttons, Track 1 |
+| Secondary | `#6C3DD8` | Gradients, Track 2 |
+| Light | `#8454E4` | Highlights on dark backgrounds |
+| Dark | `#3B1F99` | Pressed states, dark headers |
+| Accent | `#E63888` | Pink: favourites, Track 3, calls to action |
+| Dark background | `#1A1A2E` | Dark mode page background |
+| Light background | `#F8F9FA` | Light mode page background |
+
+- Signature gradient: 135°, primary purple to pink accent.
+- Cards: white (or a dark surface in dark mode), 16 px corners, a soft purple shadow.
+- Spacing on a 4 px grid (4, 8, 12, 16, 24, 32).
+- Use the template's Open Sans fonts; bold for titles, regular for body, a small caps-style label for metadata such as times and tracks.
+
+### Rules
+
+- **Theme first.** Put the style guide colours in `Resources/Styles/Colors.xaml`, and a small type ramp (display, title, subtitle, body, caption), spacing and card styles in `Styles.xaml`. Pages use these resources, never raw colours or font sizes. Support light and dark mode with `AppThemeBinding` in the resources.
 - **Real content.** Show speaker photos (circular, with initials as the fallback), sponsor logos on white tiles, and the venue photo. Use the event's real name and dates; don't invent slogans.
 - **Agenda.** Group sessions by time slot, show the track or room as a coloured chip, speaker photos and names, and a favourite (heart) toggle on each card. Breaks and registration look lighter than talks.
 - **Details.** A header with the brand gradient, then time and room chips, speakers with photos, the abstract, and a clear favourite button.
