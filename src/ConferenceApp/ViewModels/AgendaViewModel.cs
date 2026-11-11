@@ -35,7 +35,9 @@ public partial class AgendaViewModel : ObservableObject, IRecipient<CityChangedM
     [NotifyPropertyChangedFor(nameof(FilterText))]
     public partial bool ShowFavoritesOnly { get; set; }
 
-    public string FilterText => ShowFavoritesOnly ? "Showing: Favourites" : "Showing: All Sessions";
+    public string FilterText => ShowFavoritesOnly
+        ? "Showing: Favourites"
+        : "Showing: All Sessions";
 
     partial void OnSearchQueryChanged(string value) =>
         _ = LoadAsync();
