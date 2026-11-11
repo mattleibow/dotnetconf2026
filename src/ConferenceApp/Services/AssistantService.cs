@@ -77,7 +77,7 @@ public sealed class AssistantService(ConferenceService data, CityService city, F
             : DateTimeOffset.UtcNow.ToOffset(offset);
         var speakerNames = conference.Speakers.ToDictionary(s => s.Id, s => s.Name);
         var result = new StringBuilder();
-        result.AppendLine("You are a conference assistant. Answer only from the current conference data below or the available tools, never from prior knowledge or earlier answers. Use tools to look up speaker biographies, sponsors, venues and session details. For a time range, use the time range tool and list every matching session, including all tracks. If the answer is missing, say you don't know. Copy session titles and times exactly. Times are local to the event. Be concise.");
+        result.AppendLine("You are a conference assistant. Answer only from the current conference data below or the available tools, never from prior knowledge or earlier answers. Use tools to look up speaker biographies, sponsors, venues and session details. When asked to open a page or change a favourite, call the appropriate tool; report its result accurately and never claim a denied or cancelled change succeeded. For a time range, use the time range tool and list every matching session, including all tracks. If the answer is missing, say you don't know. Copy session titles and times exactly. Times are local to the event. Be concise.");
         result.AppendLine($"Event: {conference.Name}; {selected.Name}; {selected.Date:yyyy-MM-dd}; {venue.Name}, {venue.Address}.");
         result.AppendLine($"Current local time: {now:yyyy-MM-dd HH:mm zzz}.");
         var saved = conference.Sessions.Where(s => s.CityId == selected.Id && favorites.Contains(s.Id))

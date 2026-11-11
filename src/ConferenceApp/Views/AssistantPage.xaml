@@ -14,7 +14,7 @@
                 <Button Grid.Column="1" Text="New chat" Style="{StaticResource CityButton}" AutomationId="assistant-new-chat" Command="{Binding NewChatCommand}" />
             </Grid>
         </Border>
-        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Padding="16" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8">
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Padding="16" RowDefinitions="Auto,Auto,*,Auto,Auto" RowSpacing="8">
             <Label Text="{Binding Status}" AutomationId="assistant-status" Style="{StaticResource SearchMatchText}" />
             <HorizontalStackLayout Grid.Row="1" IsVisible="{Binding IsDebug}" Spacing="8">
                 <Switch AutomationId="assistant-simulated-time-enabled" IsToggled="{Binding UseSimulatedTime}" SemanticProperties.Description="Use a simulated time on event day" />
@@ -53,7 +53,24 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Border Grid.Row="3" Style="{StaticResource Card}" IsVisible="{Binding Approval.IsPending}" AutomationId="favourite-approval-card"
+                    MaximumWidthRequest="760" HorizontalOptions="Fill">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Approve favourite change?" Style="{StaticResource CardTitle}" />
+                    <Label Text="{Binding Approval.Description}" AutomationId="favourite-approval-description" />
+                    <HorizontalStackLayout Spacing="8">
+                        <Button Text="Approve" AutomationId="favourite-approve" Command="{Binding Approval.ApproveCommand}" />
+                        <Button Text="Deny" Style="{StaticResource SecondaryButton}" AutomationId="favourite-deny" Command="{Binding Approval.DenyCommand}" />
+                        <Button Text="Stop" SemanticProperties.Description="Stop assistant request" Style="{StaticResource SecondaryButton}" AutomationId="favourite-cancel" Command="{Binding CancelCommand}" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Grid.Triggers>
+                    <DataTrigger TargetType="Grid" Binding="{Binding Approval.IsPending}" Value="True">
+                        <Setter Property="IsVisible" Value="False" />
+                    </DataTrigger>
+                </Grid.Triggers>
                 <Entry Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}" AutomationId="assistant-input" SemanticProperties.Description="Your question" Text="{Binding Input}" MaxLength="500" IsEnabled="{Binding IsAvailable}" ReturnCommand="{Binding SendCommand}" />
                 <Button Grid.Column="1" Text="Send" AutomationId="assistant-send" Command="{Binding SendCommand}" IsEnabled="{Binding IsAvailable}" />
                 <Button Grid.Column="2" Text="Cancel" AutomationId="assistant-cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />

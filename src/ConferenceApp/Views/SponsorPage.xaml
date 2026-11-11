@@ -1,0 +1,19 @@
+<ContentPage x:Class="ConferenceApp.Views.SponsorPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:SponsorViewModel" Title="Sponsor">
+    <ScrollView AutomationId="sponsor-page">
+        <VerticalStackLayout Spacing="16" Padding="24" MaximumWidthRequest="1100">
+            <Label Text="{Binding Status}" />
+            <Border Style="{StaticResource Card}" MaximumWidthRequest="640" HorizontalOptions="Fill">
+                <VerticalStackLayout Spacing="16">
+                    <Border BackgroundColor="{StaticResource White}" StrokeThickness="0" Padding="16">
+                        <Image Source="{Binding Logo}" HeightRequest="160" Aspect="AspectFit" />
+                    </Border>
+                    <Label Text="{Binding Name}" Style="{StaticResource TitleText}" HorizontalTextAlignment="Center"
+                           SemanticProperties.HeadingLevel="Level1" />
+                    <Label Text="{Binding Tier}" Style="{StaticResource SearchMatchText}" HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

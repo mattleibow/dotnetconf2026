@@ -9,6 +9,7 @@ public partial class AppShell : Shell
 		InitializeComponent();
 		Routing.RegisterRoute("session", typeof(SessionPage));
 		Routing.RegisterRoute("speaker", typeof(SpeakerPage));
+		Routing.RegisterRoute("sponsor", typeof(SponsorPage));
 		var tabs = new TabBar();
 		tabs.Items.Add(new ShellContent { Title = "Agenda", Icon = "tab_agenda.png", Route = "agenda", Content = agenda, AutomationId = "agenda-tab" });
 		tabs.Items.Add(new ShellContent { Title = "Favourites", Icon = "tab_favorites.png", Route = "favorites", Content = favorites, AutomationId = "favorites-tab" });

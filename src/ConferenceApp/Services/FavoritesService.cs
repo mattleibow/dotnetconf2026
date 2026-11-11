@@ -13,9 +13,20 @@ public sealed class FavoritesService
 
     public void Toggle(string id)
     {
-        if (!favorites.Remove(id))
+        Set(id, !Contains(id));
+    }
+
+    public void Set(string id, bool isFavorite)
+    {
+        var updated = new HashSet<string>(favorites);
+        var changed = isFavorite ? updated.Add(id) : updated.Remove(id);
+        if (!changed)
+            return;
+        Preferences.Default.Set("favorites", JsonSerializer.Serialize(updated));
+        if (isFavorite)
             favorites.Add(id);
-        Preferences.Default.Set("favorites", JsonSerializer.Serialize(favorites));
+        else
+            favorites.Remove(id);
         Changed?.Invoke(this, EventArgs.Empty);
     }
 }

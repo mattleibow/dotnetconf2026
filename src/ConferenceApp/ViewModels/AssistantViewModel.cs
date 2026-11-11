@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ConferenceApp.Services;
@@ -7,8 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public sealed partial class AssistantViewModel(AssistantService assistant, ILogger<AssistantViewModel> logger) : ObservableObject
+public sealed partial class AssistantViewModel(AssistantService assistant, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
 {
+    public FavoriteApproval Approval { get; } = approval;
     private CancellationTokenSource? currentRequest;
     private readonly List<ChatMessage> history = [];
     private string? lastCityId;
@@ -52,13 +54,21 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
         if (!IsAvailable || IsBusy || question.Length == 0)
             return;
         Input = "";
+        Approval.BeginRequest();
         var request = new CancellationTokenSource();
         currentRequest = request;
         IsBusy = true;
         var requestCityId = assistant.SelectedCityId;
         Messages.Add(new AssistantMessage("You", question));
-        var answer = new AssistantMessage("Assistant", "");
+        var answer = new AssistantMessage("Assistant", "Thinking...");
         Messages.Add(answer);
+        var hasResponseText = false;
+        void ApprovalChanged(object? sender, PropertyChangedEventArgs args)
+        {
+            if (args.PropertyName == nameof(FavoriteApproval.IsPending))
+                answer.Text = Approval.IsPending ? "Waiting for your approval..." : Approval.GetResults() ?? "Thinking...";
+        }
+        Approval.PropertyChanged += ApprovalChanged;
         try
         {
             var instructions = await assistant.BuildInstructionsAsync(IsDebug && UseSimulatedTime ? SimulatedTime : null);
@@ -68,10 +78,17 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
             await foreach (var update in assistant.StreamAsync(prompt, request.Token))
             {
                 request.Token.ThrowIfCancellationRequested();
-                answer.Text += update.Text;
+                if (!string.IsNullOrEmpty(update.Text))
+                {
+                    if (!hasResponseText)
+                        answer.Text = "";
+                    hasResponseText = true;
+                    answer.Text = Approval.GetResults() ?? (answer.Text + update.Text);
+                }
             }
             request.Token.ThrowIfCancellationRequested();
-            if (string.IsNullOrWhiteSpace(answer.Text))
+            answer.Text = Approval.GetResults() ?? answer.Text;
+            if (!hasResponseText && Approval.GetResults() is null)
                 throw new InvalidOperationException("The model returned an empty response.");
             var mentioned = await assistant.FindMentionedSessionsAsync(answer.Text, requestCityId);
             request.Token.ThrowIfCancellationRequested();
@@ -85,15 +102,20 @@ public sealed partial class AssistantViewModel(AssistantService assistant, ILogg
         catch (OperationCanceledException) when (request.IsCancellationRequested)
         {
             if (Messages.Contains(answer))
-                answer.Text = string.IsNullOrWhiteSpace(answer.Text) ? "Response cancelled." : answer.Text + "\n\nResponse cancelled.";
+                answer.Text = Approval.GetResults() is { } result
+                    ? result + "\n\nResponse cancelled."
+                    : "Response cancelled; no pending favourite change was made.";
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "On-device assistant request failed.");
-            answer.Text = "Sorry, I couldn't answer on this device. Please try again.";
+            answer.Text = Approval.GetResults() is { } result
+                ? result + "\n\nThe assistant couldn't finish its response."
+                : "Sorry, I couldn't answer on this device. Please try again.";
         }
         finally
         {
+            Approval.PropertyChanged -= ApprovalChanged;
             if (currentRequest == request)
             {
                 currentRequest = null;
