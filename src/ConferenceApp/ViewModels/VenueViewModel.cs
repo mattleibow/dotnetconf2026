@@ -47,9 +47,13 @@ public partial class VenueViewModel(ConferenceService service) : ObservableObjec
     }
 }
 
-public sealed class SponsorItem(Sponsor sponsor, ConferenceService service)
+public sealed partial class SponsorItem(Sponsor sponsor, ConferenceService service)
 {
     public string Name => sponsor.Name;
     public string Tier => sponsor.Tier;
     public ImageSource? Logo => service.Image(sponsor.Image);
+    public string AutomationId => $"sponsor-{string.Concat(sponsor.Name.ToLowerInvariant().Select(c => char.IsLetterOrDigit(c) ? c : '-'))}";
+
+    [RelayCommand]
+    private async Task OpenAsync() => await Shell.Current.GoToAsync($"sponsor-detail?name={Uri.EscapeDataString(sponsor.Name)}");
 }

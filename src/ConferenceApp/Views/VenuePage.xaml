@@ -30,7 +30,9 @@
                 <CollectionView.EmptyView><Label Text="No sponsors listed for this city." Margin="16"/></CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SponsorItem">
-                        <Border Style="{StaticResource Card}" BackgroundColor="White">
+                        <Border Style="{StaticResource Card}" BackgroundColor="White" AutomationId="{Binding AutomationId}"
+                                SemanticProperties.Description="{Binding Name}" SemanticProperties.Hint="Open sponsor details">
+                            <Border.GestureRecognizers><TapGestureRecognizer Command="{Binding OpenCommand}"/></Border.GestureRecognizers>
                             <VerticalStackLayout Spacing="8">
                                 <Image Source="{Binding Logo}" HeightRequest="80" Aspect="AspectFit" SemanticProperties.Description="{Binding Name}"/>
                                 <Label Text="{Binding Name}" TextColor="Black" Style="{StaticResource SubtitleText}"/>

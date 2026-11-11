@@ -58,6 +58,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<SemanticSearchService>();
 		builder.Services.AddSingleton<SessionEnrichmentService>();
 		builder.Services.AddSingleton<SessionSearchService>();
+		builder.Services.AddSingleton<FavoriteApproval>();
 		builder.Services.AddScoped<ConferenceTools>();
 		builder.Services.AddSingleton<AssistantService>();
 		builder.Services.AddSingleton<AssistantViewModel>();
@@ -68,6 +69,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<SessionDetailViewModel>();
 		builder.Services.AddTransient<SpeakerDetailPage>();
 		builder.Services.AddTransient<SpeakerDetailViewModel>();
+		builder.Services.AddTransient<SponsorDetailPage>();
+		builder.Services.AddTransient<SponsorDetailViewModel>();
 		builder.Services.AddTransient<SpeakersPage>();
 		builder.Services.AddTransient<SpeakersViewModel>();
 		builder.Services.AddTransient<FavoritesPage>();

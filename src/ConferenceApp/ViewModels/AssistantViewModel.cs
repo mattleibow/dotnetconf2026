@@ -7,8 +7,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AssistantViewModel(AssistantService assistant, ConferenceService conference, ILogger<AssistantViewModel> logger) : ObservableObject
+public partial class AssistantViewModel(AssistantService assistant, ConferenceService conference, FavoriteApproval approval, ILogger<AssistantViewModel> logger) : ObservableObject
 {
+    public FavoriteApproval Approval { get; } = approval;
     private CancellationTokenSource? cancellation;
     private int conversationVersion;
     private readonly List<ChatMessage> history = [];
@@ -141,4 +142,6 @@ public partial class AssistantMessage(string author, string text) : ObservableOb
     public string Author { get; } = author;
     public ObservableCollection<SessionItem> Sessions { get; } = [];
     [ObservableProperty] public partial string Text { get; set; } = text;
+    public bool IsVisible => Author != "Assistant" || !string.IsNullOrEmpty(Text);
+    partial void OnTextChanged(string value) => OnPropertyChanged(nameof(IsVisible));
 }

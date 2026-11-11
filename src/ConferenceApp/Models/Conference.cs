@@ -58,8 +58,10 @@ public sealed class Venue
 
 public sealed class Sponsor
 {
+    public string Id { get; set; } = "";
     public string Name { get; set; } = "";
     public string Tier { get; set; } = "";
     public string? Image { get; set; }
+    public string? Url { get; set; }
     public List<string> CityIds { get; set; } = [];
 }

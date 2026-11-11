@@ -9,5 +9,6 @@ public partial class AppShell : Shell
 		InitializeComponent();
 		Routing.RegisterRoute("session-detail", typeof(SessionDetailPage));
 		Routing.RegisterRoute("speaker-detail", typeof(SpeakerDetailPage));
+		Routing.RegisterRoute("sponsor-detail", typeof(SponsorDetailPage));
 	}
 }

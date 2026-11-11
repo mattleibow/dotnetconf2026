@@ -13,7 +13,7 @@
                 <Button Grid.Column="1" Text="New chat" Command="{Binding NewChatCommand}" AutomationId="assistant-new-chat" VerticalOptions="Center"/>
             </Grid>
         </Grid>
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="16" MaximumWidthRequest="800" HorizontalOptions="Fill" RowSpacing="8">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*,Auto,Auto" Margin="16" MaximumWidthRequest="800" HorizontalOptions="Fill" RowSpacing="8">
             <Grid ColumnDefinitions="*,Auto">
                 <Label Text="{Binding Notice}" Style="{StaticResource BodyText}" AutomationId="assistant-status" VerticalOptions="Center"/>
                 <Button x:Name="DebugClockButton" Grid.Column="1" Text="Debug clock" Command="{Binding ToggleDebugClockCommand}" AutomationId="assistant-clock" IsVisible="False"/>
@@ -35,7 +35,7 @@
                 </CollectionView.EmptyView>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:AssistantMessage">
-                        <Border Style="{StaticResource Card}" Margin="0,0,0,8">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
                             <VerticalStackLayout Spacing="8">
                                 <Label Text="{Binding Author}" Style="{StaticResource MetadataText}"/>
                                 <Label Text="{Binding Text}" Style="{StaticResource BodyText}"/>
@@ -63,7 +63,22 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <Grid Grid.Row="4" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+            <Border Grid.Row="4" Style="{StaticResource Card}" Stroke="{StaticResource BrandGradient}" StrokeThickness="2"
+                    IsVisible="{Binding Approval.IsPending}" AutomationId="favorite-approval-card">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Approval required" Style="{StaticResource SubtitleText}"/>
+                    <Label Text="{Binding Approval.Description}" Style="{StaticResource BodyText}" AutomationId="favorite-approval-description"/>
+                    <HorizontalStackLayout Spacing="12">
+                        <Button Text="Approve" Command="{Binding Approval.ApproveCommand}" AutomationId="favorite-approve"
+                                SemanticProperties.Description="{Binding Approval.Description, StringFormat='Approve: {0}'}"/>
+                        <Button Text="Deny" Command="{Binding Approval.DenyCommand}" AutomationId="favorite-deny"
+                                BackgroundColor="Transparent" BorderWidth="1" BorderColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}"
+                                TextColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}"
+                                SemanticProperties.Description="{Binding Approval.Description, StringFormat='Deny: {0}'}"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+            <Grid Grid.Row="5" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
                 <Entry Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" Text="{Binding Input}" IsEnabled="{Binding IsAvailable}" AutomationId="assistant-input" ReturnCommand="{Binding SendCommand}" SemanticProperties.Description="Ask about the conference"/>
                 <Button Grid.Column="1" Text="Send" Command="{Binding SendCommand}" IsEnabled="{Binding CanSend}" AutomationId="assistant-send"/>
                 <Button Grid.Column="2" Text="Stop" Command="{Binding CancelCommand}" IsVisible="{Binding CanCancel}" AutomationId="assistant-stop"/>

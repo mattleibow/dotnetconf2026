@@ -47,9 +47,14 @@ public sealed class ConferenceService
 
     public bool IsFavorite(string id) => Preferences.Default.Get($"favorite-{id}", false);
 
+    public void SetFavorite(string id, bool favorite)
+    {
+        Preferences.Default.Set($"favorite-{id}", favorite);
+        Changed?.Invoke(this, EventArgs.Empty);
+    }
+
     public void ToggleFavorite(string id)
     {
-        Preferences.Default.Set($"favorite-{id}", !IsFavorite(id));
-        Changed?.Invoke(this, EventArgs.Empty);
+        SetFavorite(id, !IsFavorite(id));
     }
 }

@@ -9,7 +9,7 @@ namespace ConferenceApp.Services;
 [AIToolSource(typeof(ConferenceTools))]
 public partial class ConferenceToolContext : AIToolContext;
 
-public sealed class ConferenceTools(ConferenceService conference, SessionSearchService search, ILogger<ConferenceTools> logger)
+public sealed class ConferenceTools(ConferenceService conference, SessionSearchService search, FavoriteApproval approval, ILogger<ConferenceTools> logger)
 {
     private readonly object sync = new();
     private readonly Dictionary<string, Session> returnedSessions = [];
@@ -69,7 +69,7 @@ public sealed class ConferenceTools(ConferenceService conference, SessionSearchS
         var data = await conference.GetConferenceAsync();
         var speakers = data.Speakers.Where(s => s.CityIds.Contains(CityId) &&
             (s.Id.Equals(name, StringComparison.OrdinalIgnoreCase) || s.Name.Contains(name, StringComparison.OrdinalIgnoreCase)));
-        return await Task.WhenAll(speakers.Select(async s => new SpeakerToolResult(s.Name, s.Tagline, await conference.GetContentAsync(s.Content))));
+        return await Task.WhenAll(speakers.Select(async s => new SpeakerToolResult(s.Id, s.Name, s.Tagline, await conference.GetContentAsync(s.Content))));
     }
 
     [ExportAIFunction("my_favourites")]
@@ -99,6 +99,93 @@ public sealed class ConferenceTools(ConferenceService conference, SessionSearchS
         return [.. data.Sponsors.Where(s => s.CityIds.Contains(CityId))];
     }
 
+    [ExportAIFunction("open_session")]
+    [Description("Open the detail page for a session in the selected city by exact ID or title.")]
+    public async Task<string> OpenSessionAsync([Description("Exact session ID or title")] string idOrTitle, CancellationToken cancellationToken)
+    {
+        var session = await FindSessionAsync(idOrTitle);
+        if (session is null) return "Session not found in the selected city; nothing was opened.";
+        return await NavigateAsync($"//agenda", $"session-detail?id={Uri.EscapeDataString(session.Id)}", $"Opened session: {session.Title}.", cancellationToken);
+    }
+
+    [ExportAIFunction("open_speaker")]
+    [Description("Open a speaker's detail page in the selected city by exact ID or name.")]
+    public async Task<string> OpenSpeakerAsync([Description("Exact speaker ID or name")] string idOrName, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idOrName);
+        var data = await conference.GetConferenceAsync();
+        var matches = data.Speakers.Where(s => s.CityIds.Contains(CityId) &&
+            (s.Id.Equals(idOrName, StringComparison.OrdinalIgnoreCase) || s.Name.Equals(idOrName, StringComparison.OrdinalIgnoreCase))).ToArray();
+        if (matches.Length != 1) return "Speaker not found uniquely in the selected city; nothing was opened.";
+        return await NavigateAsync("//speakers", $"speaker-detail?id={Uri.EscapeDataString(matches[0].Id)}", $"Opened speaker: {matches[0].Name}.", cancellationToken);
+    }
+
+    [ExportAIFunction("open_sponsor")]
+    [Description("Open a sponsor's detail page in the selected city by exact name.")]
+    public async Task<string> OpenSponsorAsync([Description("Exact sponsor name")] string name, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+        var data = await conference.GetConferenceAsync();
+        var matches = data.Sponsors.Where(s => s.CityIds.Contains(CityId) && s.Name.Equals(name, StringComparison.OrdinalIgnoreCase)).ToArray();
+        if (matches.Length != 1) return "Sponsor not found uniquely in the selected city; nothing was opened.";
+        return await NavigateAsync("//venue", $"sponsor-detail?name={Uri.EscapeDataString(matches[0].Name)}", $"Opened sponsor: {matches[0].Name}.", cancellationToken);
+    }
+
+    [ExportAIFunction("open_venue")]
+    [Description("Open the selected city's venue page.")]
+    public Task<string> OpenVenueAsync(CancellationToken cancellationToken) =>
+        NavigateAsync("//venue", null, "Opened the venue page.", cancellationToken);
+
+    [ExportAIFunction("add_favourite", ApprovalRequired = true)]
+    [Description("Request approval to add a session in the selected city to favourites.")]
+    public Task<string> AddFavoriteAsync([Description("Exact session ID or title")] string idOrTitle, CancellationToken cancellationToken) =>
+        ChangeFavoriteAsync(idOrTitle, true, cancellationToken);
+
+    [ExportAIFunction("remove_favourite", ApprovalRequired = true)]
+    [Description("Request approval to remove a session in the selected city from favourites.")]
+    public Task<string> RemoveFavoriteAsync([Description("Exact session ID or title")] string idOrTitle, CancellationToken cancellationToken) =>
+        ChangeFavoriteAsync(idOrTitle, false, cancellationToken);
+
+    private async Task<Session?> FindSessionAsync(string idOrTitle)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idOrTitle);
+        var data = await conference.GetConferenceAsync();
+        var matches = data.Sessions.Where(s => s.CityId == CityId && s.Kind == "session" &&
+            (s.Id.Equals(idOrTitle, StringComparison.OrdinalIgnoreCase) || s.Title.Equals(idOrTitle, StringComparison.OrdinalIgnoreCase))).ToArray();
+        return matches.Length == 1 ? matches[0] : null;
+    }
+
+    private async Task<string> ChangeFavoriteAsync(string idOrTitle, bool favorite, CancellationToken cancellationToken)
+    {
+        var session = await FindSessionAsync(idOrTitle);
+        if (session is null) return "Session not found uniquely in the selected city; favourites were not changed.";
+        if (conference.CityId != CityId) return "The selected city changed; favourites were not changed.";
+        if (conference.IsFavorite(session.Id) == favorite)
+            return favorite ? $"{session.Title} is already a favourite; nothing changed." : $"{session.Title} is not a favourite; nothing changed.";
+
+        var approved = await approval.RequestAsync($"{(favorite ? "Add" : "Remove")} “{session.Title}” {(favorite ? "to" : "from")} favourites?", cancellationToken);
+        return await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            if (!approved || cancellationToken.IsCancellationRequested)
+                return $"The request to {(favorite ? "add" : "remove")} {session.Title} was denied or cancelled; favourites were not changed.";
+            if (conference.CityId != CityId)
+                return "The selected city changed; favourites were not changed.";
+            conference.SetFavorite(session.Id, favorite);
+            return favorite ? $"Added {session.Title} to favourites." : $"Removed {session.Title} from favourites.";
+        });
+    }
+
+    private Task<string> NavigateAsync(string root, string? detail, string success, CancellationToken cancellationToken) =>
+        MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (conference.CityId != CityId) return "The selected city changed; nothing was opened.";
+            await Shell.Current.GoToAsync(root);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (detail is not null) await Shell.Current.GoToAsync(detail);
+            return success;
+        });
+
     private async Task<SessionToolResult[]> DescribeSessionsAsync(IEnumerable<Session> sessions)
     {
         var data = await conference.GetConferenceAsync();
@@ -115,4 +202,4 @@ public sealed class ConferenceTools(ConferenceService conference, SessionSearchS
 }
 
 public sealed record SessionToolResult(string Id, string Title, string Start, string End, string? Track, string Speakers, string Abstract);
-public sealed record SpeakerToolResult(string Name, string? Tagline, string Biography);
+public sealed record SpeakerToolResult(string Id, string Name, string? Tagline, string Biography);
