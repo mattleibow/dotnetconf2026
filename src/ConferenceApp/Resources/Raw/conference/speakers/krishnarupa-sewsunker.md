@@ -1,0 +1,3 @@
+# Krishnarupa Sewsunker
+
+Krishna is a freelance data scientist and teacher who graduated from Temple University in the US with a Bachelor of Science in Mathematics and Computer Science. At university, she was a Dean’s scholarship recipient and a member of the Honors (high-achievers) program. She has worked online with more than 85 students/clients globally, including university students (Bachelors, Masters, PhD) and professionals in fields like electrical engineering and bioinformatics. Some notable profiles she’s worked with are: Neuroscience PhD candidate at NYU, Crime Science student at UCL, Biophysics PhD candidate at University of Maryland, and a Professor of Bioinformatics in the US.
