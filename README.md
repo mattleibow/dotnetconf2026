@@ -11,7 +11,8 @@ It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands
 | Folder | Contents |
 |---|---|
 | [`.github/prompts/`](.github/prompts/) | Twelve prompts, one per step. Copy each into your agent in order |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, the style guide, and how to test with DevFlow |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and how to test with DevFlow |
+| [`docs/design.md`](docs/design.md) | The design guide: brand colours, type, spacing, components and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions and images |
 | [`models/`](models/README.md) | A small ONNX embedding model for semantic search on platforms without a built-in one |
 
@@ -21,7 +22,16 @@ There's no app code yet. You create it.
 
 - **.NET 11 SDK** with the MAUI workload (`dotnet workload install maui`), and the platform tooling for your target: Xcode for iOS and Mac Catalyst, the Android SDK for Android.
 - **MAUI CLI** from [MAUI Labs](https://github.com/dotnet/maui-labs): `dotnet tool install -g Microsoft.Maui.Cli --prerelease`, then run `maui doctor`.
-- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the [.NET agent skills](https://github.com/dotnet/skills) and the MAUI DevFlow skills enabled.
+- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the MAUI Labs and .NET skills. With the Copilot CLI:
+
+  ```sh
+  copilot plugin marketplace add dotnet/maui-labs
+  copilot plugin install dotnet-maui@dotnet-maui-labs
+  copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
+  copilot plugin marketplace add dotnet/skills
+  copilot plugin install dotnet-maui@dotnet-agent-skills
+  copilot plugin install dotnet11@dotnet-agent-skills
+  ```
 - **For on-device AI** (steps 03 and 06 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
 
 ## The steps
