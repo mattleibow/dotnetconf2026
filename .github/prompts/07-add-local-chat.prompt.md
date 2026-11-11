@@ -4,7 +4,7 @@ description: Add an on-device assistant primed with the agenda
 
 Add an assistant page using the on-device chat client from `Microsoft.Maui.Essentials.AI` behind `IChatClient`. Start with whichever provider works on the device we have. No cloud.
 
-Put what it needs to know in the system instructions: the event, the selected city, its date and venue, the current time, my favourites, and the city's agenda as one compact line per session (time, track, title, speakers, topic, summary). Apple's model has only about 4,000 tokens, so keep it tight. Rebuild the instructions when the city, favourites or summaries change.
+Put what it needs to know in the system instructions: the event, the selected city, its date and venue, the current time, my favourites, and the city's agenda as one compact line per session (time, track, title, speakers, topic, summary). Apple's model has only about 4,000 tokens, so keep it tight. Rebuild the instructions when the city, favourites or summaries change, without losing the conversation.
 
 - Answer only from this data, and say so when it doesn't know.
 - Stream replies, allow cancelling, and let me start a new chat.
