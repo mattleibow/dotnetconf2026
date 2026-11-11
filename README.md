@@ -2,23 +2,31 @@
 
 > Use AI to build the app, then give the app that same AI.
 
-An almost-empty starter for a live demo: GitHub Copilot builds a polished .NET MAUI 11 conference app, then adds an on-device assistant that can use the app's services and take real actions.
+This repository starts almost empty. A coding agent such as GitHub Copilot builds a .NET MAUI 11 conference app from it, one prompt at a time. Then the agent adds AI to the app itself: semantic search, an on-device assistant, tools and actions, an Agent Framework workflow, and optional cloud routing.
 
-Reused across four cities. Simple code, great design, no finished app checked in.
+It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands-on workshop.
 
-## Demo data
+## What's here
 
-[`data/`](data/README.md) holds an offline snapshot of the event: a JSON catalogue, Markdown descriptions and images. The app is built from it, so the demo doesn't depend on the website. To refresh it before an event:
+| Folder | Contents |
+|---|---|
+| [`.github/prompts/`](.github/prompts/) | Twelve prompts, one per step. Copy each into your agent in order |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, the style guide, and how to test with DevFlow |
+| [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions and images |
+| [`models/`](models/README.md) | A small ONNX embedding model for semantic search on platforms without a built-in one |
 
-```sh
-dotnet run data/ImportConference.cs
-```
+There's no app code yet. You create it.
 
-[`models/`](models/README.md) holds the small ONNX embedding model used for semantic search where there's no built-in one. To refresh it: `dotnet run models/DownloadModels.cs`.
+## Before you start
 
-## Copy the prompts
+- **.NET 11 SDK** with the MAUI workload (`dotnet workload install maui`), and the platform tooling for your target: Xcode for iOS and Mac Catalyst, the Android SDK for Android.
+- **MAUI CLI** from [MAUI Labs](https://github.com/dotnet/maui-labs): `dotnet tool install -g Microsoft.Maui.Cli --prerelease`, then run `maui doctor`.
+- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the [.NET agent skills](https://github.com/dotnet/skills) and the MAUI DevFlow skills enabled.
+- **For on-device AI** (steps 03 and 06 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
 
-Run these in order, one at a time. Each builds on the last:
+## The steps
+
+Run the prompts in order, one at a time, and check the app after each. Each builds on the last.
 
 | # | Prompt | Adds |
 |---|---|---|
@@ -35,10 +43,17 @@ Run these in order, one at a time. Each builds on the last:
 | 11 | [Plan my day](.github/prompts/11-add-plan-my-day.prompt.md) | An Agent Framework workflow |
 | 12 | [Cloud routing](.github/prompts/12-add-cloud-routing.prompt.md) | Optional: send complex questions to a cloud model |
 
-The [Copilot instructions](.github/copilot-instructions.md) provide shared .NET 11, MAUI 11, design, and DevFlow guidance.
+Tips:
 
-## Before starting
+- Commit after each step, so you can go back if a step goes wrong.
+- Start each step in a fresh agent session; the prompts are written to stand alone.
+- The AI packages are experimental. If a step fails because an API changed, tell the agent to check the linked docs.
 
-Have a compatible .NET 11 SDK, MAUI workload, platform tooling, and simulator or device ready; check the workload's required Xcode version on Apple. Install the [MAUI Labs CLI](https://github.com/dotnet/maui-labs) (`dotnet tool install -g Microsoft.Maui.Cli --prerelease`) and run `maui doctor`. Enable the relevant [.NET agent skills](https://github.com/dotnet/skills) and MAUI DevFlow skills in your coding agent.
+## Refreshing the data and model
 
-The AI prompts use experimental [MAUI Labs local clients](https://github.com/dotnet/maui-labs/tree/main/src/AI/Microsoft.Maui.Essentials.AI) and [Microsoft.Extensions.AI](https://learn.microsoft.com/dotnet/ai/ai-extensions). Local models require supported hardware and model availability; a simulator alone may not be enough.
+Both are already included. To refresh them (with the .NET 11 SDK, from the repository root):
+
+```sh
+dotnet run data/ImportConference.cs
+dotnet run models/DownloadModels.cs
+```
