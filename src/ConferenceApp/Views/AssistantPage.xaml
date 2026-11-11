@@ -1,0 +1,49 @@
+<ContentPage x:Class="ConferenceApp.Views.AssistantPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:AssistantViewModel"
+             Title="Assistant"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="{StaticResource BrandGradient}" StrokeThickness="0" Padding="24,16">
+            <Grid ColumnDefinitions="*,Auto" MaximumWidthRequest="1100" ColumnSpacing="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Conference assistant" Style="{StaticResource HeaderTitle}" />
+                    <Label Text="Answers stay on your device" Style="{StaticResource HeaderText}" />
+                </VerticalStackLayout>
+                <Button Grid.Column="1" Text="New chat" Style="{StaticResource CityButton}" AutomationId="assistant-new-chat" Command="{Binding NewChatCommand}" />
+            </Grid>
+        </Border>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill" Padding="16" RowDefinitions="Auto,Auto,*,Auto" RowSpacing="8">
+            <Label Text="{Binding Status}" AutomationId="assistant-status" Style="{StaticResource SearchMatchText}" />
+            <HorizontalStackLayout Grid.Row="1" IsVisible="{Binding IsDebug}" Spacing="8">
+                <Switch AutomationId="assistant-simulated-time-enabled" IsToggled="{Binding UseSimulatedTime}" SemanticProperties.Description="Use a simulated time on event day" />
+                <Label Text="Debug: event day time" VerticalOptions="Center" />
+                <TimePicker AutomationId="assistant-simulated-time" Time="{Binding SimulatedTime}" IsEnabled="{Binding UseSimulatedTime}" />
+            </HorizontalStackLayout>
+            <CollectionView Grid.Row="2" AutomationId="assistant-messages" ItemsSource="{Binding Messages}" ItemsUpdatingScrollMode="KeepLastItemInView">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8" Padding="16">
+                        <Label Text="Ask about the agenda" Style="{StaticResource TitleText}" HorizontalTextAlignment="Center" />
+                        <Label Text="Try “What’s on after lunch?” or ask about a speaker’s session." Style="{StaticResource SearchMatchText}" HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AssistantMessage">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,8" MaximumWidthRequest="760" HorizontalOptions="Fill">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Role}" Style="{StaticResource Metadata}" />
+                                <Label Text="{Binding Text}" AutomationId="assistant-message-text" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Grid Grid.Row="3" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <Entry Placeholder="Ask about the conference" PlaceholderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray200}}" AutomationId="assistant-input" SemanticProperties.Description="Your question" Text="{Binding Input}" MaxLength="500" IsEnabled="{Binding IsAvailable}" ReturnCommand="{Binding SendCommand}" />
+                <Button Grid.Column="1" Text="Send" AutomationId="assistant-send" Command="{Binding SendCommand}" IsEnabled="{Binding IsAvailable}" />
+                <Button Grid.Column="2" Text="Cancel" AutomationId="assistant-cancel" Command="{Binding CancelCommand}" IsVisible="{Binding IsBusy}" />
+            </Grid>
+        </Grid>
+    </Grid>
+</ContentPage>

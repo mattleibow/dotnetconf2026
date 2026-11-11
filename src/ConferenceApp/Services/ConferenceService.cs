@@ -6,18 +6,30 @@ namespace ConferenceApp.Services;
 public sealed class ConferenceService
 {
     private Conference? conference;
+    private readonly SemaphoreSlim loadLock = new(1, 1);
 
     public async Task<Conference> GetConferenceAsync()
     {
         if (conference is not null)
             return conference;
 
-        using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
-        conference = await JsonSerializer.DeserializeAsync<Conference>(stream, new JsonSerializerOptions
+        await loadLock.WaitAsync();
+        try
         {
-            PropertyNameCaseInsensitive = true
-        }) ?? throw new InvalidDataException("The conference snapshot is empty.");
-        return conference;
+            if (conference is not null)
+                return conference;
+
+            using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
+            conference = await JsonSerializer.DeserializeAsync<Conference>(stream, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            }) ?? throw new InvalidDataException("The conference snapshot is empty.");
+            return conference;
+        }
+        finally
+        {
+            loadLock.Release();
+        }
     }
 
     public async Task<string> GetContentAsync(string path)

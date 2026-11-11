@@ -32,6 +32,8 @@ public static class MauiProgram
 		builder.Services.AddSingleton<CityService>();
 #if IOS || MACCATALYST
 #pragma warning disable MAUIAI0001
+		if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+			builder.Services.AddSingleton<IChatClient>(new AppleIntelligenceChatClient());
 		builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(services =>
 		{
 			if (UseOnnxOnApple)
@@ -53,6 +55,7 @@ public static class MauiProgram
 #endif
 		builder.Services.AddSingleton<SemanticSessionSearch>();
 		builder.Services.AddSingleton<SessionSummaryService>();
+		builder.Services.AddSingleton<AssistantService>();
 		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddSingleton<NearbyCityService>();
 		builder.Services.AddSingleton<FavoritesService>();
@@ -61,11 +64,13 @@ public static class MauiProgram
 		builder.Services.AddTransient<SpeakerViewModel>();
 		builder.Services.AddTransient<FavoritesViewModel>();
 		builder.Services.AddTransient<ExploreViewModel>();
+		builder.Services.AddSingleton<AssistantViewModel>();
 		builder.Services.AddSingleton<AgendaPage>();
 		builder.Services.AddTransient<SessionPage>();
 		builder.Services.AddTransient<SpeakerPage>();
 		builder.Services.AddSingleton<FavoritesPage>();
 		builder.Services.AddSingleton<ExplorePage>();
+		builder.Services.AddSingleton<AssistantPage>();
 		builder.Services.AddSingleton<AppShell>();
 
 #if DEBUG
