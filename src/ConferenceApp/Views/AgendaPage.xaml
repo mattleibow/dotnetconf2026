@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.AgendaPage"
-             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             x:DataType="vm:AgendaViewModel"
+             x:DataType="AgendaViewModel"
              Title="Agenda">
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
@@ -16,13 +15,13 @@
                 HorizontalOptions="Start" />
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="vm:SessionItem">
+                <DataTemplate x:DataType="SessionItem">
                     <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='session-{0}'}">
                         <Label Text="{Binding Session.Time}" />
                         <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
                         <Label Text="{Binding Speakers}" />
                         <VerticalStackLayout.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding BindingContext.OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
                                                   CommandParameter="{Binding .}" />
                         </VerticalStackLayout.GestureRecognizers>
                     </VerticalStackLayout>

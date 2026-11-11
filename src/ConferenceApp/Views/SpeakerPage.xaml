@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.SpeakerPage"
-             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             xmlns:m="clr-namespace:ConferenceApp.Models"
-             x:DataType="vm:SpeakerViewModel"
+             x:DataType="SpeakerViewModel"
              Title="Speaker">
     <ScrollView>
         <VerticalStackLayout Padding="10" Spacing="10">
@@ -12,12 +10,12 @@
             <Label Text="Sessions" FontAttributes="Bold" />
             <VerticalStackLayout AutomationId="speaker-sessions" BindableLayout.ItemsSource="{Binding Sessions}">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="m:Session">
+                    <DataTemplate x:DataType="Session">
                         <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Id, StringFormat='speaker-session-{0}'}">
                             <Label Text="{Binding Time}" />
                             <Label Text="{Binding Title}" />
                             <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding BindingContext.OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                                <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                       CommandParameter="{Binding .}" />
                             </VerticalStackLayout.GestureRecognizers>
                         </VerticalStackLayout>

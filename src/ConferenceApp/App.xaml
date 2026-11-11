@@ -1,5 +1,4 @@
-﻿<Application xmlns:local="clr-namespace:ConferenceApp"
-             x:Class="ConferenceApp.App">
+<Application x:Class="ConferenceApp.App">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

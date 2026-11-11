@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.ChatPage"
-             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             xmlns:m="clr-namespace:ConferenceApp.Models"
-             xmlns:conv="clr-namespace:ConferenceApp.Converters"
-             x:DataType="vm:ChatViewModel"
+             x:DataType="ChatViewModel"
              Title="Assistant">
     <ContentPage.Resources>
-        <conv:MarkdownToFormattedStringConverter x:Key="MarkdownConverter" />
+        <MarkdownToFormattedStringConverter x:Key="MarkdownConverter" />
     </ContentPage.Resources>
 
     <ContentPage.ToolbarItems>
@@ -20,7 +17,7 @@
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="x:String">
                     <Button Text="{Binding .}"
-                            Command="{Binding BindingContext.AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                            Command="{Binding AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                             CommandParameter="{Binding .}" />
                 </DataTemplate>
             </BindableLayout.ItemTemplate>
@@ -28,7 +25,7 @@
 
         <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="m:ChatItem">
+                <DataTemplate x:DataType="ChatItem">
                     <VerticalStackLayout Padding="0,6">
                         <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}" />
                     </VerticalStackLayout>

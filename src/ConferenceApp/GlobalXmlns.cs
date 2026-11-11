@@ -1,0 +1,5 @@
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Converters")]
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Models")]
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.ViewModels")]
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Views")]
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "Microsoft.Maui.Controls.Maps", AssemblyName = "Microsoft.Maui.Controls.Maps")]

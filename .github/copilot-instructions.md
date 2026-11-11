@@ -14,6 +14,9 @@ This repository is a demo conference app built live with coding agents. It is re
 Prefer current APIs over training-data habits:
 
 - CoreCLR is the default MAUI runtime. Leave the default runtime settings alone; don't copy old Mono or interpreter configuration workarounds.
+- XAML Source Generation (`MauiXamlInflator=SourceGen`), XAML Incremental Hot Reload, Lazy `ResourceDictionary`, and implicit XAML namespaces are enabled by default in .NET 11.
+- `src/ConferenceApp/GlobalXmlns.cs` registers `ConferenceApp.Converters`, `ConferenceApp.Models`, `ConferenceApp.ViewModels`, `ConferenceApp.Views`, and `Microsoft.Maui.Controls.Maps` into `http://schemas.microsoft.com/dotnet/maui/global`. Do not add `xmlns`, `xmlns:x`, `xmlns:vm`, `xmlns:m`, `xmlns:views`, or `xmlns:maps` declarations to XAML files—use unprefixed type names directly (`x:DataType="AgendaViewModel"`, `<Map ... />`, `{DataTemplate EventPage}`). Keep `GlobalXmlns.cs` updated if you add a new XAML namespace.
+- Use .NET 11 AOT-safe compiled `RelativeSource` bindings inside `DataTemplate`s by targeting the ViewModel directly (`Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel`) rather than `BindingContext.` on `ContentPage`.
 - Use the `Async` animation methods (`FadeToAsync`, `ScaleToAsync`, `TranslateToAsync`, and so on); the non-`Async` variants are obsolete. They accept a `CancellationToken`.
 - Shell supports route templates such as `Routing.RegisterRoute("session/{id}", typeof(SessionPage))`. Route templates currently require absolute navigation.
 - Several core Android controls use Material 3 styling by default. Don't fight it with custom renderers.

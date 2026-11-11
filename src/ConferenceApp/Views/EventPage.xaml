@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.EventPage"
-             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             xmlns:m="clr-namespace:ConferenceApp.Models"
-             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
-             x:DataType="vm:EventViewModel"
+             x:DataType="EventViewModel"
              Title="Event">
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
@@ -18,22 +15,22 @@
 
             <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
             <Label Text="{Binding Venue.Address}" />
-            <maps:Map x:Name="VenueMap"
-                      AutomationId="venue-map"
-                      HeightRequest="240"
-                      IsShowingUser="False" />
+            <Map x:Name="VenueMap"
+                 AutomationId="venue-map"
+                 HeightRequest="240"
+                 IsShowingUser="False" />
             <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
             <Label Text="{Binding Description}" />
 
             <Label Text="Sponsors" FontAttributes="Bold" />
             <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="m:Sponsor">
+                    <DataTemplate x:DataType="Sponsor">
                         <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
                             <Label Text="{Binding Name}" FontAttributes="Bold" />
                             <Label Text="{Binding Tier}" />
                             <VerticalStackLayout.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding BindingContext.OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                                <TapGestureRecognizer Command="{Binding OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type EventViewModel}}, x:DataType=EventViewModel}"
                                                       CommandParameter="{Binding .}" />
                             </VerticalStackLayout.GestureRecognizers>
                         </VerticalStackLayout>
