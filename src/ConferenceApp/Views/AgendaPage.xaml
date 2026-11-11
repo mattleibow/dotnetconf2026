@@ -13,6 +13,7 @@
                     <VerticalStackLayout Spacing="8">
                         <Label Text="{Binding Track}" Style="{StaticResource MetadataText}"/>
                         <Label Text="{Binding Title}" Style="{StaticResource SubtitleText}"/>
+                        <Label Text="{Binding MatchText}" IsVisible="{Binding HasMatchText}" Style="{StaticResource BodyText}" AutomationId="{Binding MatchAutomationId}"/>
                         <VerticalStackLayout Spacing="4" BindableLayout.ItemsSource="{Binding SpeakerItems}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="vm:SpeakerItem">
@@ -40,7 +41,10 @@
         <DataTemplate x:Key="GeneralTemplate" x:DataType="vm:SessionItem">
             <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="12,8" AutomationId="{Binding AutomationId}">
                 <Label Text="{Binding Time}" Style="{StaticResource CaptionText}" VerticalOptions="Center"/>
-                <Label Grid.Column="1" Text="{Binding Title}" Style="{StaticResource BodyText}" VerticalOptions="Center"/>
+                <VerticalStackLayout Grid.Column="1">
+                    <Label Text="{Binding Title}" Style="{StaticResource BodyText}" VerticalOptions="Center"/>
+                    <Label Text="{Binding MatchText}" IsVisible="{Binding HasMatchText}" Style="{StaticResource BodyText}" AutomationId="{Binding MatchAutomationId}"/>
+                </VerticalStackLayout>
             </Grid>
         </DataTemplate>
         <views:SessionTemplateSelector x:Key="SessionTemplates" Talk="{StaticResource TalkTemplate}" General="{StaticResource GeneralTemplate}"/>
@@ -65,8 +69,9 @@
             <Button Text="Find nearest city" Command="{Binding FindNearestCommand}" AutomationId="nearest-city" HorizontalOptions="Start"/>
         </VerticalStackLayout>
         </Grid>
-        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill">
-            <CollectionView ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
+        <Grid Grid.Row="1" RowDefinitions="Auto,*" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <SearchBar Text="{Binding SearchText}" Placeholder="Search sessions" AutomationId="agenda-search" Margin="16,8,16,0" SemanticProperties.Description="Search sessions in the selected city"/>
+            <CollectionView Grid.Row="1" ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
                 <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="1" HorizontalItemSpacing="8"/></CollectionView.ItemsLayout>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="Layout">
@@ -76,7 +81,7 @@
                         </VisualState>
                     </VisualStateGroup>
                 </VisualStateManager.VisualStateGroups>
-                <CollectionView.EmptyView><Label Text="No sessions found for this city." Margin="16"/></CollectionView.EmptyView>
+                <CollectionView.EmptyView><Label Text="{Binding EmptyMessage}" Style="{StaticResource BodyText}" Margin="16"/></CollectionView.EmptyView>
                 <CollectionView.GroupHeaderTemplate>
                     <DataTemplate x:DataType="vm:SessionGroup">
                         <Grid Padding="4,16,4,8">
@@ -85,8 +90,8 @@
                     </DataTemplate>
                 </CollectionView.GroupHeaderTemplate>
             </CollectionView>
-            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
-            <Label Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Grid.Row="1" Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
     </Grid>
 </ContentPage>

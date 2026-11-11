@@ -25,6 +25,7 @@ public static class MauiProgram
 #endif
 
 		builder.Services.AddSingleton<ConferenceService>();
+		builder.Services.AddSingleton<SessionSearchService>();
 		builder.Services.AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<AgendaPage>();
 		builder.Services.AddTransient<SessionDetailPage>();

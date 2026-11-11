@@ -6,12 +6,15 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AgendaViewModel(ConferenceService service) : ObservableObject
+public partial class AgendaViewModel(ConferenceService service, SessionSearchService searchService) : ObservableObject
 {
+    private int loadVersion;
     [ObservableProperty] public partial string CityName { get; set; } = "";
     [ObservableProperty] public partial string Date { get; set; } = "";
     [ObservableProperty] public partial string Error { get; set; } = "";
     [ObservableProperty] public partial bool IsBusy { get; set; }
+    [ObservableProperty] public partial string SearchText { get; set; } = "";
+    public string EmptyMessage => string.IsNullOrWhiteSpace(SearchText) ? "No sessions found for this city." : "No matching sessions found.";
     public ObservableCollection<SessionGroup> Groups { get; } = [];
     public bool IsDurban => service.CityId == "durban";
     public bool IsCapeTown => service.CityId == "cape-town";
@@ -19,23 +22,38 @@ public partial class AgendaViewModel(ConferenceService service) : ObservableObje
 
     public async Task LoadAsync()
     {
+        var version = ++loadVersion;
         IsBusy = true;
         try
         {
             Error = "";
             var data = await service.GetConferenceAsync();
-            var city = data.Cities.First(c => c.Id == service.CityId);
+            var cityId = service.CityId;
+            var query = SearchText;
+            var results = string.IsNullOrWhiteSpace(query) ? null : await searchService.SearchSessionsAsync(query);
+            if (version != loadVersion)
+                return;
+            var city = data.Cities.First(c => c.Id == cityId);
             CityName = city.Name;
             Date = city.Date.ToString("dddd, d MMMM yyyy");
             OnPropertyChanged(nameof(IsDurban));
             OnPropertyChanged(nameof(IsCapeTown));
             OnPropertyChanged(nameof(IsBloemfontein));
             Groups.Clear();
-            foreach (var group in data.Sessions.Where(s => s.CityId == city.Id).OrderBy(s => s.Start).GroupBy(s => s.Start))
-                Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group.Select(s => new SessionItem(s, data, service))));
+            var items = results is null
+                ? data.Sessions.Where(s => s.CityId == city.Id).Select(s => new SessionItem(s, data, service))
+                : results.Select(r => new SessionItem(r.Session, data, service, matchText: r.MatchText));
+            foreach (var group in items.OrderBy(s => s.Start).GroupBy(s => s.Start))
+                Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group));
         }
-        catch (Exception ex) { Error = $"Unable to load the agenda: {ex.Message}"; }
-        finally { IsBusy = false; }
+        catch (Exception ex) { if (version == loadVersion) Error = $"Unable to load the agenda: {ex.Message}"; }
+        finally { if (version == loadVersion) IsBusy = false; }
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        OnPropertyChanged(nameof(EmptyMessage));
+        _ = LoadAsync();
     }
 
     [RelayCommand]
@@ -84,6 +102,9 @@ public partial class SessionItem : ObservableObject
     private readonly ConferenceService service;
     private readonly Action<SessionItem>? favoriteChanged;
     public string Title => session.Title;
+    public DateTimeOffset Start => session.Start;
+    public string MatchText { get; }
+    public bool HasMatchText => !string.IsNullOrEmpty(MatchText);
     public string Time => $"{session.Start:HH:mm} – {session.End:HH:mm}";
     public string Track => session.Track ?? "Main session";
     public string Speakers { get; }
@@ -91,15 +112,17 @@ public partial class SessionItem : ObservableObject
     public bool IsGeneral => !IsSession;
     public bool IsSession => session.Kind == "session";
     public string AutomationId => $"session-{session.Id}";
+    public string MatchAutomationId => $"search-match-{session.Id}";
     public string FavoriteAutomationId => $"favorite-{session.Id}";
     public string FavoriteDescription => service.IsFavorite(session.Id) ? $"Remove {session.Title} from favourites" : $"Add {session.Title} to favourites";
     public string Heart => service.IsFavorite(session.Id) ? "heart_filled.png" : "heart_outline.png";
 
-    public SessionItem(Session session, Conference data, ConferenceService service, Action<SessionItem>? favoriteChanged = null)
+    public SessionItem(Session session, Conference data, ConferenceService service, Action<SessionItem>? favoriteChanged = null, string matchText = "")
     {
         this.session = session;
         this.service = service;
         this.favoriteChanged = favoriteChanged;
+        MatchText = matchText;
         Speakers = string.Join(", ", data.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => s.Name));
         SpeakerItems = data.Speakers.Where(s => session.SpeakerIds.Contains(s.Id)).Select(s => new SpeakerItem(s, service)).ToList();
     }
