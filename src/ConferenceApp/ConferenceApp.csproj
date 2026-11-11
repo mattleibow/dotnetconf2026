@@ -22,7 +22,7 @@
 
 
 		<!-- Display name -->
-		<ApplicationTitle>ConferenceApp</ApplicationTitle>
+		<ApplicationTitle>.NET Conf South Africa</ApplicationTitle>
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.conferenceapp</ApplicationId>

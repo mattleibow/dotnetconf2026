@@ -1,0 +1,93 @@
+<ContentPage x:Class="ConferenceApp.Views.AgendaPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:AgendaViewModel"
+             x:Name="Page"
+             Title="Agenda"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <Grid RowDefinitions="Auto,*">
+        <Border Background="{StaticResource BrandGradient}" StrokeThickness="0" Padding="24,16,24,20">
+            <VerticalStackLayout Spacing="8" MaximumWidthRequest="1100">
+                <Label Text=".NET CONF 2026" Style="{StaticResource HeaderTitle}" />
+                <Label Text="Community Edition South Africa" Style="{StaticResource HeaderText}" />
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                    <Label Text="{Binding EventDate}" Style="{StaticResource HeaderText}" VerticalOptions="Center" />
+                    <Button Grid.Column="1" Text="Find nearest" Style="{StaticResource CityButton}" AutomationId="nearest-city" Command="{Binding FindNearestCommand}" />
+                </Grid>
+                <FlexLayout Wrap="Wrap" Direction="Row">
+                    <Button Text="Durban" Style="{StaticResource CityButton}" AutomationId="city-durban" SemanticProperties.Description="Select Durban" Command="{Binding SelectCityCommand}" CommandParameter="durban">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Durban"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Durban, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Cape Town" Style="{StaticResource CityButton}" AutomationId="city-cape-town" SemanticProperties.Description="Select Cape Town" Command="{Binding SelectCityCommand}" CommandParameter="cape-town">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Cape Town"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Cape Town, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                    <Button Text="Bloemfontein" Style="{StaticResource CityButton}" AutomationId="city-bloemfontein" SemanticProperties.Description="Select Bloemfontein" Command="{Binding SelectCityCommand}" CommandParameter="bloemfontein">
+                        <Button.Triggers><DataTrigger TargetType="Button" Binding="{Binding CityName}" Value="Bloemfontein"><Setter Property="BackgroundColor" Value="{StaticResource BrandAccent}" /><Setter Property="SemanticProperties.Description" Value="Bloemfontein, selected" /></DataTrigger></Button.Triggers>
+                    </Button>
+                </FlexLayout>
+            </VerticalStackLayout>
+        </Border>
+        <Grid Grid.Row="1" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+            <CollectionView AutomationId="session-list" ItemsSource="{Binding Groups}" Margin="16,8">
+                <CollectionView.EmptyView>
+                    <Label Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SessionGroup">
+                        <VerticalStackLayout>
+                            <Grid HeightRequest="52">
+                                <Label Text="{Binding Time}" Style="{StaticResource TitleText}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level2" />
+                            </Grid>
+                            <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="SpaceBetween" BindableLayout.ItemsSource="{Binding .}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SessionCard">
+                                        <Border Style="{StaticResource Card}" AutomationId="{Binding AutomationId}" FlexLayout.Basis="100%" Margin="0,0,0,8">
+                                            <Border.Triggers>
+                                                <DataTrigger TargetType="Border" Binding="{Binding IsGeneral}" Value="True"><Setter Property="Style" Value="{StaticResource GeneralCard}" /></DataTrigger>
+                                                <DataTrigger TargetType="Border" Binding="{Binding UseHalfWidth}" Value="True"><Setter Property="FlexLayout.Basis" Value="49%" /></DataTrigger>
+                                            </Border.Triggers>
+                                            <Border.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}" CommandParameter="{Binding .}" />
+                                            </Border.GestureRecognizers>
+                                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                                <VerticalStackLayout Spacing="6">
+                                                    <Border Style="{StaticResource TrackChip}">
+                                                        <Border.Triggers>
+                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Track 2"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
+                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Auditorium"><Setter Property="BackgroundColor" Value="{StaticResource BrandSecondary}" /></DataTrigger>
+                                                            <DataTrigger TargetType="Border" Binding="{Binding Track}" Value="Lecture 5"><Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" /></DataTrigger>
+                                                        </Border.Triggers>
+                                                        <Label Text="{Binding Track}" Style="{StaticResource ChipText}" />
+                                                    </Border>
+                                    <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
+                                    <Label Text="{Binding Time}" />
+                                    <HorizontalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Speakers}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:SpeakerCard">
+                                                <Border StrokeShape="RoundRectangle 16" HeightRequest="32" WidthRequest="32" Padding="0" SemanticProperties.Description="{Binding Name}">
+                                                    <Grid>
+                                                        <Label Text="{Binding Initials}" HorizontalOptions="Center" VerticalOptions="Center" />
+                                                        <Image Source="{Binding Photo}" Aspect="AspectFill" />
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding SpeakerNames}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1" Text="{Binding Heart}" Style="{StaticResource HeartButton}" AutomationId="{Binding FavoriteAutomationId}"
+                                        SemanticProperties.Description="{Binding FavoriteDescription}"
+                                        Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type vm:AgendaViewModel}}, x:DataType=vm:AgendaViewModel}"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+        </Grid>
+    </Grid>
+</ContentPage>

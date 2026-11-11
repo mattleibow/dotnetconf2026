@@ -1,0 +1,37 @@
+<ContentPage x:Class="ConferenceApp.Views.ExplorePage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:ExploreViewModel" Title="Venue &amp; sponsors"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <ScrollView AutomationId="explore-page">
+        <VerticalStackLayout Spacing="16" Padding="24" MaximumWidthRequest="1100">
+            <Label Text="{Binding CityName}" Style="{StaticResource Metadata}" />
+            <Label Text="Venue" Style="{StaticResource TitleText}" />
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Image Source="{Binding VenueImage}" HeightRequest="220" Aspect="AspectFill" />
+                    <Label Text="{Binding VenueName}" Style="{StaticResource CardTitle}" />
+                    <Label Text="{Binding Address}" />
+                    <Label Text="{Binding Description}" />
+                    <Button Text="Open map" AutomationId="venue-map" Command="{Binding OpenMapCommand}" />
+                </VerticalStackLayout>
+            </Border>
+            <Label Text="Sponsors" Style="{StaticResource TitleText}" />
+            <Label Text="{Binding Status}" />
+            <FlexLayout BindableLayout.ItemsSource="{Binding Sponsors}" Wrap="Wrap" Direction="Row" JustifyContent="Center">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="vm:SponsorCard">
+                        <Border Style="{StaticResource Card}" WidthRequest="240" Margin="0,0,12,12">
+                            <VerticalStackLayout Spacing="8">
+                                <Border BackgroundColor="{StaticResource White}" StrokeThickness="0" Padding="8">
+                                    <Image Source="{Binding Logo}" HeightRequest="80" Aspect="AspectFit" />
+                                </Border>
+                                <Label Text="{Binding Name}" Style="{StaticResource CardTitle}" />
+                                <Label Text="{Binding Tier}" Style="{StaticResource Metadata}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

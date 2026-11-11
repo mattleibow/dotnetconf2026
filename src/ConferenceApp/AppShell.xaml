@@ -1,11 +1,4 @@
 <Shell
     x:Class="ConferenceApp.AppShell"
-    xmlns:local="clr-namespace:ConferenceApp"
-    Title="ConferenceApp">
-
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
-
+    Title=".NET Conf 2026">
 </Shell>

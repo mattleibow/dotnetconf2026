@@ -3,6 +3,13 @@
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
     <Color x:Key="Primary">#512BD4</Color>
+    <Color x:Key="BrandAccent">#E63888</Color>
+    <Color x:Key="BrandLight">#8454E4</Color>
+    <Color x:Key="PageLight">#F8F9FA</Color>
+    <Color x:Key="PageDark">#1A1A2E</Color>
+    <Color x:Key="SurfaceDark">#29283F</Color>
+    <Color x:Key="BrandDark">#3B1F99</Color>
+    <Color x:Key="BrandSecondary">#6C3DD8</Color>
     <Color x:Key="PrimaryDark">#ac99ea</Color>
     <Color x:Key="PrimaryDarkText">#242424</Color>
     <Color x:Key="Secondary">#DFD8F7</Color>

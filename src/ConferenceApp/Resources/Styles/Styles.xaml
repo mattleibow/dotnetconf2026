@@ -1,6 +1,74 @@
 ﻿<ResourceDictionary 
     >
 
+    <LinearGradientBrush x:Key="BrandGradient" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource Primary}" Offset="0" />
+        <GradientStop Color="{StaticResource BrandAccent}" Offset="1" />
+    </LinearGradientBrush>
+    <Style x:Key="Card" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource White}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Shadow">
+            <Setter.Value>
+                <Shadow Brush="{StaticResource PrimaryBrush}" Offset="0,3" Radius="10" Opacity="0.10" />
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="TitleText" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="22" />
+    </Style>
+    <Style x:Key="CardTitle" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="17" />
+    </Style>
+    <Style x:Key="GeneralCard" TargetType="Border" BasedOn="{StaticResource Card}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Shadow" Value="{x:Null}" />
+    </Style>
+    <Style x:Key="Metadata" TargetType="Label">
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource BrandLight}}" />
+    </Style>
+    <Style x:Key="HeaderTitle" TargetType="Label" BasedOn="{StaticResource TitleText}">
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+    </Style>
+    <Style x:Key="HeaderText" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+    </Style>
+    <Style x:Key="CityButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource BrandDark}" />
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="CornerRadius" Value="22" />
+        <Setter Property="MinimumHeightRequest" Value="48" />
+        <Setter Property="Margin" Value="0,0,8,8" />
+    </Style>
+    <Style x:Key="HeartButton" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent" />
+        <Setter Property="TextColor" Value="{StaticResource BrandAccent}" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="VerticalOptions" Value="Start" />
+    </Style>
+    <Style x:Key="TrackChip" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+    </Style>
+    <Style x:Key="ChipText" TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="FontFamily" Value="OpenSansSemibold" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
     <Style TargetType="ActivityIndicator">
         <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />
     </Style>

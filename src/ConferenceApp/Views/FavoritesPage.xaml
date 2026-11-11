@@ -1,0 +1,26 @@
+<ContentPage x:Class="ConferenceApp.Views.FavoritesPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             x:DataType="vm:FavoritesViewModel" Title="Favourites"
+             BackgroundColor="{AppThemeBinding Light={StaticResource PageLight}, Dark={StaticResource PageDark}}">
+    <CollectionView AutomationId="favorites-list" ItemsSource="{Binding Sessions}" Margin="16" MaximumWidthRequest="1100">
+        <CollectionView.EmptyView>
+            <Label Text="{Binding Status}" HorizontalOptions="Center" VerticalOptions="Center" />
+        </CollectionView.EmptyView>
+        <CollectionView.ItemTemplate>
+            <DataTemplate x:DataType="vm:SessionCard">
+                <Border Style="{StaticResource Card}" Margin="0,0,0,8" AutomationId="{Binding AutomationId}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type vm:FavoritesViewModel}}, x:DataType=vm:FavoritesViewModel}" CommandParameter="{Binding .}" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="{Binding Track}" Style="{StaticResource Metadata}" />
+                        <Label Text="{Binding Title}" Style="{StaticResource CardTitle}" />
+                        <Label Text="{Binding CityAndDate}" />
+                        <Label Text="{Binding Time}" />
+                        <Label Text="{Binding SpeakerNames}" />
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</ContentPage>
