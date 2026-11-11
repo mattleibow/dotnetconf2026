@@ -92,7 +92,8 @@ The .NET Conf 2026 brand, from the event website:
 
 - Give interactive and important elements a stable, kebab-case `AutomationId`, such as `session-list`, `favorite-button`, and `sponsors-tab`.
 - Make list items tappable with a tap gesture or command on the item, and give each item a stable `AutomationId`; `CollectionView` selection is awkward to drive from automation.
-- Build one target framework at a time (`dotnet build -f net11.0-maccatalyst`, then run). Parallel builds of different target frameworks share `obj/` and corrupt each other.
+- Build one target framework at a time (`dotnet build -f net11.0-maccatalyst`, then run). Parallel builds of different target frameworks share `obj/` and corrupt each other. Build before `-t:Run`; `-t:Run` on its own may launch a stale or missing app.
+- If a simulator screenshot shows the wrong device or the home screen, use `xcrun simctl io <UDID> screenshot <file>` for the simulator running your app.
 - When driving the app with the `maui devflow` CLI, prefer `batch` for several steps and pass the agent port explicitly; separate concurrent CLI calls can conflict. The broker may list agents from other apps, so pick yours by app name and process.
 - After a meaningful change, build and run the app, then use MAUI DevFlow to inspect the visual tree, interact with the UI, and take screenshots. Check both a phone in portrait and a wide desktop window (Mac Catalyst at about 1200 px wide). Fix what you see; don't stop at "it compiles."
 - **Design review.** When a screen is done, take phone and desktop screenshots and ask a second reviewer to critique them: a rubber-duck or code-review sub-agent, ideally on a stronger model than the one building. Give it the screenshots, the style guide above, and what the screen is for. Ask for the top issues in functionality, layout, visual polish and accessibility, then fix the ones that matter. One review round per screen is enough.
