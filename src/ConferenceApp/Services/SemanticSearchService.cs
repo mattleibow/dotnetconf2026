@@ -1,7 +1,7 @@
-using System.Text.RegularExpressions;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
@@ -27,11 +27,11 @@ public sealed class SemanticSearchService(
             var seen = new HashSet<string>();
             if (index.Count == 0)
                 return new(results, "");
-            await foreach (var hit in index.Collection.SearchAsync(query, index.Count))
+            await foreach (var hit in index.Writer.VectorStoreCollection.SearchAsync(query, index.Count))
             {
-                var session = index.Sessions[hit.Record.SessionId];
+                var session = index.Sessions[(string)hit.Record["documentid"]!];
                 if (session.CityId == cityId && seen.Add(session.Id))
-                    results.Add(new SessionSearchResult(session, hit.Record.Excerpt, true));
+                    results.Add(new SessionSearchResult(session, (string)hit.Record["excerpt"]!, true));
             }
             return new(results, "");
         }
@@ -48,48 +48,42 @@ public sealed class SemanticSearchService(
         logger.LogInformation("Building semantic search index with {Generator}", generator.GetType().FullName);
         var store = new InMemoryVectorStore(new() { EmbeddingGenerator = generator });
         var dimensions = generator is OnnxEmbeddingGenerator ? 384 : 512;
-        var definition = new VectorStoreCollectionDefinition
-        {
-            Properties =
-            [
-                new VectorStoreKeyProperty(nameof(SessionChunk.Key), typeof(int)),
-                new VectorStoreDataProperty(nameof(SessionChunk.SessionId), typeof(string)),
-                new VectorStoreDataProperty(nameof(SessionChunk.Excerpt), typeof(string)),
-                new VectorStoreVectorProperty(nameof(SessionChunk.Text), typeof(string), dimensions),
-            ]
-        };
-        var collection = store.GetCollection<int, SessionChunk>("sessions", definition);
-        await collection.EnsureCollectionExistsAsync();
+        var writer = new VectorStoreWriter<string>(store, dimensions);
         var data = await conferenceService.GetConferenceAsync();
-        var sessions = data.Sessions.Where(s => s.Kind == "session").ToDictionary(s => s.Id);
-        var count = 0;
-        foreach (var session in sessions.Values)
+        var sessions = new Dictionary<string, Session>();
+        var directory = Path.Combine(FileSystem.AppDataDirectory, "conference", "sessions");
+        Directory.CreateDirectory(directory);
+
+        try
         {
-            var text = await conferenceService.GetContentAsync(session.Content);
-            var normalized = string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-            var sentences = Regex.Split(normalized, @"(?<=[.!?])\s+").Where(s => s.Length > 0).ToArray();
-            for (var i = 0; i < sentences.Length; i += 2)
+            foreach (var session in data.Sessions.Where(s => s.Kind == "session"))
             {
-                var excerpt = string.Join(" ", sentences.Skip(i).Take(2));
-                await collection.UpsertAsync(new SessionChunk
-                {
-                    Key = count++,
-                    SessionId = session.Id,
-                    Excerpt = excerpt,
-                    Text = $"{session.Title}. {excerpt}"
-                });
+                var path = Path.Combine(directory, Path.GetFileName(session.Content));
+                using var source = await FileSystem.OpenAppPackageFileAsync($"conference/{session.Content}");
+                using var destination = File.Create(path);
+                await source.CopyToAsync(destination);
+                sessions.Add(path, session);
             }
+
+            var chunker = new SessionChunker(sessions);
+            var pipeline = new IngestionPipeline<string>(new MarkdownReader(), chunker, writer);
+            await foreach (var result in pipeline.ProcessAsync(sessions.Keys.Select(path => new FileInfo(path))))
+            {
+                if (!result.Succeeded)
+                    throw new InvalidOperationException($"Could not index session document '{result.DocumentId}'.", result.Exception);
+            }
+            return new(writer, pipeline, sessions, chunker.Count);
         }
-        return new(collection, sessions, count);
+        catch
+        {
+            writer.Dispose();
+            throw;
+        }
     }
 
-    private sealed record Index(InMemoryCollection<int, SessionChunk> Collection, Dictionary<string, Session> Sessions, int Count);
-
-    private sealed class SessionChunk
-    {
-        public int Key { get; set; }
-        public string SessionId { get; set; } = "";
-        public string Excerpt { get; set; } = "";
-        public string Text { get; set; } = "";
-    }
+    private sealed record Index(
+        VectorStoreWriter<string> Writer,
+        IngestionPipeline<string> Pipeline,
+        Dictionary<string, Session> Sessions,
+        int Count);
 }
