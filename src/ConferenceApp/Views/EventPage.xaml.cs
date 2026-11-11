@@ -5,11 +5,11 @@ using Microsoft.Maui.Maps;
 
 namespace ConferenceApp.Views;
 
-public partial class VenuePage : ContentPage
+public partial class EventPage : ContentPage
 {
-    private readonly VenueViewModel viewModel;
+    private readonly EventViewModel viewModel;
 
-    public VenuePage(VenueViewModel viewModel)
+    public EventPage(EventViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = this.viewModel = viewModel;
@@ -25,7 +25,7 @@ public partial class VenuePage : ContentPage
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(VenueViewModel.Venue))
+        if (e.PropertyName == nameof(EventViewModel.Venue))
             UpdateMap();
     }
 

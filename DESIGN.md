@@ -1,6 +1,6 @@
 ---
 name: .NET Conf 2026 South Africa
-description: Offline companion app for .NET Conf 2026 across Cape Town, Johannesburg, Pretoria, and Durban
+description: Offline companion app for .NET Conf 2026 across Durban, Cape Town, and Bloemfontein
 colors:
   primary: "#512BD4"
   primary-dark: "#3B1F99"
@@ -142,7 +142,7 @@ The .NET Conf 2026 brand palette pairs deep .NET purple with vibrant magenta aga
 ## Layout
 
 Spacing follows a strict 4pt grid: `4`, `8`, `12`, `16`, `24`, `32`.
-- **Phones (<800pt):** 16pt page padding, bottom tab bar (Agenda, Speakers, Favourites, Venue, Sponsors, Assistant), single-column lists, full-width cards.
+- **Phones (<800pt):** 16pt page padding, 4 bottom tabs (**Event**, **Agenda**, **Speakers**, **Assistant**), single-column lists, full-width cards.
 - **Wide windows (≥800pt):** 24pt page padding, content centred with a maximum width of 1,100pt, multi-column card grids for parallel sessions and speakers, and two-column detail pages (header and speaker cards on the left, abstract on the right).
 - **Responsive switching:** Switch layouts in one place per page using `AdaptiveTrigger` visual states or page width, never per control.
 
@@ -161,21 +161,18 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 
 ## Components
 
-### Hero Header & City Switcher
-- **Header:** 135° `Primary`-to-`Accent` gradient banner displaying the event name in `Display`, selected city and date in `Label`, and city pill chips directly underneath. Hide the Shell nav bar on pages that render their own hero header so titles never appear twice.
-- **City Chips:** Four horizontal pill chips (Cape Town, Johannesburg, Pretoria, Durban); the selected city is solid white (`#FFFFFF`) with `Primary` text, and unselected cities are outlined in translucent white with white text.
+### Event Page, Hero Header & City Switcher
+- **Event Page (Tab 1):** Starts with the 135° `Primary`-to-`Accent` hero banner displaying `.NET Conf 2026 South Africa` in `Display`, the selected city and date in `Label`, and the three city pill chips (**Durban**, **Cape Town**, **Bloemfontein**) directly underneath, followed by the Venue section (venue photo, name, address, description, embedded native `Map` with pin, and "Open in Maps" button) and the Sponsors section (logos centred on white tiles grouped by tier).
+- **Global City Pill:** Every tab (Event, Agenda, Speakers, Assistant) also exposes a city switcher pill or toolbar item in the top corner showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet so users can see and switch the active city from anywhere in the app.
 
-### Session Cards & General Items
+### Agenda & Session Cards
+- **Agenda Filter:** Segmented pill toggle at the top of Agenda switching between **All Sessions** and **Favourites** (`AutomationId="favorites-filter"`).
 - **Talk Cards:** 16pt rounded `Surface` card with time and track chip along the top, session title in `Subtitle` (max 2 lines), speaker avatars + names in `Caption`, and a 44×44pt heart toggle aligned top-right (filled `Accent` heart when favourited, outline `TextSecondary` heart otherwise). Entire card is tappable with `Background="Transparent"` on hit targets.
 - **General Items** (registration, breaks, lunch): Compact single row with time and title—no card chrome and no favourite heart.
 
 ### Detail Pages (Session & Speaker)
 - **Session Page:** Gradient header with title, time and room chips, tappable speaker rows with 40pt photos, full abstract in `Body`, and a full-width `Accent` favourite button.
 - **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards.
-
-### Venue & Sponsors
-- **Venue:** Full-width venue photo with 16pt rounded corners, venue name, address, description, an embedded native `Map` (`Microsoft.Maui.Controls.Maps`) with a pin on the venue's coordinates, and a primary "Open in Maps" button.
-- **Sponsors:** Dedicated Sponsors tab showing sponsor logos centred on white tiles grouped by tier.
 
 ### Assistant
 - **Suggestion Chips:** Horizontal scrollable pill chips at the top (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke).

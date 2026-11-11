@@ -8,53 +8,56 @@ namespace ConferenceApp.ViewModels;
 
 public record SessionItem(Session Session, string Speakers);
 
-public partial class AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject
+public partial class AgendaViewModel : ObservableObject
 {
-    public ObservableCollection<City> Cities { get; } = [];
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+
+    public AgendaViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    {
+        this.database = database;
+        this.preferences = preferences;
+        preferences.CityChanged += async (_, _) => await LoadAsync();
+        preferences.FavoritesChanged += async (_, _) => await LoadAsync();
+    }
+
     public ObservableCollection<SessionItem> Sessions { get; } = [];
 
     [ObservableProperty]
     public partial City? SelectedCity { get; set; }
 
-    partial void OnSelectedCityChanged(City? value)
-    {
-        if (value is null)
-            return;
-        _ = LoadSessionsAsync(value.Id);
-    }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(FilterText))]
+    public partial bool ShowFavoritesOnly { get; set; }
+
+    public string FilterText => ShowFavoritesOnly ? "Showing: Favourites" : "Showing: All Sessions";
+
+    partial void OnShowFavoritesOnlyChanged(bool value) =>
+        _ = LoadAsync();
 
     [RelayCommand]
     private async Task LoadAsync()
     {
-        if (Cities.Count == 0)
-        {
-            foreach (var city in await database.GetCitiesAsync())
-                Cities.Add(city);
-        }
-        SelectedCity = await preferences.GetSelectedCityAsync(database);
-    }
-
-    private async Task LoadSessionsAsync(string cityId)
-    {
+        var city = await preferences.GetSelectedCityAsync(database);
+        SelectedCity = city;
+        var favoriteIds = preferences.GetFavoriteIds();
         Sessions.Clear();
-        foreach (var session in await database.GetSessionsAsync(cityId))
+        foreach (var session in await database.GetSessionsAsync(city.Id))
         {
+            if (ShowFavoritesOnly && !favoriteIds.Contains(session.Id))
+                continue;
             var speakers = await database.GetSpeakersForSessionAsync(session);
             Sessions.Add(new SessionItem(session, string.Join(", ", speakers.Select(s => s.Name))));
         }
     }
 
     [RelayCommand]
-    private async Task PickCityAsync()
-    {
-        var names = Cities.Select(c => c.Name).ToArray();
-        var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
-        if (Cities.FirstOrDefault(c => c.Name == choice) is { } city)
-        {
-            preferences.SelectedCityId = city.Id;
-            SelectedCity = city;
-        }
-    }
+    private void ToggleFavoritesFilter() =>
+        ShowFavoritesOnly = !ShowFavoritesOnly;
+
+    [RelayCommand]
+    private Task PickCityAsync() =>
+        preferences.PickCityAsync(database);
 
     [RelayCommand]
     private Task OpenSessionAsync(SessionItem item) =>

@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage x:Class="ConferenceApp.Views.AgendaPage"
              xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
-             xmlns:m="clr-namespace:ConferenceApp.Models"
              x:DataType="vm:AgendaViewModel"
              Title="Agenda">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto,*" Padding="10" RowSpacing="10">
-        <Button AutomationId="city-picker"
-                Text="{Binding SelectedCity.Name, StringFormat='City: {0}', FallbackValue='Select City'}"
-                Command="{Binding PickCityCommand}"
+        <Button AutomationId="favorites-filter"
+                Text="{Binding FilterText}"
+                Command="{Binding ToggleFavoritesFilterCommand}"
                 HorizontalOptions="Start" />
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>

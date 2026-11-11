@@ -26,11 +26,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<UserPreferencesService>();
 		builder.Services.AddSingleton<ChatService>();
 
+		builder.Services.AddTransient<EventPage>().AddTransient<EventViewModel>();
 		builder.Services.AddTransient<AgendaPage>().AddTransient<AgendaViewModel>();
 		builder.Services.AddTransient<SpeakersPage>().AddTransient<SpeakersViewModel>();
-		builder.Services.AddTransient<FavoritesPage>().AddTransient<FavoritesViewModel>();
-		builder.Services.AddTransient<VenuePage>().AddTransient<VenueViewModel>();
-		builder.Services.AddTransient<SponsorsPage>().AddTransient<SponsorsViewModel>();
 		builder.Services.AddTransient<ChatPage>().AddTransient<ChatViewModel>();
 		builder.Services.AddTransient<SessionPage>().AddTransient<SessionViewModel>();
 		builder.Services.AddTransient<SpeakerPage>().AddTransient<SpeakerViewModel>();

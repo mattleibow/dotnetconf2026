@@ -6,16 +6,39 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel(ChatService chat) : ObservableObject
+public partial class ChatViewModel : ObservableObject
 {
+    private readonly ChatService chat;
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+
+    public ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences)
+    {
+        this.chat = chat;
+        this.database = database;
+        this.preferences = preferences;
+        preferences.CityChanged += async (_, _) => await LoadAsync();
+    }
+
     public ObservableCollection<ChatItem> Messages { get; } = [];
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
+
+    [ObservableProperty]
+    public partial City? SelectedCity { get; set; }
 
     [ObservableProperty]
     public partial string Prompt { get; set; } = "";
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
+
+    [RelayCommand]
+    private async Task LoadAsync() =>
+        SelectedCity = await preferences.GetSelectedCityAsync(database);
+
+    [RelayCommand]
+    private Task PickCityAsync() =>
+        preferences.PickCityAsync(database);
 
     [RelayCommand]
     private Task AskSuggestionAsync(string suggestion)

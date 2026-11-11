@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="ConferenceApp.Views.EventPage"
+             xmlns:vm="clr-namespace:ConferenceApp.ViewModels"
+             xmlns:m="clr-namespace:ConferenceApp.Models"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             x:DataType="vm:EventViewModel"
+             Title="Event">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="10" Spacing="10">
+            <Label Text=".NET Conf 2026 South Africa" FontAttributes="Bold" />
+            <Button AutomationId="event-city-button"
+                    Text="{Binding SelectedCity.Name, StringFormat='City: {0}', FallbackValue='Select City'}"
+                    Command="{Binding PickCityCommand}"
+                    HorizontalOptions="Start" />
+
+            <Label Text="{Binding Venue.Name}" FontAttributes="Bold" />
+            <Label Text="{Binding Venue.Address}" />
+            <maps:Map x:Name="VenueMap"
+                      AutomationId="venue-map"
+                      HeightRequest="240"
+                      IsShowingUser="False" />
+            <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
+            <Label Text="{Binding Description}" />
+
+            <Label Text="Sponsors" FontAttributes="Bold" />
+            <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="m:Sponsor">
+                        <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Text="{Binding Tier}" />
+                            <VerticalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding BindingContext.OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType=ContentPage}"
+                                                      CommandParameter="{Binding .}" />
+                            </VerticalStackLayout.GestureRecognizers>
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

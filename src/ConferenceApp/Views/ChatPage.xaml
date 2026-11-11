@@ -4,6 +4,12 @@
              xmlns:m="clr-namespace:ConferenceApp.Models"
              x:DataType="vm:ChatViewModel"
              Title="Assistant">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
     <Grid RowDefinitions="Auto,*,Auto" Padding="10" RowSpacing="10">
         <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
             <BindableLayout.ItemTemplate>

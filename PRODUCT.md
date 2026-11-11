@@ -8,7 +8,7 @@ adaptive
 
 ## Users
 
-Attendees at .NET Conf 2026 South Africa (Cape Town, Johannesburg, Pretoria, Durban) browsing the schedule on their phone in a busy conference hallway or on a laptop between talks.
+Attendees at .NET Conf 2026 South Africa (Durban, Cape Town, Bloemfontein) browsing the schedule on their phone in a busy conference hallway or on a laptop between talks.
 
 ## Product Purpose
 
@@ -25,8 +25,8 @@ Used live during one-day developer events across four South African cities, as w
 ## Capabilities and Constraints
 
 - Offline conference data packaged in `data/conference/` (`conference.json`, Markdown abstracts, speaker photos, sponsor logos, venue photos).
-- Six primary tabs: Agenda, Speakers, Favourites, Venue (with embedded map), Sponsors, and Assistant.
-- City switching updates Agenda, Speakers, Favourites, Venue, and Assistant context.
+- Four primary tabs: **Event** (hero header, city selection, venue with embedded map, and sponsors), **Agenda** (with All / Favourites filter), **Speakers**, and **Assistant**.
+- City switching is available on the Event hero and via a top-corner city pill/button on every tab, updating Event, Agenda, Speakers, Favourites, and Assistant context immediately.
 - Must look great on both a phone in portrait and a wide desktop window (Mac Catalyst).
 
 ## Brand Commitments
@@ -36,8 +36,8 @@ Used live during one-day developer events across four South African cities, as w
 
 ## Evidence on Hand
 
-- `data/conference/conference.json` and Markdown content for all four cities, speakers, venues, and sponsors.
-- Real speaker avatars (`data/conference/images/speakers/`), sponsor logos (`data/conference/images/sponsors/`), and venue photos (`data/conference/images/venues/`).
+- `data/conference/conference.json` and Markdown content for all three cities (Durban, Cape Town, Bloemfontein), speakers, venues, and sponsors.
+- Real speaker avatars (`data/conference/speakers/`), sponsor logos (`data/conference/sponsors/`), and venue photos (`data/conference/venues/`).
 
 ## Product Principles
 

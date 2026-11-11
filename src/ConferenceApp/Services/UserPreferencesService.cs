@@ -28,6 +28,19 @@ public class UserPreferencesService
     public async Task<City> GetSelectedCityAsync(ConferenceDatabase database) =>
         await database.GetCityAsync(SelectedCityId);
 
+    public async Task<City?> PickCityAsync(ConferenceDatabase database)
+    {
+        var cities = await database.GetCitiesAsync();
+        var names = cities.Select(c => c.Name).ToArray();
+        var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
+        if (cities.FirstOrDefault(c => c.Name == choice) is { } city)
+        {
+            SelectedCityId = city.Id;
+            return city;
+        }
+        return null;
+    }
+
     public IReadOnlySet<string> GetFavoriteIds() =>
         Preferences.Get(FavoritesKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
 
