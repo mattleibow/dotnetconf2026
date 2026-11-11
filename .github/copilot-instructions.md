@@ -82,7 +82,7 @@ The .NET Conf 2026 brand, from the event website:
 
 ## Agent workflow
 
-- Discover a compatible prerelease of `Microsoft.Maui.DevFlow.Agent` when needed. Use its `Microsoft.Maui.DevFlow.Agent` namespace and register it in Debug builds only:
+- Add `Microsoft.Maui.DevFlow.Agent` with the version that matches the installed `maui` CLI (check `maui --version`); `--prerelease` can pick an older, incompatible build. Use its `Microsoft.Maui.DevFlow.Agent` namespace and register it in Debug builds only:
 
   ```csharp
   #if DEBUG
