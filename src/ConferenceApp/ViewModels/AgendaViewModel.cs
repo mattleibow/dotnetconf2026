@@ -14,7 +14,10 @@ public partial class AgendaViewModel(ConferenceService service, SessionSearchSer
     [ObservableProperty] public partial string Error { get; set; } = "";
     [ObservableProperty] public partial bool IsBusy { get; set; }
     [ObservableProperty] public partial string SearchText { get; set; } = "";
-    public string EmptyMessage => string.IsNullOrWhiteSpace(SearchText) ? "No sessions found for this city." : "No matching sessions found.";
+    [ObservableProperty] public partial string SearchNotice { get; set; } = "";
+    public string EmptyMessage => string.IsNullOrWhiteSpace(SearchText) ? "No sessions found for this city."
+        : string.IsNullOrEmpty(SearchNotice) ? "No matching sessions found."
+        : "No keyword matches. Try a shorter term, speaker name, or another city.";
     public ObservableCollection<SessionGroup> Groups { get; } = [];
     public bool IsDurban => service.CityId == "durban";
     public bool IsCapeTown => service.CityId == "cape-town";
@@ -40,11 +43,19 @@ public partial class AgendaViewModel(ConferenceService service, SessionSearchSer
             OnPropertyChanged(nameof(IsCapeTown));
             OnPropertyChanged(nameof(IsBloemfontein));
             Groups.Clear();
-            var items = results is null
-                ? data.Sessions.Where(s => s.CityId == city.Id).Select(s => new SessionItem(s, data, service))
-                : results.Select(r => new SessionItem(r.Session, data, service, matchText: r.MatchText));
-            foreach (var group in items.OrderBy(s => s.Start).GroupBy(s => s.Start))
-                Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group));
+            SearchNotice = results?.Warning ?? "";
+            OnPropertyChanged(nameof(EmptyMessage));
+            if (results is null)
+            {
+                var items = data.Sessions.Where(s => s.CityId == city.Id).Select(s => new SessionItem(s, data, service));
+                foreach (var group in items.OrderBy(s => s.Start).GroupBy(s => s.Start))
+                    Groups.Add(new SessionGroup(group.Key.ToString("HH:mm"), group));
+            }
+            else
+            {
+                foreach (var group in results.Results.GroupBy(r => r.IsSemantic ? "Semantic matches (nearest, may be unrelated)" : "Keyword matches"))
+                    Groups.Add(new SessionGroup(group.Key, group.Select(r => new SessionItem(r.Session, data, service, matchText: r.MatchText))));
+            }
         }
         catch (Exception ex) { if (version == loadVersion) Error = $"Unable to load the agenda: {ex.Message}"; }
         finally { if (version == loadVersion) IsBusy = false; }

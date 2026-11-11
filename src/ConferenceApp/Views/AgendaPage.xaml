@@ -69,9 +69,10 @@
             <Button Text="Find nearest city" Command="{Binding FindNearestCommand}" AutomationId="nearest-city" HorizontalOptions="Start"/>
         </VerticalStackLayout>
         </Grid>
-        <Grid Grid.Row="1" RowDefinitions="Auto,*" MaximumWidthRequest="1100" HorizontalOptions="Fill">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*" MaximumWidthRequest="1100" HorizontalOptions="Fill">
             <SearchBar Text="{Binding SearchText}" Placeholder="Search sessions" AutomationId="agenda-search" Margin="16,8,16,0" SemanticProperties.Description="Search sessions in the selected city"/>
-            <CollectionView Grid.Row="1" ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
+            <Label Grid.Row="1" Text="{Binding SearchNotice}" Style="{StaticResource CaptionText}" Margin="16,0" AutomationId="search-notice"/>
+            <CollectionView Grid.Row="2" ItemsSource="{Binding Groups}" IsGrouped="True" AutomationId="session-list" Margin="16,8" ItemTemplate="{StaticResource SessionTemplates}">
                 <CollectionView.ItemsLayout><GridItemsLayout Orientation="Vertical" Span="1" HorizontalItemSpacing="8"/></CollectionView.ItemsLayout>
                 <VisualStateManager.VisualStateGroups>
                     <VisualStateGroup x:Name="Layout">
@@ -90,8 +91,8 @@
                     </DataTemplate>
                 </CollectionView.GroupHeaderTemplate>
             </CollectionView>
-            <ActivityIndicator Grid.Row="1" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
-            <Label Grid.Row="1" Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <ActivityIndicator Grid.Row="2" IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}"/>
+            <Label Grid.Row="2" Text="{Binding Error}" HorizontalOptions="Center" VerticalOptions="Center"/>
         </Grid>
     </Grid>
 </ContentPage>

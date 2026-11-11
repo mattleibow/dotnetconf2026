@@ -2,13 +2,17 @@ using ConferenceApp.Models;
 
 namespace ConferenceApp.Services;
 
-public sealed class SessionSearchService(ConferenceService conferenceService)
+public sealed class SessionSearchService(ConferenceService conferenceService
+#if IOS || MACCATALYST
+    , SemanticSearchService semanticSearch
+#endif
+    )
 {
-    public async Task<IReadOnlyList<SessionSearchResult>> SearchSessionsAsync(string query)
+    public async Task<SessionSearchResponse> SearchSessionsAsync(string query)
     {
         query = query.Trim();
         if (query.Length == 0)
-            return [];
+            return new([], "");
 
         var cityId = conferenceService.CityId;
         var data = await conferenceService.GetConferenceAsync();
@@ -34,8 +38,17 @@ public sealed class SessionSearchService(ConferenceService conferenceService)
             var excerpt = (start > 0 ? "…" : "") + normalized[start..end] + (end < normalized.Length ? "…" : "");
             return new SessionSearchResult(session, excerpt);
         }));
-        return results.OfType<SessionSearchResult>().ToList();
+        var matches = results.OfType<SessionSearchResult>().ToList();
+#if IOS || MACCATALYST
+        var semantic = await semanticSearch.SearchAsync(query, cityId);
+        var exactIds = matches.Select(r => r.Session.Id).ToHashSet();
+        matches.AddRange(semantic.Results.Where(r => !exactIds.Contains(r.Session.Id)).Take(5));
+        return new(matches, semantic.Warning);
+#else
+        return new(matches, "");
+#endif
     }
 }
 
-public sealed record SessionSearchResult(Session Session, string MatchText);
+public sealed record SessionSearchResult(Session Session, string MatchText, bool IsSemantic = false);
+public sealed record SessionSearchResponse(IReadOnlyList<SessionSearchResult> Results, string Warning);
