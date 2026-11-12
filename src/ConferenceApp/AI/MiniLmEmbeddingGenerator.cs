@@ -6,18 +6,15 @@ using Microsoft.ML.Tokenizers;
 
 namespace ConferenceApp.AI;
 
-public sealed class MiniLmEmbeddingGenerator : IEmbeddingGenerator<string, Embedding<float>>
+public sealed class MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> logger)
+    : IEmbeddingGenerator<string, Embedding<float>>
 {
     private const string ModelId = "all-MiniLM-L6-v2";
     private const int Dimensions = 384;
     private const int MaximumTokens = 256;
 
-    private readonly Lazy<Task<(InferenceSession Session, BertTokenizer Tokenizer)>> model;
-
-    public MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> logger)
-    {
-        model = new(() => LoadModelAsync(logger));
-    }
+    private readonly Lazy<Task<(InferenceSession Session, BertTokenizer Tokenizer)>> model =
+        new(() => LoadModelAsync(logger));
 
     public async Task<GeneratedEmbeddings<Embedding<float>>> GenerateAsync(
         IEnumerable<string> values,
