@@ -20,8 +20,3 @@ public partial class ChatItem(bool isUser, string text = "") : ObservableObject
 
     public bool HasProgress => !string.IsNullOrWhiteSpace(Progress);
 }
-
-public record ChatSessionCard(Session Session, string Metadata, string Speakers, string Reason = "")
-{
-    public bool HasReason => !string.IsNullOrWhiteSpace(Reason);
-}

@@ -116,7 +116,7 @@ public partial class DayPlanService(ConferenceDatabase database, SearchService s
         }
     }
 
-    internal static (TimeOnly Start, TimeOnly End) GetTimeWindow(string request, DayPreferences preferences)
+    private static (TimeOnly Start, TimeOnly End) GetTimeWindow(string request, DayPreferences preferences)
     {
         var start = ReadTime(ArrivalTime().Match(request), ArrivalCue().IsMatch(request) ? preferences.StartTime : "", new(8, 0));
         var end = ReadTime(DepartureTime().Match(request), DepartureCue().IsMatch(request) ? preferences.EndTime : "", new(23, 59));
@@ -156,7 +156,7 @@ public partial class DayPlanService(ConferenceDatabase database, SearchService s
         return candidates.Values.ToArray();
     }
 
-    internal static IReadOnlyList<Session> PickSchedule(IEnumerable<Candidate> candidates, TimeOnly start, TimeOnly end)
+    private static IReadOnlyList<Session> PickSchedule(IEnumerable<Candidate> candidates, TimeOnly start, TimeOnly end)
     {
         var sorted = candidates.Where(c => c.Session.IsTalk && c.Session.End > c.Session.Start &&
                 TimeOnly.FromDateTime(c.Session.Start.DateTime) >= start &&
@@ -228,7 +228,7 @@ public partial class DayPlanService(ConferenceDatabase database, SearchService s
     [GeneratedRegex(@"\b(?:leav(?:e|ing)|depart(?:ing)?|until|finish(?:ing)?|before)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex DepartureCue();
 
-    internal record Candidate(Session Session, double Score);
+    private record Candidate(Session Session, double Score);
 
     private sealed class PlanningState(City city, string request)
     {

@@ -8,26 +8,6 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakerSessionItem(Session session, string cityName,
-    string? summary = null, string? topic = null) : ObservableObject
-{
-    public Session Session { get; } = session;
-    public string Meta => Session.Track is { Length: > 0 } track
-        ? $"{cityName} · {Session.Time} · {track}"
-        : $"{cityName} · {Session.Time}";
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSummary))]
-    public partial string? Summary { get; set; } = summary;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasTopic))]
-    public partial string? Topic { get; set; } = topic;
-
-    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
-    public bool HasTopic => !string.IsNullOrWhiteSpace(Topic);
-}
-
 public partial class SpeakerViewModel : ObservableObject,
     IQueryAttributable,
     IRecipient<CityChangedMessage>,
@@ -45,7 +25,7 @@ public partial class SpeakerViewModel : ObservableObject,
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
-    public ObservableCollection<SpeakerSessionItem> Sessions { get; } = [];
+    public ObservableCollection<SessionItem> Sessions { get; } = [];
 
     [ObservableProperty]
     public partial Speaker? Speaker { get; set; }
@@ -73,11 +53,18 @@ public partial class SpeakerViewModel : ObservableObject,
         if (Speaker is null)
             return;
         var city = await preferences.GetSelectedCityAsync(database);
+        var favoriteIds = preferences.GetFavoriteIds();
         Sessions.Clear();
         foreach (var session in await database.GetSessionsForSpeakerAsync(city.Id, Speaker.Id))
         {
             var enriched = enrichment.GetSession(session.Id);
-            Sessions.Add(new SpeakerSessionItem(session, city.Name, enriched.Summary, enriched.HasTopic ? enriched.Topic : null));
+            Sessions.Add(new SessionItem(
+                session,
+                Speaker.Name,
+                favoriteIds.Contains(session.Id),
+                enriched.Summary,
+                enriched.HasTopic ? enriched.Topic : null,
+                city.Name));
         }
     }
 
@@ -92,6 +79,6 @@ public partial class SpeakerViewModel : ObservableObject,
     }
 
     [RelayCommand]
-    private Task OpenSessionAsync(SpeakerSessionItem item) =>
+    private Task OpenSessionAsync(SessionItem item) =>
         Shell.Current.GoToAsync($"session?id={item.Session.Id}");
 }

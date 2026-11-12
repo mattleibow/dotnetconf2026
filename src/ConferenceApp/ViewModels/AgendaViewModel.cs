@@ -9,26 +9,6 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SessionItem(Session session, string speakers, bool isFavorite,
-    string? summary = null, string? topic = null) : ObservableObject
-{
-    public Session Session { get; } = session;
-    public string Speakers { get; } = speakers;
-    public bool IsFavorite { get; } = isFavorite;
-    public string Meta => Session.Track is { Length: > 0 } track ? $"{Session.Time} · {track}" : Session.Time;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSummary))]
-    public partial string? Summary { get; set; } = summary;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasTopic))]
-    public partial string? Topic { get; set; } = topic;
-
-    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
-    public bool HasTopic => !string.IsNullOrWhiteSpace(Topic);
-}
-
 public partial class AgendaViewModel : ObservableObject,
     IRecipient<CityChangedMessage>,
     IRecipient<FavoritesChangedMessage>,

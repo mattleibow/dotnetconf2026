@@ -10,7 +10,7 @@
             <Label Text="Sessions" FontAttributes="Bold" />
             <VerticalStackLayout AutomationId="speaker-sessions" BindableLayout.ItemsSource="{Binding Sessions}">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="SpeakerSessionItem">
+                    <DataTemplate x:DataType="SessionItem">
                         <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='speaker-session-{0}'}">
                             <Label Text="{Binding Meta}" />
                             <Label Text="{Binding Topic}" IsVisible="{Binding HasTopic}" />
