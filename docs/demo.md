@@ -124,20 +124,24 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `Searc
   - The tool call pauses inside the chat bubble while the user sees **Approve** / **Deny** buttons!
   - Only when the user taps **Approve** does `preferences.SetFavorite(...)` run and return `"Added '...' to favourites."` to the model.
 
-### 5. Agents, Context + RAG Summaries, Sequential Workflow & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
+### 5. Agents, Multiple Context Providers, Workflows & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
 
 - **Entry point:** `builder.AddAgents()` in `MauiProgram.cs`.
-- **Live Context + Compact RAG Summaries (`CreateContextProvider` in `AgentExtensions.cs`):**
-  - Uses `Microsoft.Agents.AI.TextSearchProvider` (`TextSearchBehavior.BeforeAIInvoke`) to inject two lightweight context blocks before each turn:
-    1. **Current Event & User Context:** Selected city, event date, venue name/address, and the user's saved favourites.
-    2. **Top 5 Semantic Matches (Compact Summaries):** Queries `SearchService` and formats each match as `Time | Room [Topic] | Title | Speakers — 1-line Summary` (using the `SummaryEnricher` and `ClassificationEnricher` cache!).
+- **Multiple `AIContextProvider`s (`AIContextProviders = [userContextProvider, ragProvider]`):**
+  - `ChatClientAgentOptions.AIContextProviders` accepts a list of context providers, letting us cleanly separate concerns:
+    1. **`UserContextProvider` (Custom `AIContextProvider`):** Injects the selected city, event date, venue name/address, and the user's saved favourites.
+    2. **`CreateRagProvider` (`Microsoft.Agents.AI.TextSearchProvider`):** Runs `BeforeAIInvoke`, queries `SearchService` for the top 5 matching talks in the current city, and formats each match as `Time | Room [Topic] | Title | Speakers — 1-line Summary` (using the `SummaryEnricher` and `ClassificationEnricher` cache!).
   - Why summaries in RAG and full abstracts in `get_session`? Keeping RAG to 1-line summaries keeps the prompt small and fast for discovery, while the model calls `get_session` on demand when it needs the full multi-paragraph abstract!
-- **Chaining Agents with `AsAIAgent` + `AgentWorkflowBuilder.BuildSequential`:**
-  - `AgentExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
-    1. **`PreferencesAgent` (`localClient.AsAIAgent(name: "PreferencesAgent", instructions: ...)`):** Extracts the attendee's topic interests, arrival time, and departure time.
-    2. **`ScheduleAgent` (`localClient.AsAIAgent(new ChatClientAgentOptions { Name = "ScheduleAgent", AIContextProviders = [contextProvider], Tools = [...], ... })`):** Receives `PreferencesAgent`'s output, uses the RAG summaries and `list_sessions` tool, and picks a conflict-free schedule with a 1-sentence reason per talk.
-    3. **`AgentWorkflowBuilder.BuildSequential("DayPlanWorkflow", [preferencesAgent, scheduleAgent])`:** Chains the two agents sequentially.
-    4. **`dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)`:** Turns the workflow directly into an `IChatClient` so `SemanticRoutingChatClient` can route to it!
+- **3-Tier `SemanticRoutingChatClient` (Single Agent $\rightarrow$ Sequential Workflow $\rightarrow$ Group Chat Workflow):**
+  - `AgentExtensions.CreateAssistantRouter` wires three distinct agentic patterns behind a single `SemanticRoutingChatClient` powered by our ONNX `MiniLmEmbeddingGenerator`:
+    1. **Route 1 (Default — `CreateAssistantAgent`):** A single `localClient.AsAIAgent(...)` with `userContextProvider`, `ragProvider`, and `ConferenceToolContext.Default.Tools` for fast Q&A, speaker bios, schedule queries, and human-in-the-loop favourites.
+    2. **Route 2 (Sequential Workflow — `CreateDayPlanWorkflow` via `AgentWorkflowBuilder.BuildSequential`):**
+       - Chains `PreferencesAgent` (extracts topic interests, arrival time, and departure time using `userContextProvider`) $\rightarrow$ `ScheduleAgent` (calls `list_sessions(TimeOnly, TimeOnly)` and builds a conflict-free schedule).
+       - Wrapped via `.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)`.
+    3. **Route 3 (Group Chat Workflow — `CreateDebateWorkflow` via `AgentWorkflowBuilder.CreateGroupChatBuilderWith`):**
+       - Uses `RoundRobinGroupChatManager` (`MaximumIterationCount = 3`) to orchestrate a 3-turn panel debate between `PracticalBuilder` (hands-on mobile & AI dev), `SystemArchitect` (cloud, architecture & DevOps lead), and `TrackModerator` (synthesizes both viewpoints into a recommendation).
+       - Each streaming `ChatResponseUpdate` carries `update.AuthorName`, which `ChatService` uses to label each speaker live (`**PracticalBuilder:**`, `**SystemArchitect:**`, `**TrackModerator:**`) and attach clickable session cards for every talk pitched in the debate!
 - **Live Demo on Assistant tab:**
-  - Type **`I'm into mobile and AI, leaving at 3`** in the chat input and tap **Plan my day** (`plan-my-day`)—or just type **`Build me a conflict-free schedule for today around AI, leaving at 3`** and hit **Send**.
-  - Watch `PreferencesAgent` and `ScheduleAgent` run in sequence in `maui devflow logs`, review the recommended session cards and bulk approval card (`Add all N talks to favourites?`), tap **Approve**, and show the updated schedule in **Agenda → Favourites**.
+  - **Single Agent + RAG + Tools:** Tap **`When is Matthew's talk?`** or **`What's on after lunch?`**.
+  - **Sequential Workflow (`BuildSequential`):** Type **`I'm into mobile and AI, leaving at 3`** and tap **`Plan my day`** (`plan-my-day`). Watch `PreferencesAgent` $\rightarrow$ `ScheduleAgent` run in sequence in `maui devflow logs` and trigger the bulk approval card (`Add all N talks to favourites?`).
+  - **Group Chat Workflow (`CreateGroupChatBuilderWith`):** Tap **`Debate: AI vs Cloud talks`** and watch `PracticalBuilder`, `SystemArchitect`, and `TrackModerator` take turns debating sessions live on device!

@@ -186,20 +186,18 @@ public sealed class ConferenceAssistantTools(
             return $"No matching sessions in {city.Name}.";
 
         var conference = await database.GetConferenceAsync();
-        var lines = new List<string>(matches.Length);
+        return string.Join('\n', matches.Select(session => FormatSession(conference, session)));
+    }
 
-        foreach (var session in matches)
-        {
-            var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
-                conference.Speakers.First(s => s.Id == id).Name));
-            var enriched = enrichment.GetSession(session.Id);
-            var topic = enriched.HasTopic ? $" [{enriched.Topic}]" : "";
-            var summary = !string.IsNullOrWhiteSpace(enriched.Summary) ? $" — {enriched.Summary}" : "";
+    internal string FormatSession(Conference conference, Session session)
+    {
+        var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
+            conference.Speakers.First(s => s.Id == id).Name));
+        var enriched = enrichment.GetSession(session.Id);
+        var topic = enriched.HasTopic ? $" [{enriched.Topic}]" : "";
+        var summary = !string.IsNullOrWhiteSpace(enriched.Summary) ? $" — {enriched.Summary}" : "";
 
-            lines.Add($"{session.Time} | {session.Track ?? "All attendees"}{topic} | {session.Title} | {speakers}{summary}");
-        }
-
-        return string.Join('\n', lines);
+        return $"{session.Time} | {session.Track ?? "All attendees"}{topic} | {session.Title} | {speakers}{summary}";
     }
 
     private async Task<Session> FindSessionAsync(string cityId, string value)

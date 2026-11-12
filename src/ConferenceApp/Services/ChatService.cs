@@ -20,6 +20,7 @@ public class ChatService(
     [
         "When is Matthew's talk?",
         "What's on after lunch?",
+        "Debate: AI vs Cloud talks",
         "Do my favourites clash?"
     ];
 
@@ -63,9 +64,10 @@ public class ChatService(
 
         var receivedText = false;
         var isDayPlan = false;
+        string? activeDebateSpeaker = null;
         var updates = new List<ChatResponseUpdate>();
 
-        // Stream from SemanticRoutingChatClient (routes to DayPlanWorkflow or ConferenceAssistant).
+        // Stream from SemanticRoutingChatClient (routes to ConferenceAssistant, DayPlanWorkflow, or PanelDebateWorkflow).
         await foreach (var update in router.GetStreamingResponseAsync(history, cancellationToken: cancellationToken))
         {
             if (update.AuthorName == "PreferencesAgent")
@@ -83,6 +85,13 @@ public class ChatService(
                     reply.Progress = "ScheduleAgent: building your conflict-free schedule...");
             }
 
+            if (update.AuthorName is "PracticalBuilder" or "SystemArchitect" or "TrackModerator"
+                && !receivedText)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = $"{update.AuthorName}: preparing argument...");
+            }
+
             updates.Add(update);
             if ((update.Role is null || update.Role == ChatRole.Assistant) && !string.IsNullOrEmpty(update.Text))
             {
@@ -91,6 +100,18 @@ public class ChatService(
                     receivedText = true;
                     await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "");
                 }
+
+                // In a multi-agent Group Chat workflow, label each speaker as they take the floor.
+                if (update.AuthorName is "PracticalBuilder" or "SystemArchitect" or "TrackModerator"
+                    && update.AuthorName != activeDebateSpeaker)
+                {
+                    var prefix = activeDebateSpeaker is null
+                        ? $"**{update.AuthorName}:** "
+                        : $"\n\n**{update.AuthorName}:** ";
+                    activeDebateSpeaker = update.AuthorName;
+                    yield return prefix;
+                }
+
                 yield return update.Text;
             }
         }

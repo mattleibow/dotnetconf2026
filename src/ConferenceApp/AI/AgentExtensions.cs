@@ -18,6 +18,14 @@ public static class AgentExtensions
         "Create a full day itinerary of sessions with no clashes"
     ];
 
+    private static readonly IReadOnlyList<string> DebateUtterances =
+    [
+        "Debate: AI vs Cloud talks",
+        "Debate which track or session I should attend",
+        "Help me choose between the AI talks and the cloud architecture talks",
+        "Give me different perspectives on which sessions to pick"
+    ];
+
     public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
         builder.Services.AddScoped<ConferenceAssistantTools>();
@@ -36,8 +44,37 @@ public static class AgentExtensions
             services.GetRequiredService<UserPreferencesService>());
         var ragProvider = CreateRagProvider(services, loggerFactory);
 
-        // 1. General assistant agent: uses user context + RAG summaries + source-generated tools.
-        var assistantAgent = localClient.AsAIAgent(
+        // Route 1 (Default): Single AIAgent with user context, RAG summaries, and source-generated tools.
+        var assistantAgent = CreateAssistantAgent(localClient, userContextProvider, ragProvider, loggerFactory, services);
+
+        // Route 2 (Sequential Workflow): PreferencesAgent -> ScheduleAgent ("Plan my day").
+        var dayPlanWorkflow = CreateDayPlanWorkflow(localClient, userContextProvider, ragProvider, loggerFactory, services);
+
+        // Route 3 (Group Chat Workflow): Round-robin multi-agent panel debate ("Debate: AI vs Cloud talks").
+        var debateWorkflow = CreateDebateWorkflow(localClient, userContextProvider, ragProvider, loggerFactory, services);
+
+        // Semantic router: uses our ONNX MiniLM embeddings to pick the right agent or workflow per prompt.
+        return new SemanticRoutingChatClient(
+            services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
+            new Dictionary<IChatClient, IReadOnlyList<string>>
+            {
+                [dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)] = DayPlanUtterances,
+                [debateWorkflow.AsAIAgent(name: "PanelDebate").AsIChatClient(allowNonChatClientAgents: true)] = DebateUtterances
+            },
+            defaultClient: assistantAgent.AsIChatClient(),
+            scoreThreshold: 0.60f,
+            topK: 1,
+            leaveOpen: true);
+    }
+
+    // 1. Single Agent: Fast Q&A, speaker bios, schedule queries, and human-in-the-loop favourites.
+    private static AIAgent CreateAssistantAgent(
+        IChatClient localClient,
+        AIContextProvider userContextProvider,
+        AIContextProvider ragProvider,
+        ILoggerFactory loggerFactory,
+        IServiceProvider services) =>
+        localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
                 Name = "ConferenceAssistant",
@@ -60,7 +97,14 @@ public static class AgentExtensions
             loggerFactory,
             services);
 
-        // 2. Sequential "Plan my day" workflow: PreferencesAgent -> ScheduleAgent.
+    // 2. Sequential Workflow: Step 1 extracts arrival/departure & topics; Step 2 builds a conflict-free schedule.
+    private static Workflow CreateDayPlanWorkflow(
+        IChatClient localClient,
+        AIContextProvider userContextProvider,
+        AIContextProvider ragProvider,
+        ILoggerFactory loggerFactory,
+        IServiceProvider services)
+    {
         var preferencesAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
@@ -105,22 +149,86 @@ public static class AgentExtensions
             loggerFactory,
             services);
 
-        var dayPlanWorkflow = AgentWorkflowBuilder.BuildSequential(
+        return AgentWorkflowBuilder.BuildSequential(
             "DayPlanWorkflow",
             [preferencesAgent, scheduleAgent]);
+    }
 
-        // 3. Semantic router: uses our ONNX MiniLM embeddings to route schedule-planning prompts
-        // to the sequential workflow, while keeping general Q&A and tool calls on the assistant agent.
-        return new SemanticRoutingChatClient(
-            services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
-            new Dictionary<IChatClient, IReadOnlyList<string>>
+    // 3. Group Chat Workflow: Three specialist personas take turns debating which talks to attend.
+    private static Workflow CreateDebateWorkflow(
+        IChatClient localClient,
+        AIContextProvider userContextProvider,
+        AIContextProvider ragProvider,
+        ILoggerFactory loggerFactory,
+        IServiceProvider services)
+    {
+        var practicalBuilder = localClient.AsAIAgent(
+            new ChatClientAgentOptions
             {
-                [dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)] = DayPlanUtterances
+                Name = "PracticalBuilder",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are PracticalBuilder, a hands-on mobile & AI app developer on a conference panel.
+                        Pitch 1 or 2 practical, code-heavy or AI/mobile talks from the current city's sessions in 2 short sentences.
+                        Always use exact session titles and times from the context.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 180
+                },
+                AIContextProviders = [userContextProvider, ragProvider]
             },
-            defaultClient: assistantAgent.AsIChatClient(),
-            scoreThreshold: 0.60f,
-            topK: 1,
-            leaveOpen: true);
+            loggerFactory,
+            services);
+
+        var systemArchitect = localClient.AsAIAgent(
+            new ChatClientAgentOptions
+            {
+                Name = "SystemArchitect",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are SystemArchitect, a cloud, architecture, and DevOps lead on a conference panel.
+                        Counter PracticalBuilder by pitching 1 or 2 architecture, cloud, or platform talks from the current city's sessions in 2 short sentences.
+                        Always use exact session titles and times from the context.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 180
+                },
+                AIContextProviders = [userContextProvider, ragProvider]
+            },
+            loggerFactory,
+            services);
+
+        var trackModerator = localClient.AsAIAgent(
+            new ChatClientAgentOptions
+            {
+                Name = "TrackModerator",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are TrackModerator wrapping up the panel debate.
+                        In 2 short sentences, synthesize PracticalBuilder and SystemArchitect's picks and give the attendee a clear takeaway on which talk to pick first.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 180
+                },
+                AIContextProviders = [userContextProvider]
+            },
+            loggerFactory,
+            services);
+
+        return AgentWorkflowBuilder
+            .CreateGroupChatBuilderWith(agents => new RoundRobinGroupChatManager(agents)
+            {
+                MaximumIterationCount = 3
+            })
+            .AddParticipants(practicalBuilder, systemArchitect, trackModerator)
+            .WithName("PanelDebateWorkflow")
+            .Build();
     }
 
     // Context Provider 1: Injects the user's current city, event date, venue, and saved favourites.
@@ -172,6 +280,7 @@ public static class AgentExtensions
                     return [];
 
                 var city = await preferences.GetSelectedCityAsync(database);
+                var conference = await database.GetConferenceAsync();
                 var matches = (await search.SearchSessionsAsync(city.Id, trimmed))
                     .Where(session => session.IsTalk)
                     .Take(TopRagSessions)
@@ -183,20 +292,19 @@ public static class AgentExtensions
                 logger.LogInformation("[AI RAG] Injected {Count} session summaries in {City} for '{Query}': {Titles}",
                     matches.Count, city.Name, trimmed, string.Join(" | ", matches.Select(s => s.Title)));
 
-                return
-                [
-                    new TextSearchProvider.TextSearchResult
-                    {
-                        SourceName = $"Top Semantic Matches in {city.Name}",
-                        SourceLink = city.Id,
-                        Text = await tools.FormatSessionsAsync(city, matches)
-                    }
-                ];
+                return matches.Select(session => new TextSearchProvider.TextSearchResult
+                {
+                    SourceName = session.Title,
+                    SourceLink = session.Id,
+                    Text = tools.FormatSession(conference, session)
+                });
             },
             new TextSearchProviderOptions
             {
                 SearchTime = TextSearchProviderOptions.TextSearchBehavior.BeforeAIInvoke,
-                SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2),
+                SearchInputMessageFilter = messages => messages
+                    .Where(m => m.Role == ChatRole.User && string.IsNullOrEmpty(m.AuthorName))
+                    .TakeLast(1),
                 CitationsPrompt = "Use the current city context, session summaries, and tools to answer accurately. Do not output raw SourceDocLink IDs."
             },
             loggerFactory);
