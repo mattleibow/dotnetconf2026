@@ -56,7 +56,8 @@ maui devflow logs --follow --no-json
 
 | File | Feature |
 |---|---|
-| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` wiring `IChatClient`, `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
+| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) | `builder.AddConferenceAI()` registering `IChatClient` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient`) and `IEmbeddingGenerator` with `.UseLogging()` |
+| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddConferenceAgents()` wiring `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
 | [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) |
 | [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` + hybrid vector search |
 | [`AI/SessionRagProvider.cs`](src/ConferenceApp/AI/SessionRagProvider.cs) | Agent Framework `TextSearchProvider` (`BeforeAIInvoke`) injecting the top 3 matching session abstracts before each turn |

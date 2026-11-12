@@ -154,10 +154,10 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `Searc
      - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` / `ChangeFavoriteAsync` adds the card).
      - Click **Approve** (`chat-approve-action`), then switch to **Agenda → Favourites** to show it saved.
 
-### 5. Chained Agent Workflow & Semantic Routing ("Plan my day"): [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs)
+### 5. Chained Agent Workflow & Semantic Routing ("Plan my day"): [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
 
 - **Chaining Agents with `AsAIAgent` + `AgentWorkflowBuilder.BuildSequential`:**
-  - Instead of writing custom workflow state classes or manual `IChatClient` wrappers, `AIExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
+  - Instead of writing custom workflow state classes or manual `IChatClient` wrappers, `AgentExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
     1. **`PreferencesAgent` (`localClient.AsAIAgent(name: "PreferencesAgent", instructions: ...)`):** Extracts the attendee's topic interests, arrival time, and departure time.
     2. **`ScheduleAgent` (`localClient.AsAIAgent(new ChatClientAgentOptions { Name = "ScheduleAgent", AIContextProviders = [ragProvider], ... })`):** Automatically receives `PreferencesAgent`'s output, runs `SessionRagProvider` to inject the matching session abstracts, and picks a conflict-free schedule with a 1-sentence reason per talk.
     3. **`AgentWorkflowBuilder.BuildSequential("DayPlanWorkflow", [preferencesAgent, scheduleAgent])`:** Chains the two agents sequentially.
