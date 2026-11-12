@@ -113,38 +113,29 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `Searc
 
 ### 4. Source-Generated Tools & Human-in-the-Loop Approvals: [`src/ConferenceApp/AI/ConferenceAssistantTools.cs`](../src/ConferenceApp/AI/ConferenceAssistantTools.cs) & [`src/ConferenceApp/Services/ChatService.cs`](../src/ConferenceApp/Services/ChatService.cs)
 
-- **Compact Context + On-Demand Retrieval (`ChatService.GetSystemInstructionsAsync`):**
-  - The system prompt only gives the model 1 line per session (`time | title | speakers | room`). It doesn't bloat the context with 54 abstracts or 38 speaker bios.
 - **Declarative Tool Bindings (`Microsoft.Maui.AI.Attributes`):**
-  - `[AIToolSource]` on `ConferenceAssistantTools` + `[AITool]` on methods + `[AIToolContext]` on `ConferenceToolContext` source-generates `AIFunction` definitions (`ConferenceToolContext.Default.Tools`) with zero reflection.
-  - **Read-only tools:** `search_sessions` (calls `SearchService` for RAG!), `get_session` (loads full abstract), `get_speaker` (loads speaker bio), `list_sessions` (time range filter), `get_favorites`.
-  - **Navigation tools:** `open_session`, `open_speaker`, `open_event` (drives `Shell.Current.GoToAsync`).
-  - **Approval-gated mutation tools (`[AITool(..., ApprovalRequired = true)]`):** `add_favorite` and `remove_favorite`.
+  - `[AIToolSource]` on `ConferenceAssistantTools` + `[ExportAIFunction]` on methods source-generates `AIFunction` definitions (`ConferenceToolContext.Default.Tools`) with zero reflection.
+  - **Stateless tools:** No per-turn city state—every tool reads `await preferences.GetSelectedCityAsync(database)` directly.
+  - **Strongly-typed `TimeOnly` parameters:** `list_sessions(TimeOnly start, TimeOnly end)` uses `TimeOnly` directly (`AIJsonUtilities` generates `"format": "time"` and deserializes `"14:00"` with zero manual string parsing).
+  - **Read-only tools:** `search_sessions` (returns 1-line summaries), `get_session` (loads the full Markdown abstract on demand), `get_speaker` (loads speaker biography), `list_sessions` (`TimeOnly` window), and `get_favorites`.
+  - **Approval-gated mutation tools (`[ExportAIFunction(..., ApprovalRequired = true)]`):** `add_favorite` and `remove_favorite`.
 - **How Human-in-the-Loop Approval Works (`ChangeFavoriteAsync` & `Models/ChatApproval.cs`):**
-  - Before mutating `UserPreferencesService`, `ChangeFavoriteAsync` pushes a `ChatApproval` object (`TaskCompletionSource<bool>`) into `reply.Approvals` on the main thread and `await approval.WaitAsync(cancellationToken)`.
+  - Before mutating `UserPreferencesService`, `ChangeFavoriteAsync` pushes a `ChatApproval` object (`TaskCompletionSource<bool>`) into `CurrentReply.Approvals` on the main thread and `await approval.WaitAsync(cancellationToken)`.
   - The tool call pauses inside the chat bubble while the user sees **Approve** / **Deny** buttons!
   - Only when the user taps **Approve** does `preferences.SetFavorite(...)` run and return `"Added '...' to favourites."` to the model.
-- **Live Demo on Assistant tab (in Durban):**
-  1. Ask: **`Is there a talk about keeping AI costs down?`** then follow up with **`Who's giving it, and when?`**
-     - Point out `[AI RAG] TextSearchProvider injected 3 session abstracts...` in `maui devflow logs`—and how the follow-up combines both user questions (`TakeLast(2)`) to keep *The Hidden Cost of 'Just Call the LLM'* in context!
-  2. Ask: **`What's Niels' background?`**
-     - Watch `reply.Progress` show `"Reading biography for Niels Berglund..."` and the terminal log `[AI Tool] get_speaker('niels-berglund')`.
-  3. Ask: **`Find me a talk about sports odds and favourite it`**
-     - Watch the model use the RAG context / tools and call `add_favorite` (`"Waiting for your approval to add..."`).
-     - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` / `ChangeFavoriteAsync` adds the card).
-     - Click **Approve** (`chat-approve-action`), then switch to **Agenda → Favourites** to show it saved.
 
-### 5. Agents, RAG Middleware, Sequential Workflow & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
+### 5. Agents, Context + RAG Summaries, Sequential Workflow & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
 
 - **Entry point:** `builder.AddAgents()` in `MauiProgram.cs`.
-- **Agent Framework RAG Context Provider (`CreateRagProvider` in `AgentExtensions.cs`):**
-  - Creates a `Microsoft.Agents.AI.TextSearchProvider` configured with `TextSearchBehavior.BeforeAIInvoke` and `SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2)`.
-  - Passed into `ChatClientAgentOptions.AIContextProviders = [ragProvider]`.
-  - Before every model turn, it queries `SearchService` using the latest 1–2 user messages, fetches the top 3 matching talk abstracts for the active city, and injects them into the in-flight request without polluting the saved chat history (`[AI RAG] TextSearchProvider injected 3 session abstracts...`).
+- **Live Context + Compact RAG Summaries (`CreateContextProvider` in `AgentExtensions.cs`):**
+  - Uses `Microsoft.Agents.AI.TextSearchProvider` (`TextSearchBehavior.BeforeAIInvoke`) to inject two lightweight context blocks before each turn:
+    1. **Current Event & User Context:** Selected city, event date, venue name/address, and the user's saved favourites.
+    2. **Top 5 Semantic Matches (Compact Summaries):** Queries `SearchService` and formats each match as `Time | Room [Topic] | Title | Speakers — 1-line Summary` (using the `SummaryEnricher` and `ClassificationEnricher` cache!).
+  - Why summaries in RAG and full abstracts in `get_session`? Keeping RAG to 1-line summaries keeps the prompt small and fast for discovery, while the model calls `get_session` on demand when it needs the full multi-paragraph abstract!
 - **Chaining Agents with `AsAIAgent` + `AgentWorkflowBuilder.BuildSequential`:**
-  - Instead of writing custom workflow state classes or manual `IChatClient` wrappers, `AgentExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
+  - `AgentExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
     1. **`PreferencesAgent` (`localClient.AsAIAgent(name: "PreferencesAgent", instructions: ...)`):** Extracts the attendee's topic interests, arrival time, and departure time.
-    2. **`ScheduleAgent` (`localClient.AsAIAgent(new ChatClientAgentOptions { Name = "ScheduleAgent", AIContextProviders = [ragProvider], ... })`):** Automatically receives `PreferencesAgent`'s output, runs `SessionRagProvider` to inject the matching session abstracts, and picks a conflict-free schedule with a 1-sentence reason per talk.
+    2. **`ScheduleAgent` (`localClient.AsAIAgent(new ChatClientAgentOptions { Name = "ScheduleAgent", AIContextProviders = [contextProvider], Tools = [...], ... })`):** Receives `PreferencesAgent`'s output, uses the RAG summaries and `list_sessions` tool, and picks a conflict-free schedule with a 1-sentence reason per talk.
     3. **`AgentWorkflowBuilder.BuildSequential("DayPlanWorkflow", [preferencesAgent, scheduleAgent])`:** Chains the two agents sequentially.
     4. **`dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)`:** Turns the workflow directly into an `IChatClient` so `SemanticRoutingChatClient` can route to it!
 - **Live Demo on Assistant tab:**
