@@ -8,7 +8,7 @@ public record FavoritesChangedMessage;
 
 public class UserPreferencesService
 {
-    private const string CityKey = "city";
+    private const string CityKey = "selected_city";
     private const string FavoritesKey = "favorites";
 
     public string? SelectedCityId
@@ -26,8 +26,13 @@ public class UserPreferencesService
         }
     }
 
-    public async Task<City> GetSelectedCityAsync(ConferenceDatabase database) =>
-        await database.GetCityAsync(SelectedCityId);
+    public async Task<City> GetSelectedCityAsync(ConferenceDatabase database)
+    {
+        var city = await database.GetCityAsync(SelectedCityId);
+        if (SelectedCityId != city.Id)
+            Preferences.Set(CityKey, city.Id);
+        return city;
+    }
 
     public async Task<City?> PickCityAsync(ConferenceDatabase database)
     {
