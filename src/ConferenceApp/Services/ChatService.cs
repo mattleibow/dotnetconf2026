@@ -7,9 +7,7 @@ using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-#if IOS || MACCATALYST
 using Microsoft.Maui.Essentials.AI;
-#endif
 
 namespace ConferenceApp.Services;
 
@@ -28,34 +26,15 @@ public class ChatService(
         "Do my favourites clash?"
     ];
 
-    public async Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default)
-    {
-        using var scope = scopeFactory.CreateScope();
-        return await GetUnavailableReasonAsync(scope.ServiceProvider.GetService<IChatClient>(), cancellationToken);
-    }
-
-    private static async Task<string?> GetUnavailableReasonAsync(IChatClient? client, CancellationToken cancellationToken)
-    {
-        if (client is null)
-            return "On-device chat isn't available on this device. You can still browse the agenda and favourites. No cloud service is used.";
-
-#if IOS || MACCATALYST
-        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+    public async Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
+        await AIExtensions.GetModelAvailabilityAsync(cancellationToken) switch
         {
-            var status = await AppleIntelligenceChatClient.GetModelStatusAsync(cancellationToken);
-            return status.Availability switch
-            {
-                ChatModelAvailability.Available => null,
-                ChatModelAvailability.Disabled => "Apple Intelligence is turned off. Enable it in your device settings to chat locally. No cloud service is used.",
-                ChatModelAvailability.NotReady or ChatModelAvailability.Downloading =>
-                    "The on-device model is still getting ready. Try again after Apple Intelligence finishes downloading.",
-                _ => "Apple Intelligence isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."
-            };
-        }
-#endif
-        await Task.CompletedTask;
-        return null;
-    }
+            ChatModelAvailability.Available => null,
+            ChatModelAvailability.Disabled => "On-device AI is turned off. Enable it in your device settings to chat locally. No cloud service is used.",
+            ChatModelAvailability.NotReady or ChatModelAvailability.Downloading =>
+                "The on-device model is still getting ready. Try again after it finishes downloading.",
+            _ => "On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."
+        };
 
     public async Task<string> GetSystemInstructionsAsync() =>
         await GetSystemInstructionsAsync(await preferences.GetSelectedCityAsync(database));
@@ -99,8 +78,7 @@ public class ChatService(
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         using var scope = scopeFactory.CreateScope();
-        var client = scope.ServiceProvider.GetService<IChatClient>();
-        if (await GetUnavailableReasonAsync(client, cancellationToken) is { } reason)
+        if (await GetUnavailableReasonAsync(cancellationToken) is { } reason)
         {
             yield return reason;
             yield break;

@@ -2,9 +2,7 @@ using ConferenceApp.Services;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-#if IOS || MACCATALYST
 using Microsoft.Maui.Essentials.AI;
-#endif
 
 namespace ConferenceApp.AI;
 
@@ -30,13 +28,9 @@ public static class AIExtensions
                 .UseLogging(sp.GetRequiredService<ILoggerFactory>())
                 .Build());
 
-        // 2. On-device chat client (with Microsoft.Extensions.AI logging middleware).
-#if IOS || MACCATALYST
-        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
-        {
-            builder.Services.AddTransient<IChatClient>(CreateAppleChatClient);
-        }
-#endif
+        // 2. On-device chat client across Apple (AppleIntelligenceChatClient), Android (GeminiNanoChatClient),
+        // and Windows (WindowsAIChatClient) from Microsoft.Maui.Essentials.AI, wrapped with logging.
+        builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
 
         // 3. Data ingestion, semantic search, tools, workflow, RAG middleware & semantic router.
         builder.Services.AddSingleton<SessionEnrichmentService>();
@@ -50,18 +44,50 @@ public static class AIExtensions
         return builder;
     }
 
+    public static async Task<ChatModelAvailability> GetModelAvailabilityAsync(CancellationToken cancellationToken = default)
+    {
 #if IOS || MACCATALYST
-    [System.Runtime.Versioning.SupportedOSPlatform("ios26.0")]
-    [System.Runtime.Versioning.SupportedOSPlatform("maccatalyst26.0")]
-    private static IChatClient CreateAppleChatClient(IServiceProvider services)
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+            return (await AppleIntelligenceChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+        return ChatModelAvailability.NotSupported;
+#elif ANDROID
+        return (await GeminiNanoChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+#elif WINDOWS
+        return (await WindowsAIChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+#else
+        await Task.CompletedTask;
+        return ChatModelAvailability.NotSupported;
+#endif
+    }
+
+    private static IChatClient CreateLocalChatClient(IServiceProvider services)
     {
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        return new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
+#if IOS || MACCATALYST
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+        {
+            return new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
+                .AsBuilder()
+                .UseLogging(loggerFactory)
+                .Build();
+        }
+        throw new PlatformNotSupportedException("Apple Intelligence requires iOS or Mac Catalyst 26.0 or later.");
+#elif ANDROID
+        return new GeminiNanoChatClient()
             .AsBuilder()
+            .UseFunctionInvocation(loggerFactory)
             .UseLogging(loggerFactory)
             .Build();
-    }
+#elif WINDOWS
+        return new WindowsAIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation(loggerFactory)
+            .UseLogging(loggerFactory)
+            .Build();
+#else
+        throw new PlatformNotSupportedException("On-device chat is not supported on this platform.");
 #endif
+    }
 
     private static ChatClientAgent CreateAssistantAgent(IServiceProvider services)
     {

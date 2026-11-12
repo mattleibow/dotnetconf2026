@@ -74,17 +74,13 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `Searc
 ### 1. Wiring, RAG Middleware & Semantic Routing: [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs) & [`src/ConferenceApp/AI/SessionRagProvider.cs`](../src/ConferenceApp/AI/SessionRagProvider.cs)
 
 - **Single entry point:** `builder.AddConferenceAI()` called from `MauiProgram.cs`.
-- **`Microsoft.Extensions.AI` (`IChatClient` & `IEmbeddingGenerator`):**
-  - On iOS / Mac Catalyst 26+, registers `AppleIntelligenceChatClient` from `Microsoft.Maui.Essentials.AI` (`MAUIAI0001`).
-  - Wraps it in a `ChatClientBuilder` pipeline with `.UseLogging(loggerFactory)`:
-    ```csharp
-    new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
-        .AsBuilder()
-        .UseLogging(loggerFactory)
-        .Build()
-    ```
-  - Because `UseLogging` is attached and DevFlow captures `ILogger`, every prompt, streaming response, and function call shows up automatically in `maui devflow logs`!
-  - Passing `functionInvocationServices: services` lets Apple's native FoundationModels runtime resolve DI services when invoking tools.
+- **`Microsoft.Extensions.AI` (`IChatClient` & `IEmbeddingGenerator`) across all platforms:**
+  - `Microsoft.Maui.Essentials.AI` (`11.0.0-preview.8.26555.2`) provides local on-device `IChatClient` implementations for every platform:
+    - **iOS / Mac Catalyst:** `AppleIntelligenceChatClient(loggerFactory, functionInvocationServices: services)`
+    - **Android:** `GeminiNanoChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
+    - **Windows:** `WindowsAIChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
+  - Wraps each in a `ChatClientBuilder` pipeline with `.UseLogging(loggerFactory)` so every prompt, streaming response, and function call shows up automatically in `maui devflow logs`!
+  - And `AIExtensions.GetModelStatusAsync()` checks `ChatModelStatus.Availability` (`Available`, `Disabled`, `Downloading`, `NotReady`) uniformly across all three platforms.
 - **Agent Framework RAG Middleware (`TextSearchProvider` + `.UseAIContextProviders(...)` in `SessionRagProvider.cs`):**
   - `SessionRagProvider.Create(...)` builds a `Microsoft.Agents.AI.TextSearchProvider` configured with `TextSearchBehavior.BeforeAIInvoke` and `SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2)`.
   - Attached to the local `IChatClient` via `.AsBuilder().UseAIContextProviders(ragProvider).Build()`.

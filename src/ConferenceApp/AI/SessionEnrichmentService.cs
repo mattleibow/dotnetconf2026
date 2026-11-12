@@ -9,9 +9,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
-#if IOS || MACCATALYST
 using Microsoft.Maui.Essentials.AI;
-#endif
 
 namespace ConferenceApp.AI;
 
@@ -114,17 +112,11 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
                     await PublishAsync("On-device summaries aren't available on this device. The full agenda is ready to browse.");
                     return;
                 }
-#if IOS || MACCATALYST
-                if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+                if (await AIExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
                 {
-                    var status = await AppleIntelligenceChatClient.GetModelStatusAsync();
-                    if (status.Availability != ChatModelAvailability.Available)
-                    {
-                        await PublishAsync("Summaries need Apple Intelligence. Once it's ready, reopen the app to prepare them on this device.");
-                        return;
-                    }
+                    await PublishAsync("On-device summaries need a ready local model. Reopen the app once on-device AI is available.");
+                    return;
                 }
-#endif
                 EnricherOptions CreateOptions(string instruction) => new(client.AsBuilder().Use(async (messages, options, next, cancellationToken) =>
                 {
                     var input = messages.ToList();
