@@ -44,8 +44,7 @@ public sealed class ConferenceAssistantTools(
         if (string.IsNullOrWhiteSpace(query))
             throw new ArgumentException("Enter a topic, title or speaker.", nameof(query));
         var sessions = await search.SearchSessionsAsync(city.Id, query);
-        var results = await DescribeSessionsAsync(sessions, addCards: false, cancellationToken);
-        return string.IsNullOrEmpty(search.StatusMessage) ? results : $"{search.StatusMessage}\n{results}";
+        return await DescribeSessionsAsync(sessions, addCards: false, cancellationToken);
     }
 
     [ExportAIFunction("get_session")]

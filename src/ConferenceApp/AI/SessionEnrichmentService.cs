@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
@@ -15,10 +14,9 @@ namespace ConferenceApp.AI;
 
 public record SessionEnrichedMessage(string? SessionId);
 
-public partial class SessionEnrichmentService : ObservableObject, IDisposable
+public sealed class SessionEnrichmentService : IDisposable
 {
     private static readonly string[] Topics = ["AI", "Mobile", "Web", "Cloud", "Data", "IoT"];
-    private const string MissingSummaryMessage = "Some on-device summaries couldn't be generated. You can still read every full abstract.";
     private readonly ConcurrentDictionary<string, SessionEnrichment> results = new();
     private readonly Lazy<Task> processing;
     private readonly TaskCompletionSource<VectorStoreCollection<object, Dictionary<string, object?>>?> searchReady =
@@ -101,22 +99,14 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
                     foreach (var entry in saved)
                         results[entry.Key] = entry.Value;
                     logger.LogInformation("[AI] Loaded enrichment (summaries & topics) for {Count} sessions from local cache.", saved.Count);
-                    await PublishAsync("", cacheLoaded: true);
+                    await PublishAsync(null);
                 }
 
                 var remaining = sessions.Where(s => !results.ContainsKey(s.Id)).ToList();
-                if (remaining.Count == 0)
+                if (remaining.Count == 0 || client is null)
                     return;
-                if (client is null)
-                {
-                    await PublishAsync("On-device summaries aren't available on this device. The full agenda is ready to browse.");
-                    return;
-                }
                 if (await AIExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
-                {
-                    await PublishAsync("On-device summaries need a ready local model. Reopen the app once on-device AI is available.");
                     return;
-                }
                 EnricherOptions CreateOptions(string instruction) => new(client.AsBuilder().Use(async (messages, options, next, cancellationToken) =>
                 {
                     var input = messages.ToList();
@@ -134,11 +124,9 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
                 var classifier = new ClassificationEnricher(CreateOptions(
                     "This is ONE talk. Return exactly one label: AI, Mobile, Web, Cloud, Data, IoT, or None. Choose None unless one topic clearly fits. Do not return an explanation or one label per technology."),
                     Topics, fallbackClass: "None");
-                var completed = sessions.Count - remaining.Count;
                 foreach (var session in remaining)
                 {
                     logger.LogInformation("[AI] Enriching session {SessionId} with SummaryEnricher + ClassificationEnricher...", session.Id);
-                    await PublishAsync($"Preparing on-device summaries ({++completed}/{sessions.Count})");
                     var chunk = chunks.TryGetValue(session.Id, out var indexed) ? indexed : await ReadChunkAsync(session);
                     await foreach (var enriched in classifier.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
                     {
@@ -153,16 +141,14 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
                         await JsonSerializer.SerializeAsync(cache, results.ToDictionary(),
                             EnrichmentJsonContext.Default.DictionaryStringSessionEnrichment);
                     File.Move(temporaryPath, cachePath, overwrite: true);
-                    await PublishAsync(StatusMessage, session.Id);
+                    await PublishAsync(session.Id);
                 }
                 logger.LogInformation("[AI] Completed background enrichment for {Count} sessions.", results.Count);
-                await PublishAsync("");
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or
                 JsonException or InvalidOperationException or NotSupportedException)
             {
                 logger.LogError(exception, "[AI] Background session enrichment stopped.");
-                await PublishAsync("Couldn't prepare all on-device summaries. The agenda is still available.");
             }
             finally
             {
@@ -170,9 +156,6 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
             }
         }
     }
-
-    [ObservableProperty]
-    public partial string StatusMessage { get; set; } = "";
 
     public Task StartAsync() => processing.Value;
 
@@ -185,13 +168,9 @@ public partial class SessionEnrichmentService : ObservableObject, IDisposable
     public SessionEnrichment GetSession(string sessionId) =>
         results.TryGetValue(sessionId, out var result) ? result : SessionEnrichment.Empty;
 
-    private Task PublishAsync(string status, string? sessionId = null, bool cacheLoaded = false) =>
+    private static Task PublishAsync(string? sessionId) =>
         MainThread.InvokeOnMainThreadAsync(() =>
-        {
-            StatusMessage = status;
-            if (sessionId is not null || cacheLoaded)
-                WeakReferenceMessenger.Default.Send(new SessionEnrichedMessage(sessionId));
-        });
+            WeakReferenceMessenger.Default.Send(new SessionEnrichedMessage(sessionId)));
 
     private static string ReadMetadata(IngestionChunk<string> chunk, string key) =>
         chunk.Metadata.TryGetValue(key, out var value) && value is string text

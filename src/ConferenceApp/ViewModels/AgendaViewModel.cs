@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -27,7 +26,6 @@ public partial class AgendaViewModel : ObservableObject,
         this.preferences = preferences;
         this.search = search;
         this.enrichment = enrichment;
-        search.PropertyChanged += OnSearchPropertyChanged;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
@@ -38,9 +36,6 @@ public partial class AgendaViewModel : ObservableObject,
 
     [ObservableProperty]
     public partial string SearchQuery { get; set; } = "";
-
-    [ObservableProperty]
-    public partial string SearchStatus { get; set; } = "";
 
     [ObservableProperty]
     public partial bool ShowFavoritesOnly { get; set; }
@@ -59,12 +54,6 @@ public partial class AgendaViewModel : ObservableObject,
 
     public void Receive(SessionEnrichedMessage message) =>
         MainThread.BeginInvokeOnMainThread(() => ApplyEnrichment(message.SessionId));
-
-    private void OnSearchPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName == nameof(SearchService.StatusMessage))
-            SearchStatus = search.StatusMessage;
-    }
 
     [RelayCommand]
     private async Task LoadAsync()

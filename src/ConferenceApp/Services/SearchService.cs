@@ -1,23 +1,18 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
 using ConferenceApp.Models;
 using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.Services;
 
-public partial class SearchService(ConferenceDatabase database, SessionEnrichmentService enrichment,
-    ILogger<SearchService> logger) : ObservableObject
+public class SearchService(
+    ConferenceDatabase database,
+    SessionEnrichmentService enrichment,
+    ILogger<SearchService> logger)
 {
     private const int SemanticResultLimit = 5;
-    private int searchVersion;
-
-    [ObservableProperty]
-    public partial string StatusMessage { get; set; } = "";
 
     public async Task<IReadOnlyList<Session>> SearchSessionsAsync(string cityId, string query)
     {
-        var version = Interlocked.Increment(ref searchVersion);
-        await SetStatusAsync("", version);
         var sessions = await database.GetSessionsAsync(cityId);
         var trimmed = query.Trim();
         if (string.IsNullOrEmpty(trimmed))
@@ -36,15 +31,9 @@ public partial class SearchService(ConferenceDatabase database, SessionEnrichmen
 
         try
         {
-            var ready = enrichment.GetSearchCollectionAsync();
-            if (!ready.IsCompleted)
-                await SetStatusAsync("Preparing on-device search...", version);
-            var collection = await ready;
+            var collection = await enrichment.GetSearchCollectionAsync();
             if (collection is null)
-            {
-                await SetStatusAsync("Semantic search isn't available on this device. Showing title and speaker matches.", version);
                 return results;
-            }
 
             var matches = await Task.Run(async () =>
             {
@@ -58,27 +47,18 @@ public partial class SearchService(ConferenceDatabase database, SessionEnrichmen
             });
             var byId = sessions.ToDictionary(session => session.Id);
             var seen = results.Select(session => session.Id).ToHashSet();
-            foreach (var (id, score) in matches.Where(m => !seen.Contains(m.Id)).Take(SemanticResultLimit))
+            foreach (var (id, _) in matches.Where(m => !seen.Contains(m.Id)).Take(SemanticResultLimit))
             {
                 if (byId.TryGetValue(id, out var session) && seen.Add(id))
                     results.Add(session);
             }
             logger.LogInformation("[AI Search] Query '{Query}' in {CityId} -> Top match: '{TopTitle}' ({Total} results)",
                 trimmed, cityId, results.FirstOrDefault()?.Title ?? "none", results.Count);
-            await SetStatusAsync("", version);
         }
         catch (Exception exception) when (exception is InvalidOperationException or NotSupportedException or ArgumentException)
         {
             logger.LogError(exception, "[AI Search] On-device session search failed for city {CityId}.", cityId);
-            await SetStatusAsync("Couldn't search by meaning. Showing title and speaker matches.", version);
         }
         return results;
     }
-
-    private Task SetStatusAsync(string message, int version) =>
-        MainThread.InvokeOnMainThreadAsync(() =>
-        {
-            if (version == Volatile.Read(ref searchVersion))
-                StatusMessage = message;
-        });
 }
