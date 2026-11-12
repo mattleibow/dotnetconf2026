@@ -8,8 +8,8 @@ Add a "Plan my day" feature in the Assistant using an Agent Framework workflow (
 2. Find candidate talks for the selected city using our semantic search service (plain code).
 3. Pick a conflict-free schedule with no overlapping time slots (plain code).
 4. For each picked talk, run an agent step concurrently to write one short line on why it fits me.
-5. Present the recommended schedule in chat and ask for approval before adding all of them to my favourites.
+5. Log `[AI Workflow]` step progress via `ILogger`, update `reply.Progress` for each workflow step in the UI, and present the recommended schedule in chat with one approval card before adding all of them to my favourites.
 
 Docs: [Agent Framework in .NET MAUI](https://learn.microsoft.com/dotnet/maui/ai/agent-framework) and [Agent Framework workflows](https://learn.microsoft.com/agent-framework/).
 
-Use DevFlow on Mac Catalyst to run "Plan my day", approve the plan, and verify the sessions are favourited.
+Use DevFlow on Mac Catalyst to run "Plan my day", check `maui devflow logs --limit 25 --no-json`, approve the plan, and verify the sessions are favourited.

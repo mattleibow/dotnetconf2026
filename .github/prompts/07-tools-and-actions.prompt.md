@@ -8,8 +8,9 @@ Give the assistant tools and actions using `Microsoft.Maui.AI.Attributes` instea
 - Expose read-only tools for the selected city: search sessions (calling our semantic search service), get a session with its full abstract, get a speaker with their bio, list sessions in a time range (24-hour daytime, so "2 to 4" means `14:00`–`16:00`), and get my favourites.
 - Expose action tools: open a session, speaker, or the event/venue tab, and separate `add_favorite` and `remove_favorite` tools.
 - Changing favourites requires my approval: mark the favourite tools `ApprovalRequired` and show an inline approve/deny card in the chat. On Apple, tools run inside the native client (pass `functionInvocationServices`), so enforce the approval check inside the tool implementation itself.
-- Under each assistant reply, show compact tappable session cards only for the sessions actually returned or referenced in that turn.
+- Log `[AI Tool]` invocations via `ILogger` and update `reply.Progress` so the UI shows which tool is currently running.
+- Under each assistant reply, show compact tappable session cards only for the sessions actually inspected (`get_session`), listed, favourited, or referenced in that turn—do not attach cards for raw `search_sessions` candidates.
 
 Docs: [source-generated app tools](https://github.com/dotnet/maui-labs/blob/main/src/AIExtensions/Microsoft.Maui.AI.Attributes/README.md) and [provider tool support](https://github.com/dotnet/maui-labs/blob/main/docs/ai/local-chat-provider.md).
 
-Use DevFlow on Mac Catalyst to ask "What's Niels' background?", then "Find me a talk about football and favourite it", approve the action, and verify it appears when filtering Agenda by Favourites.
+Use DevFlow on Mac Catalyst to ask "What's Niels' background?", then "Find me a talk about football and favourite it", approve the action, check `maui devflow logs --limit 25 --no-json`, and verify it appears when filtering Agenda by Favourites.
