@@ -37,24 +37,14 @@ public static class AgentExtensions
 
     private static SemanticRoutingChatClient CreateAssistantRouter(IServiceProvider services)
     {
-        var localClient = services.GetRequiredService<IChatClient>();
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var database = services.GetRequiredService<ConferenceDatabase>();
-        var preferences = services.GetRequiredService<UserPreferencesService>();
-        var enrichment = services.GetRequiredService<SessionEnrichmentService>();
-
-        var userContext = new UserContextProvider(database, preferences);
-        var agendaContext = new AgendaContextProvider(database, preferences, enrichment);
-        var ragContext = CreateRagProvider(services, loggerFactory);
-
         // Route 1 (Default): Single AIAgent with user context, RAG search, and all tools.
-        var assistantAgent = CreateAssistantAgent(localClient, userContext, ragContext, loggerFactory, services);
+        var assistantAgent = CreateAssistantAgent(services);
 
         // Route 2 (Sequential Workflow): PreferencesAgent -> ScheduleAgent ("Plan my day").
-        var dayPlanWorkflow = CreateDayPlanWorkflow(localClient, userContext, loggerFactory, services);
+        var dayPlanWorkflow = CreateDayPlanWorkflow(services);
 
         // Route 3 (Group Chat Workflow): Round-robin multi-agent panel debate ("Debate: AI vs Cloud talks").
-        var debateWorkflow = CreateDebateWorkflow(localClient, userContext, agendaContext, loggerFactory, services);
+        var debateWorkflow = CreateDebateWorkflow(services);
 
         // Semantic router: uses our ONNX MiniLM embeddings to pick the right agent or workflow per prompt.
         return new SemanticRoutingChatClient(
@@ -70,15 +60,16 @@ public static class AgentExtensions
             leaveOpen: true);
     }
 
-    // 1. Single Agent: General Q&A, speaker bios, schedule queries, and human-in-the-loop favourites.
+    // 1. Single Agent: General Q&A, speaker bios, schedule queries, and favourites.
     //    Uses UserContext + RAG (to discover matching sessions) + both Data and Favourites tool sets.
-    private static AIAgent CreateAssistantAgent(
-        IChatClient localClient,
-        AIContextProvider userContext,
-        AIContextProvider ragContext,
-        ILoggerFactory loggerFactory,
-        IServiceProvider services) =>
-        localClient.AsAIAgent(
+    private static AIAgent CreateAssistantAgent(IServiceProvider services)
+    {
+        var localClient = services.GetRequiredService<IChatClient>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var userContext = new UserContextProvider(services);
+        var ragContext = CreateRagProvider(services);
+
+        return localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
                 Name = "ConferenceAssistant",
@@ -110,15 +101,16 @@ public static class AgentExtensions
             },
             loggerFactory,
             services);
+    }
 
     // 2. Sequential Workflow: Step 1 extracts arrival/departure & topics; Step 2 builds a conflict-free schedule.
     //    Only gives ScheduleAgent the read-only ConferenceDataTools (no favourite mutation tools).
-    private static Workflow CreateDayPlanWorkflow(
-        IChatClient localClient,
-        AIContextProvider userContext,
-        ILoggerFactory loggerFactory,
-        IServiceProvider services)
+    private static Workflow CreateDayPlanWorkflow(IServiceProvider services)
     {
+        var localClient = services.GetRequiredService<IChatClient>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var userContext = new UserContextProvider(services);
+
         var preferencesAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
@@ -178,14 +170,14 @@ public static class AgentExtensions
     }
 
     // 3. Group Chat Workflow: Three specialist personas take turns debating which talks to attend.
-    //    Uses AgendaContextProvider (Option B) so all panelists see the city's full talk catalog without tool calls.
-    private static Workflow CreateDebateWorkflow(
-        IChatClient localClient,
-        AIContextProvider userContext,
-        AIContextProvider agendaContext,
-        ILoggerFactory loggerFactory,
-        IServiceProvider services)
+    //    Uses AgendaContextProvider so all panelists see the city's full talk catalog without tool calls.
+    private static Workflow CreateDebateWorkflow(IServiceProvider services)
     {
+        var localClient = services.GetRequiredService<IChatClient>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+        var userContext = new UserContextProvider(services);
+        var agendaContext = new AgendaContextProvider(services);
+
         var practicalBuilder = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
@@ -265,10 +257,11 @@ public static class AgentExtensions
     }
 
     // Context Provider 1: Injects the user's current city, event date, venue, and saved favourites.
-    private sealed class UserContextProvider(
-        ConferenceDatabase database,
-        UserPreferencesService preferences) : AIContextProvider
+    private sealed class UserContextProvider(IServiceProvider services) : AIContextProvider
     {
+        private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
+        private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
+
         protected override async ValueTask<AIContext> ProvideAIContextAsync(
             InvokingContext context,
             CancellationToken cancellationToken = default)
@@ -296,11 +289,12 @@ public static class AgentExtensions
     }
 
     // Context Provider 2: Injects the compact talk catalog for the current city (used by the Group Chat debate).
-    private sealed class AgendaContextProvider(
-        ConferenceDatabase database,
-        UserPreferencesService preferences,
-        SessionEnrichmentService enrichment) : AIContextProvider
+    private sealed class AgendaContextProvider(IServiceProvider services) : AIContextProvider
     {
+        private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
+        private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
+        private readonly SessionEnrichmentService enrichment = services.GetRequiredService<SessionEnrichmentService>();
+
         protected override async ValueTask<AIContext> ProvideAIContextAsync(
             InvokingContext context,
             CancellationToken cancellationToken = default)
@@ -328,12 +322,13 @@ public static class AgentExtensions
 
     // Context Provider 3 (RAG): Finds the top matching sessions by semantic similarity and injects
     // each session's ID, title, and summary for discovery. The agent calls get_session for schedule/abstract details.
-    private static TextSearchProvider CreateRagProvider(IServiceProvider services, ILoggerFactory loggerFactory)
+    private static TextSearchProvider CreateRagProvider(IServiceProvider services)
     {
         var database = services.GetRequiredService<ConferenceDatabase>();
         var preferences = services.GetRequiredService<UserPreferencesService>();
         var search = services.GetRequiredService<SearchService>();
         var enrichment = services.GetRequiredService<SessionEnrichmentService>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger("ConferenceApp.AI.AgentExtensions");
 
         return new TextSearchProvider(
