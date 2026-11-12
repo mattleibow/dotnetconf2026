@@ -30,12 +30,12 @@ public static class AgentExtensions
     {
         builder.Services.AddSingleton<ConferenceDataTools>();
         builder.Services.AddSingleton<FavoritesTools>();
-        builder.Services.AddSingleton<SemanticRoutingChatClient>(CreateAssistantRouter);
+        builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;
     }
 
-    private static SemanticRoutingChatClient CreateAssistantRouter(IServiceProvider services)
+    private static IChatClient CreateAssistantRouter(IServiceProvider services)
     {
         // Route 1 (Default): Single AIAgent with user context, RAG search, and all tools.
         var assistantAgent = CreateAssistantAgent(services);

@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using ConferenceApp.AI;
 using ConferenceApp.Models;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
 
@@ -11,7 +12,7 @@ namespace ConferenceApp.Services;
 public class ChatService(
     ConferenceDatabase database,
     UserPreferencesService preferences,
-    SemanticRoutingChatClient router,
+    [FromKeyedServices("assistant")] IChatClient chatClient,
     ILogger<ChatService> logger)
 {
     public ObservableCollection<ChatItem> Messages { get; } = [];
@@ -61,8 +62,8 @@ public class ChatService(
         string? activeDebateSpeaker = null;
         var updates = new List<ChatResponseUpdate>();
 
-        // Stream from SemanticRoutingChatClient (routes to ConferenceAssistant, DayPlanWorkflow, or PanelDebateWorkflow).
-        await foreach (var update in router.GetStreamingResponseAsync(history, cancellationToken: cancellationToken))
+        // Stream from the keyed "assistant" IChatClient (routes to ConferenceAssistant, DayPlanWorkflow, or PanelDebateWorkflow).
+        await foreach (var update in chatClient.GetStreamingResponseAsync(history, cancellationToken: cancellationToken))
         {
             if (update.AuthorName == "PreferencesAgent")
             {
