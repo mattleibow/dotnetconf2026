@@ -16,6 +16,7 @@
 // Files are pinned to one Hugging Face revision and checked against their SHA-256 hashes,
 // so every run produces the same bytes.
 
+using System.Numerics.Tensors;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using Microsoft.ML.OnnxRuntime;
@@ -69,8 +70,8 @@ var query = Embed("saving money on AI");
 var related = Embed("The hidden cost of just calling the LLM: architecture patterns for cost-efficient GenAI");
 var unrelated = Embed("Lunch and networking");
 
-var relatedScore = Dot(query, related);
-var unrelatedScore = Dot(query, unrelated);
+var relatedScore = TensorPrimitives.CosineSimilarity(query, related);
+var unrelatedScore = TensorPrimitives.CosineSimilarity(query, unrelated);
 Console.WriteLine($"Embedding size: {query.Length}");
 Console.WriteLine($"Similarity to a related talk:   {relatedScore:F3}");
 Console.WriteLine($"Similarity to an unrelated one: {unrelatedScore:F3}");
@@ -81,7 +82,7 @@ if (relatedScore <= unrelatedScore)
 Console.WriteLine($"Model ready in {folder}");
 
 
-// Tokenize, run the model, then average the token vectors and normalize the result.
+// Tokenize, run the model, then pool the token vectors and L2-normalize with TensorPrimitives.
 // The app's ONNX embedding generator does the same thing.
 float[] Embed(string text)
 {
@@ -97,18 +98,14 @@ float[] Embed(string text)
     ]);
 
     // last_hidden_state has the shape [1, tokens, 384].
-    var hidden = outputs.Single(output => output.Name == "last_hidden_state").AsTensor<float>();
-    var vector = new float[hidden.Dimensions[2]];
+    var hidden = outputs.Single(output => output.Name == "last_hidden_state").AsEnumerable<float>().ToArray();
+    var vector = new float[384];
 
     for (var token = 0; token < count; token++)
-        for (var dimension = 0; dimension < vector.Length; dimension++)
-            vector[dimension] += hidden[0, token, dimension] / count;
+        TensorPrimitives.Add(vector, hidden.AsSpan(token * 384, 384), vector);
 
-    var length = MathF.Sqrt(Dot(vector, vector));
-    return [.. vector.Select(value => value / length)];
+    TensorPrimitives.Divide(vector, TensorPrimitives.Norm(vector), vector);
+    return vector;
 }
-
-// For normalized vectors, the dot product is the cosine similarity.
-static float Dot(float[] left, float[] right) => left.Zip(right, (a, b) => a * b).Sum();
 
 static string SourceDirectory([CallerFilePath] string file = "") => Path.GetDirectoryName(file)!;

@@ -1,3 +1,4 @@
+using System.Numerics.Tensors;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.ML.OnnxRuntime;
@@ -13,6 +14,7 @@ public sealed class MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> l
     private const int Dimensions = 384;
     private const int MaximumTokens = 256;
 
+    // Lazy-load the bundled ONNX model and WordPiece vocabulary once on first use.
     private readonly Lazy<Task<(InferenceSession Session, BertTokenizer Tokenizer)>> model =
         new(() => LoadModelAsync(logger));
 
@@ -27,10 +29,13 @@ public sealed class MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> l
         foreach (var text in values)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            // 1. Tokenize text into WordPiece token IDs (with [CLS] and [SEP] tokens).
             var ids = tokenizer.EncodeToIds(text, MaximumTokens, addSpecialTokens: true, out _, out _);
             var count = ids.Count;
             int[] shape = [1, count];
 
+            // 2. Run the ONNX transformer model; last_hidden_state has shape [1, tokens, 384].
             using var outputs = session.Run(
             [
                 NamedOnnxValue.CreateFromTensor("input_ids", new DenseTensor<long>(ids.Select(id => (long)id).ToArray(), shape)),
@@ -38,16 +43,13 @@ public sealed class MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> l
                 NamedOnnxValue.CreateFromTensor("token_type_ids", new DenseTensor<long>(new long[count], shape))
             ]);
 
-            var hidden = outputs.Single(output => output.Name == "last_hidden_state").AsTensor<float>();
+            // 3. Pool token vectors and L2-normalize to a unit vector using SIMD TensorPrimitives.
+            var hidden = outputs.Single(output => output.Name == "last_hidden_state").AsEnumerable<float>().ToArray();
             var vector = new float[Dimensions];
             for (var token = 0; token < count; token++)
-                for (var dimension = 0; dimension < Dimensions; dimension++)
-                    vector[dimension] += hidden[0, token, dimension] / count;
+                TensorPrimitives.Add(vector, hidden.AsSpan(token * Dimensions, Dimensions), vector);
 
-            var length = MathF.Sqrt(vector.Sum(value => value * value));
-            for (var dimension = 0; dimension < Dimensions; dimension++)
-                vector[dimension] /= length;
-
+            TensorPrimitives.Divide(vector, TensorPrimitives.Norm(vector), vector);
             embeddings.Add(new(vector));
         }
 
