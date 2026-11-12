@@ -59,8 +59,8 @@ maui devflow logs --follow --no-json
 | [`AI/ChatExtensions.cs`](src/ConferenceApp/AI/ChatExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddChatClients()` registering `IChatClient` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient`) with `.UseLogging()` |
 | [`AI/EmbeddingExtensions.cs`](src/ConferenceApp/AI/EmbeddingExtensions.cs) & [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | `builder.AddEmbeddings()` registering the 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>`, `SessionEnrichmentService`, and `SearchService` |
 | [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) + hybrid vector search |
-| [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) |
-| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddAgents()` wiring `TextSearchProvider` RAG, `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
+| [`AI/ConferenceDataTools.cs`](src/ConferenceApp/AI/ConferenceDataTools.cs) & [`AI/FavoritesTools.cs`](src/ConferenceApp/AI/FavoritesTools.cs) | Focused `[AIToolSource]` tool sets (`ConferenceDataToolContext` for read-only sessions/speakers/schedule; `FavoritesToolContext` for `get_favorites`, `add_favorite`, and `remove_favorite`) |
+| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddAgents()` wiring custom `AIContextProvider`s, `TextSearchProvider` RAG, `AsAIAgent`, `BuildSequential`, `CreateGroupChatBuilderWith`, and `SemanticRoutingChatClient` |
 
 ## Refreshing the data and model
 

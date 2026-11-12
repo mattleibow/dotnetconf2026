@@ -172,7 +172,7 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 ### Assistant
 - **Top Action & Suggestion Bar:** Pinned **Plan my day** pill button (`AutomationId="plan-my-day"`), horizontal scrollable suggestion chips (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke), and a **New chat** button (`AutomationId="chat-new"`).
 - **Message Bubbles & Live Progress:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and an inline italic progress status label (`Progress` when `HasProgress`, `AutomationId="chat-progress"`).
-- **Referenced Session Cards & Approval Cards:** Tappable session cards (`Sessions`, `AutomationId="chat-session-card-<id>"`) and inline favourite approval cards (`Approvals`, `AutomationId="chat-approval-<id>"` with `chat-approve-action` and `chat-deny-action` buttons) rendered cleanly below the assistant reply bubble.
+- **Referenced Session Cards:** Tappable session cards (`Sessions`, `AutomationId="chat-session-card-<id>"`) rendered cleanly below the assistant reply bubble.
 - **Input Bar:** Pinned bottom bar with a rounded `Surface` `Entry` and a `Primary` Send button.
 
 ## Do's and Don'ts

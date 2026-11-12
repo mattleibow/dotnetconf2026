@@ -3,15 +3,15 @@ using System.Runtime.CompilerServices;
 using ConferenceApp.AI;
 using ConferenceApp.Models;
 using Microsoft.Extensions.AI;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
 public class ChatService(
+    ConferenceDatabase database,
     UserPreferencesService preferences,
-    IServiceScopeFactory scopeFactory,
+    SemanticRoutingChatClient router,
     ILogger<ChatService> logger)
 {
     public ObservableCollection<ChatItem> Messages { get; } = [];
@@ -45,11 +45,6 @@ public class ChatService(
             yield break;
         }
 
-        using var scope = scopeFactory.CreateScope();
-        var tools = scope.ServiceProvider.GetRequiredService<ConferenceAssistantTools>();
-        var router = scope.ServiceProvider.GetRequiredService<SemanticRoutingChatClient>();
-
-        tools.CurrentReply = reply;
         await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "Thinking on device...");
 
         // Build conversation history from prior chat turns.
@@ -63,7 +58,6 @@ public class ChatService(
         }
 
         var receivedText = false;
-        var isDayPlan = false;
         string? activeDebateSpeaker = null;
         var updates = new List<ChatResponseUpdate>();
 
@@ -72,7 +66,6 @@ public class ChatService(
         {
             if (update.AuthorName == "PreferencesAgent")
             {
-                isDayPlan = true;
                 await MainThread.InvokeOnMainThreadAsync(() =>
                     reply.Progress = "PreferencesAgent: reading your interests and time window...");
                 continue;
@@ -80,7 +73,6 @@ public class ChatService(
 
             if (update.AuthorName == "ScheduleAgent" && !receivedText)
             {
-                isDayPlan = true;
                 await MainThread.InvokeOnMainThreadAsync(() =>
                     reply.Progress = "ScheduleAgent: building your conflict-free schedule...");
             }
@@ -117,28 +109,42 @@ public class ChatService(
         }
 
         reply.ResponseMessages = updates.ToChatResponse().Messages.ToArray();
-        await tools.AddReferencedSessionsAsync(reply.Text);
-
-        // When the DayPlan workflow recommends a schedule, offer a one-click approval card to favourite all picks.
-        if (isDayPlan && reply.Sessions.Count > 0 && reply.Approvals.Count == 0)
-        {
-            var approval = new ChatApproval(reply.Sessions.Select(card => card.Session).ToArray(), add: true);
-            await MainThread.InvokeOnMainThreadAsync(() => reply.Approvals.Add(approval));
-
-            if (await approval.WaitAsync(cancellationToken))
-            {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    preferences.SetFavorites(reply.Sessions.Select(card => card.Session.Id), isFavorite: true));
-                yield return $"\n\nAdded all {reply.Sessions.Count} recommended talks to favourites.";
-            }
-            else
-            {
-                yield return "\n\nPlan not saved. Your favourites haven't changed.";
-            }
-        }
+        await AddReferencedSessionsAsync(reply);
 
         logger.LogInformation("[AI Chat] Completed reply ({Length} chars, {Cards} session cards).",
             reply.Text.Length, reply.Sessions.Count);
+    }
+
+    // Attaches tappable session cards under the assistant reply for any talk mentioned in the response.
+    private async Task AddReferencedSessionsAsync(ChatItem reply)
+    {
+        var city = await preferences.GetSelectedCityAsync(database);
+        var conference = await database.GetConferenceAsync();
+        var sessions = await database.GetSessionsAsync(city.Id);
+
+        var referenced = sessions
+            .Where(s => s.IsTalk && (
+                reply.Text.Contains(s.Title, StringComparison.OrdinalIgnoreCase) ||
+                reply.Text.Contains(s.Id, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
+
+        if (referenced.Length == 0)
+            return;
+
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            foreach (var session in referenced)
+            {
+                if (reply.Sessions.Any(card => card.Session.Id == session.Id))
+                    continue;
+
+                var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
+                    conference.Speakers.First(s => s.Id == id).Name));
+                var meta = $"{city.Name} · {session.Time} · {session.Track ?? "All attendees"}";
+
+                reply.Sessions.Add(new ChatSessionCard(session, meta, speakers));
+            }
+        });
     }
 
     internal static bool IsDayPlanRequest(string request) =>

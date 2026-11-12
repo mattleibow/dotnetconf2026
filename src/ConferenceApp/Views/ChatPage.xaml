@@ -55,7 +55,7 @@
                                 <DataTemplate x:DataType="ChatSessionCard">
                                     <VerticalStackLayout Padding="8"
                                                          Background="Transparent"
-                                                         AutomationId="{Binding Session.Id, StringFormat='chat-session-card-{0}'}">
+                                                         AutomationId="{$'chat-session-card-{Session.Id}'}">
                                         <Label Text="{Binding Metadata}" />
                                         <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
                                         <Label Text="{Binding Speakers}" />
@@ -64,28 +64,6 @@
                                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                                                                   CommandParameter="{Binding .}" />
                                         </VerticalStackLayout.GestureRecognizers>
-                                    </VerticalStackLayout>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-
-                        <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Approvals}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="ChatApproval">
-                                    <VerticalStackLayout Padding="8"
-                                                         Spacing="6"
-                                                         AutomationId="{$'chat-approval-{Sessions[0].Id}'}">
-                                        <Label Text="{Binding Title}" FontAttributes="Bold" />
-                                        <Label Text="{Binding Description}" />
-                                        <Label Text="{Binding Status}" />
-                                        <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsPending}">
-                                            <Button AutomationId="chat-approve-action"
-                                                    Text="Approve"
-                                                    Command="{Binding ApproveCommand}" />
-                                            <Button AutomationId="chat-deny-action"
-                                                    Text="Deny"
-                                                    Command="{Binding DenyCommand}" />
-                                        </HorizontalStackLayout>
                                     </VerticalStackLayout>
                                 </DataTemplate>
                             </BindableLayout.ItemTemplate>

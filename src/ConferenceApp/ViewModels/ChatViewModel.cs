@@ -72,20 +72,10 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     private void ClearChat()
     {
         activeTurn?.Cancel();
-        foreach (var approval in Messages.SelectMany(message => message.Approvals))
-            approval.Cancel();
         Messages.Clear();
         Prompt = "";
         IsBusy = false;
     }
-
-    [RelayCommand]
-    private void ApproveAction(ChatApproval? approval) =>
-        approval?.Decide(approved: true);
-
-    [RelayCommand]
-    private void DenyAction(ChatApproval? approval) =>
-        approval?.Decide(approved: false);
 
     [RelayCommand]
     private Task OpenSessionAsync(ChatSessionCard? card) =>
@@ -122,8 +112,6 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
         catch (Exception ex)
         {
             reply.Progress = "";
-            foreach (var approval in reply.Approvals)
-                approval.Cancel();
             reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
         }
         finally

@@ -7,7 +7,6 @@ namespace ConferenceApp.Models;
 public partial class ChatItem(bool isUser, string text = "") : ObservableObject
 {
     public bool IsUser { get; } = isUser;
-    public ObservableCollection<ChatApproval> Approvals { get; } = [];
     public ObservableCollection<ChatSessionCard> Sessions { get; } = [];
     public IReadOnlyList<ChatMessage> ResponseMessages { get; set; } = [];
 
