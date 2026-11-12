@@ -20,6 +20,9 @@ public sealed class ConferenceAssistantTools(
     private string? selectedCityId;
     private CancellationToken turnCancellation;
 
+    internal City CurrentCity => city ?? throw new InvalidOperationException("Assistant turn has not started.");
+    internal ChatItem CurrentReply => reply ?? throw new InvalidOperationException("Assistant turn has not started.");
+
     public void BeginTurn(City selectedCity, ChatItem assistantReply, CancellationToken cancellationToken)
     {
         if (reply is not null)

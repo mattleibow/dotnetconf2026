@@ -18,7 +18,7 @@
 		<SingleProject>true</SingleProject>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<NoWarn>$(NoWarn);MAUIAI0001</NoWarn>
+		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001</NoWarn>
 
 
 

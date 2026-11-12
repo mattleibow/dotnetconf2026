@@ -69,22 +69,42 @@ When Step 02 finishes, show the result on screen:
 
 ## Part 3: Giving the App That Same AI — Code Walkthrough & Live Demo (20 mins)
 
-All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `SearchService.cs` and `ChatService.cs`. Keep `maui devflow logs --follow --no-json` running in a terminal (or open the **Logs** tab in the DevFlow Web Inspector) so the audience sees every model call, embedding query, tool invocation, and workflow step in real time.
+All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `SearchService.cs` and `ChatService.cs`. Keep `maui devflow logs --follow --no-json` running in a terminal (or open the **Logs** tab in the DevFlow Web Inspector) so the audience sees every model call, embedding query, RAG context injection, semantic route selection, tool invocation, and workflow step in real time.
 
-### 1. Wiring & Logging: [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs)
+### 1. Wiring, RAG Middleware & Semantic Routing: [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs) & [`src/ConferenceApp/AI/SessionRagProvider.cs`](../src/ConferenceApp/AI/SessionRagProvider.cs)
 
 - **Single entry point:** `builder.AddConferenceAI()` called from `MauiProgram.cs`.
-- **`Microsoft.Extensions.AI` abstraction (`IChatClient` & `IEmbeddingGenerator`):**
+- **`Microsoft.Extensions.AI` (`IChatClient` & `IEmbeddingGenerator`):**
   - On iOS / Mac Catalyst 26+, registers `AppleIntelligenceChatClient` from `Microsoft.Maui.Essentials.AI` (`MAUIAI0001`).
-  - Wraps it in a `ChatClientBuilder` pipeline:
+  - Wraps it in a `ChatClientBuilder` pipeline with `.UseLogging(loggerFactory)`:
     ```csharp
-    new AppleIntelligenceChatClient(sp)
+    new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
         .AsBuilder()
-        .UseLogging(sp.GetRequiredService<ILoggerFactory>())
+        .UseLogging(loggerFactory)
         .Build()
     ```
   - Because `UseLogging` is attached and DevFlow captures `ILogger`, every prompt, streaming response, and function call shows up automatically in `maui devflow logs`!
-  - Notice `new AppleIntelligenceChatClient(sp)` passes `IServiceProvider`: on Apple platforms, native Foundation Models execute tools inside the client using `functionInvocationServices`.
+  - Passing `functionInvocationServices: services` lets Apple's native FoundationModels runtime resolve DI services when invoking tools.
+- **Agent Framework RAG Middleware (`TextSearchProvider` + `.UseAIContextProviders(...)` in `SessionRagProvider.cs`):**
+  - `SessionRagProvider.Create(...)` builds a `Microsoft.Agents.AI.TextSearchProvider` configured with `TextSearchBehavior.BeforeAIInvoke` and `SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2)`.
+  - Attached to the local `IChatClient` via `.AsBuilder().UseAIContextProviders(ragProvider).Build()`.
+  - Before every model turn, it queries `SearchService` using the latest 1–2 user messages (so follow-ups like *"Who's giving it, and when?"* retain topic context), fetches the top 3 matching talk abstracts for the active city, and injects them as `## Additional Context` on the in-flight request without polluting the saved chat history!
+  - Logs: `[AI RAG] TextSearchProvider injected 3 session abstracts for '...': ...`
+- **Semantic Chat Routing (`SemanticRoutingChatClient` in `AIExtensions.cs`):**
+  - Uses our 384-dim `MiniLmEmbeddingGenerator` (`IEmbeddingGenerator<string, Embedding<float>>`) to embed the user's message and compare it against `DayPlanUtterances` (`scoreThreshold: 0.60f`, `topK: 1`):
+    ```csharp
+    var router = new SemanticRoutingChatClient(
+        services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
+        new Dictionary<IChatClient, IReadOnlyList<string>>
+        {
+            [services.GetRequiredService<DayPlanChatClient>()] = DayPlanUtterances
+        },
+        defaultClient: ragAssistantClient,
+        scoreThreshold: 0.60f,
+        topK: 1,
+        leaveOpen: true);
+    ```
+  - Schedule-building requests (whether clicking **Plan my day** or typing *"Build me a conflict-free schedule around AI, leaving at 3"*) route automatically to `DayPlanChatClient` (`DayPlanService` workflow), while general questions and tool calls route to `ragAssistantClient`—all wrapped inside `ChatClientAgent`!
 
 ### 2. Data Ingestion & Background Enrichment: [`src/ConferenceApp/AI/SessionEnrichmentService.cs`](../src/ConferenceApp/AI/SessionEnrichmentService.cs)
 
@@ -129,14 +149,16 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `Searc
   - The tool call pauses inside the chat bubble while the user sees **Approve** / **Deny** buttons!
   - Only when the user taps **Approve** does `preferences.SetFavorite(...)` run and return `"Added '...' to favourites."` to the model.
 - **Live Demo on Assistant tab (in Durban):**
-  1. Ask: **`What's Niels' background?`**
-     - Watch `reply.Progress` show `"Running tool: get_speaker..."` and the terminal log `[AI Tool] get_speaker(speaker: 'Niels')`.
-  2. Ask: **`Find me a talk about sports odds and favourite it`**
-     - Watch the model chain `search_sessions` → `get_session` → `add_favorite` (`"Waiting for your approval to add..."`).
-     - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` adds the card).
+  1. Ask: **`Is there a talk about keeping AI costs down?`** then follow up with **`Who's giving it, and when?`**
+     - Point out `[AI RAG] TextSearchProvider injected 3 session abstracts...` in `maui devflow logs`—and how the follow-up combines both user questions (`TakeLast(2)`) to keep *The Hidden Cost of 'Just Call the LLM'* in context!
+  2. Ask: **`What's Niels' background?`**
+     - Watch `reply.Progress` show `"Reading biography for Niels Berglund..."` and the terminal log `[AI Tool] get_speaker('niels-berglund')`.
+  3. Ask: **`Find me a talk about sports odds and favourite it`**
+     - Watch the model use the RAG context / tools and call `add_favorite` (`"Waiting for your approval to add..."`).
+     - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` / `ChangeFavoriteAsync` adds the card).
      - Click **Approve** (`chat-approve-action`), then switch to **Agenda → Favourites** to show it saved.
 
-### 5. Multi-Step Agent Workflow ("Plan my day"): [`src/ConferenceApp/AI/DayPlanService.cs`](../src/ConferenceApp/AI/DayPlanService.cs)
+### 5. Multi-Step Agent Workflow ("Plan my day"): [`src/ConferenceApp/AI/DayPlanService.cs`](../src/ConferenceApp/AI/DayPlanService.cs) & [`src/ConferenceApp/AI/DayPlanChatClient.cs`](../src/ConferenceApp/AI/DayPlanChatClient.cs)
 
 - **Why a Workflow (`Microsoft.Agents.AI.Workflows`) instead of a single Giant Prompt?**
   - Small on-device models are great at focused extraction and short writing, but bad at combinatorial time-slot constraint solving across 20 sessions.
