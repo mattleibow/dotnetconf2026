@@ -20,11 +20,15 @@ public static class AIExtensions
 
     public static MauiAppBuilder AddConferenceAI(this MauiAppBuilder builder)
     {
-        // 1. Semantic embeddings: MiniLM ONNX (384-dim) runs on every platform.
+        // 1. Semantic embeddings: MiniLM ONNX (384-dim) runs on every platform, wrapped with Microsoft.Extensions.AI logging.
         // On Apple, you can also compare against the built-in NLEmbeddingGenerator:
         // builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(
-        //     sp => new NLEmbeddingGenerator(sp.GetRequiredService<ILoggerFactory>()));
-        builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>, MiniLmEmbeddingGenerator>();
+        //     sp => new NLEmbeddingGenerator(sp.GetRequiredService<ILoggerFactory>()).AsBuilder().UseLogging(sp.GetRequiredService<ILoggerFactory>()).Build());
+        builder.Services.AddSingleton<IEmbeddingGenerator<string, Embedding<float>>>(sp =>
+            ActivatorUtilities.CreateInstance<MiniLmEmbeddingGenerator>(sp)
+                .AsBuilder()
+                .UseLogging(sp.GetRequiredService<ILoggerFactory>())
+                .Build());
 
         // 2. On-device chat client (with Microsoft.Extensions.AI logging middleware).
 #if IOS || MACCATALYST
