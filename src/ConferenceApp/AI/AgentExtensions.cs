@@ -8,6 +8,8 @@ namespace ConferenceApp.AI;
 
 public static class AgentExtensions
 {
+    private const int TopRagSessions = 3;
+
     private static readonly IReadOnlyList<string> DayPlanUtterances =
     [
         "Plan my day",
@@ -16,8 +18,9 @@ public static class AgentExtensions
         "Create a full day itinerary of sessions with no clashes"
     ];
 
-    public static MauiAppBuilder AddConferenceAgents(this MauiAppBuilder builder)
+    public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
+        builder.Services.AddScoped<ConferenceAssistantTools>();
         builder.Services.AddScoped<SemanticRoutingChatClient>(CreateAssistantRouter);
         return builder;
     }
@@ -26,13 +29,7 @@ public static class AgentExtensions
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-
-        // Agent Framework RAG middleware: injects the top 3 matching session abstracts before each turn.
-        var ragProvider = SessionRagProvider.Create(
-            services.GetRequiredService<ConferenceDatabase>(),
-            services.GetRequiredService<SearchService>(),
-            services.GetRequiredService<ConferenceAssistantTools>(),
-            loggerFactory);
+        var ragProvider = CreateRagProvider(services, loggerFactory);
 
         // 1. Default Q&A and tool-calling assistant agent (with RAG + source-generated tools).
         var assistantAgent = localClient.AsAIAgent(
@@ -101,5 +98,53 @@ public static class AgentExtensions
             scoreThreshold: 0.60f,
             topK: 1,
             leaveOpen: true);
+    }
+
+    private static TextSearchProvider CreateRagProvider(IServiceProvider services, ILoggerFactory loggerFactory)
+    {
+        var database = services.GetRequiredService<ConferenceDatabase>();
+        var search = services.GetRequiredService<SearchService>();
+        var tools = services.GetRequiredService<ConferenceAssistantTools>();
+        var logger = loggerFactory.CreateLogger("ConferenceApp.AI.AgentExtensions");
+
+        return new TextSearchProvider(
+            async (query, cancellationToken) =>
+            {
+                var trimmed = string.Join(" ", query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+                if (string.IsNullOrWhiteSpace(trimmed))
+                    return [];
+
+                var city = tools.CurrentCity;
+                var matches = (await search.SearchSessionsAsync(city.Id, trimmed))
+                    .Where(session => session.IsTalk)
+                    .Take(TopRagSessions)
+                    .ToList();
+
+                var results = new List<TextSearchProvider.TextSearchResult>(matches.Count);
+                foreach (var session in matches)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var speakers = await database.GetSpeakersForSessionAsync(session);
+                    var speakerNames = string.Join(", ", speakers.Select(s => s.Name));
+                    var abstractText = await database.GetTextAsync(session.Content);
+                    results.Add(new TextSearchProvider.TextSearchResult
+                    {
+                        SourceName = $"{session.Title} ({session.Time}, {session.Track ?? "All attendees"}, Speakers: {speakerNames})",
+                        SourceLink = session.Id,
+                        Text = abstractText
+                    });
+                }
+
+                logger.LogInformation("[AI RAG] TextSearchProvider injected {Count} session abstracts for '{Query}': {Titles}",
+                    results.Count, trimmed, string.Join(" | ", matches.Select(s => s.Title)));
+                return results;
+            },
+            new TextSearchProviderOptions
+            {
+                SearchTime = TextSearchProviderOptions.TextSearchBehavior.BeforeAIInvoke,
+                SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2),
+                CitationsPrompt = "Use these session abstracts and tool results to answer accurately. Do not output raw SourceDocLink IDs."
+            },
+            loggerFactory);
     }
 }

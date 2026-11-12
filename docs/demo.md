@@ -37,7 +37,7 @@ Open these files briefly before kicking off the first prompt to show why the bas
 | [`src/ConferenceApp/Views/AgendaPage.xaml`](../src/ConferenceApp/Views/AgendaPage.xaml) & [`ChatPage.xaml`](../src/ConferenceApp/Views/ChatPage.xaml) | `<ContentPage x:Class="ConferenceApp.Views.AgendaPage" x:DataType="AgendaViewModel">`, `IsVisible="{!string.IsNullOrWhiteSpace(Topic)}"`, `Text="{ShowFavoritesOnly ? 'Showing: Favourites' : 'Showing: All Sessions'}"`, `IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"` | Three huge .NET 11 XAML features in one file: **1) Zero `xmlns:` declarations**, **2) C# Expressions in XAML** (`{!string.IsNullOrWhiteSpace(Topic)}`, ternaries, `AND`, string interpolation `{$'chat-approval-{Sessions[0].Id}'}`—eliminating all `HasXyz` ViewModel properties and `InverseBooleanConverter`s!), and **3) AOT-safe compiled `RelativeSource` bindings** (`AncestorType={x:Type AgendaViewModel}, x:DataType=AgendaViewModel`). |
 | [`src/ConferenceApp/ViewModels/AgendaViewModel.cs`](../src/ConferenceApp/ViewModels/AgendaViewModel.cs) | `[ObservableProperty] public partial string SearchQuery { get; set; } = "";` | **C# partial properties + `CommunityToolkit.Mvvm` 8.4.2**: no backing fields, no `_searchQuery` naming rules, and full IDE/source-gen visibility. |
 | [`data/ImportConference.cs`](../data/ImportConference.cs) & [`models/DownloadModels.cs`](../models/DownloadModels.cs) | `#:package HtmlAgilityPack@1.12.4` and `dotnet run data/ImportConference.cs` | **.NET single-file C# scripts (`dotnet run file.cs`)**: no `.csproj` needed for repo utilities—used here to snapshot the Sessionize/web data and download/verify the ONNX model. |
-| [`src/ConferenceApp/MauiProgram.cs`](../src/ConferenceApp/MauiProgram.cs) | `builder.AddConferenceAI();` and `builder.AddMauiDevFlowAgent(...)` | Clean DI registration (`AddTransient<Page>().AddTransient<ViewModel>()`), plus **MAUI DevFlow Agent** registered in `#if DEBUG` with `EnableLayoutDiagnostics = true` and `EnableProfiler = true`. |
+| [`src/ConferenceApp/MauiProgram.cs`](../src/ConferenceApp/MauiProgram.cs) | `builder.AddChatClients(); builder.AddEmbeddings(); builder.AddAgents();` and `builder.AddMauiDevFlowAgent(...)` | Clean DI registration (`AddTransient<Page>().AddTransient<ViewModel>()`), three discoverable AI extension methods you can F12 into, plus **MAUI DevFlow Agent** registered in `#if DEBUG` with `EnableLayoutDiagnostics = true` and `EnableProfiler = true`. |
 | [`.github/copilot-instructions.md`](../.github/copilot-instructions.md), [`DESIGN.md`](../DESIGN.md), [`PRODUCT.md`](../PRODUCT.md) | Repo instructions + Impeccable design spec | How we keep coding agents aligned: `.github/copilot-instructions.md` teaches the agent .NET 11 APIs (like `ScaleToAsync`, `BoxView.Fill` brushes, and `GlobalXmlns`), while `DESIGN.md` defines the tokens and rules for the `impeccable` design skill. |
 
 ---
@@ -69,38 +69,18 @@ When Step 02 finishes, show the result on screen:
 
 ## Part 3: Giving the App That Same AI — Code Walkthrough & Live Demo (20 mins)
 
-All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `SearchService.cs` and `ChatService.cs`. Keep `maui devflow logs --follow --no-json` running in a terminal (or open the **Logs** tab in the DevFlow Web Inspector) so the audience sees every model call, embedding query, RAG context injection, semantic route selection, tool invocation, and workflow step in real time.
+All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `SearchService.cs` and `ChatService.cs`, discoverable directly from `MauiProgram.cs` (`builder.AddChatClients()`, `builder.AddEmbeddings()`, `builder.AddAgents()`). Keep `maui devflow logs --follow --no-json` running in a terminal (or open the **Logs** tab in the DevFlow Web Inspector) so the audience sees every model call, embedding query, RAG context injection, semantic route selection, tool invocation, and workflow step in real time.
 
-### 1. Wiring, RAG Middleware & Semantic Routing: [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs) & [`src/ConferenceApp/AI/SessionRagProvider.cs`](../src/ConferenceApp/AI/SessionRagProvider.cs)
+### 1. Local Chat Clients: [`src/ConferenceApp/AI/ChatExtensions.cs`](../src/ConferenceApp/AI/ChatExtensions.cs)
 
-- **Single entry point:** `builder.AddConferenceAI()` called from `MauiProgram.cs`.
-- **`Microsoft.Extensions.AI` (`IChatClient` & `IEmbeddingGenerator`) across all platforms:**
+- **Entry point:** `builder.AddChatClients()` in `MauiProgram.cs`.
+- **`Microsoft.Extensions.AI` (`IChatClient`) across all platforms:**
   - `Microsoft.Maui.Essentials.AI` (`11.0.0-preview.8.26555.2`) provides local on-device `IChatClient` implementations for every platform:
-    - **iOS / Mac Catalyst:** `AppleIntelligenceChatClient(loggerFactory, functionInvocationServices: services)`
-    - **Android:** `GeminiNanoChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
-    - **Windows:** `WindowsAIChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
+    - **iOS / Mac Catalyst (`OperatingSystem.IsIOSVersionAtLeast(26)`):** `AppleIntelligenceChatClient(loggerFactory, functionInvocationServices: services)`
+    - **Android (`OperatingSystem.IsAndroidVersionAtLeast(26)`):** `GeminiNanoChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
+    - **Windows (`OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100)`):** `WindowsAIChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
   - Wraps each in a `ChatClientBuilder` pipeline with `.UseLogging(loggerFactory)` so every prompt, streaming response, and function call shows up automatically in `maui devflow logs`!
-  - And `AIExtensions.GetModelStatusAsync()` checks `ChatModelStatus.Availability` (`Available`, `Disabled`, `Downloading`, `NotReady`) uniformly across all three platforms.
-- **Agent Framework RAG Middleware (`TextSearchProvider` + `.UseAIContextProviders(...)` in `SessionRagProvider.cs`):**
-  - `SessionRagProvider.Create(...)` builds a `Microsoft.Agents.AI.TextSearchProvider` configured with `TextSearchBehavior.BeforeAIInvoke` and `SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2)`.
-  - Attached to the local `IChatClient` via `.AsBuilder().UseAIContextProviders(ragProvider).Build()`.
-  - Before every model turn, it queries `SearchService` using the latest 1–2 user messages (so follow-ups like *"Who's giving it, and when?"* retain topic context), fetches the top 3 matching talk abstracts for the active city, and injects them as `## Additional Context` on the in-flight request without polluting the saved chat history!
-  - Logs: `[AI RAG] TextSearchProvider injected 3 session abstracts for '...': ...`
-- **Semantic Chat Routing (`SemanticRoutingChatClient` in `AIExtensions.cs`):**
-  - Uses our 384-dim `MiniLmEmbeddingGenerator` (`IEmbeddingGenerator<string, Embedding<float>>`) to embed the user's message and compare it against `DayPlanUtterances` (`scoreThreshold: 0.60f`, `topK: 1`):
-    ```csharp
-    var router = new SemanticRoutingChatClient(
-        services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
-        new Dictionary<IChatClient, IReadOnlyList<string>>
-        {
-            [services.GetRequiredService<DayPlanChatClient>()] = DayPlanUtterances
-        },
-        defaultClient: ragAssistantClient,
-        scoreThreshold: 0.60f,
-        topK: 1,
-        leaveOpen: true);
-    ```
-  - Schedule-building requests (whether clicking **Plan my day** or typing *"Build me a conflict-free schedule around AI, leaving at 3"*) route automatically to `DayPlanChatClient` (`DayPlanService` workflow), while general questions and tool calls route to `ragAssistantClient`—all wrapped inside `ChatClientAgent`!
+  - And `ChatExtensions.GetModelAvailabilityAsync()` checks `ChatModelStatus.Availability` (`Available`, `Disabled`, `Downloading`, `NotReady`) uniformly across all platforms.
 
 ### 2. Data Ingestion & Background Enrichment: [`src/ConferenceApp/AI/SessionEnrichmentService.cs`](../src/ConferenceApp/AI/SessionEnrichmentService.cs)
 
@@ -113,7 +93,7 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `Searc
   - Persists to `session-enrichment.json` (and seeds from `Resources/Raw/session-enrichment.json` on first launch so cold start is instant, while still enriching any new/uncached talks in the background).
   - Publishes `SessionEnrichedMessage` via `WeakReferenceMessenger` so Agenda and Speaker cards update live.
 
-### 3. Semantic Search (Apple NLEmbedding vs. ONNX MiniLM): [`src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs`](../src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) & [`src/ConferenceApp/Services/SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs)
+### 3. Semantic Search (Apple NLEmbedding vs. ONNX MiniLM): [`src/ConferenceApp/AI/EmbeddingExtensions.cs`](../src/ConferenceApp/AI/EmbeddingExtensions.cs), [`src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs`](../src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) & [`src/ConferenceApp/Services/SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs)
 
 - **Ingestion into Vector Store (`SessionEnrichmentService.cs` lines 48–60):**
   - Uses `VectorStoreWriter<string>` to write all 54 chunks (title + full abstract + `cityid` metadata) into `InMemoryVectorStore` (`CommunityToolkit.VectorData.InMemory`) using `DistanceFunction.CosineSimilarity`.
@@ -154,8 +134,13 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `Searc
      - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` / `ChangeFavoriteAsync` adds the card).
      - Click **Approve** (`chat-approve-action`), then switch to **Agenda → Favourites** to show it saved.
 
-### 5. Chained Agent Workflow & Semantic Routing ("Plan my day"): [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
+### 5. Agents, RAG Middleware, Sequential Workflow & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
 
+- **Entry point:** `builder.AddAgents()` in `MauiProgram.cs`.
+- **Agent Framework RAG Context Provider (`CreateRagProvider` in `AgentExtensions.cs`):**
+  - Creates a `Microsoft.Agents.AI.TextSearchProvider` configured with `TextSearchBehavior.BeforeAIInvoke` and `SearchInputMessageFilter = messages => messages.Where(m => m.Role == ChatRole.User).TakeLast(2)`.
+  - Passed into `ChatClientAgentOptions.AIContextProviders = [ragProvider]`.
+  - Before every model turn, it queries `SearchService` using the latest 1–2 user messages, fetches the top 3 matching talk abstracts for the active city, and injects them into the in-flight request without polluting the saved chat history (`[AI RAG] TextSearchProvider injected 3 session abstracts...`).
 - **Chaining Agents with `AsAIAgent` + `AgentWorkflowBuilder.BuildSequential`:**
   - Instead of writing custom workflow state classes or manual `IChatClient` wrappers, `AgentExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
     1. **`PreferencesAgent` (`localClient.AsAIAgent(name: "PreferencesAgent", instructions: ...)`):** Extracts the attendee's topic interests, arrival time, and departure time.

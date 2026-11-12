@@ -27,7 +27,7 @@ public class ChatService(
     ];
 
     public async Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
-        await AIExtensions.GetModelAvailabilityAsync(cancellationToken) switch
+        await ChatExtensions.GetModelAvailabilityAsync(cancellationToken) switch
         {
             ChatModelAvailability.Available => null,
             ChatModelAvailability.Disabled => "On-device AI is turned off. Enable it in your device settings to chat locally. No cloud service is used.",

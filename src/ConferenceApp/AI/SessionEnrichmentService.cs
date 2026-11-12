@@ -105,7 +105,7 @@ public sealed class SessionEnrichmentService : IDisposable
                 var remaining = sessions.Where(s => !results.ContainsKey(s.Id)).ToList();
                 if (remaining.Count == 0 || client is null)
                     return;
-                if (await AIExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+                if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
                     return;
                 EnricherOptions CreateOptions(string instruction) => new(client.AsBuilder().Use(async (messages, options, next, cancellationToken) =>
                 {

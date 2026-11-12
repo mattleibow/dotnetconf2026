@@ -37,7 +37,7 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 ## App architecture
 
 - Keep the structure flat and easy to read on a projector: `AI/`, `Converters/`, `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- The app lives in `src/ConferenceApp/` with `ConferenceDatabase` (stateless data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService` (literal + ONNX semantic search), `ChatService` (streaming on-device assistant), and `builder.AddConferenceAI()` in `AI/AIExtensions.cs` (which registers the local `IChatClient`, `MiniLmEmbeddingGenerator`, `SessionEnrichmentService`, `SessionRagProvider`, `ConferenceAssistantTools`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient`).
+- The app lives in `src/ConferenceApp/` with `ConferenceDatabase` (stateless data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService` (literal + ONNX semantic search), `ChatService` (streaming on-device assistant), and three extension methods in `AI/`: `builder.AddChatClients()` (`ChatExtensions.cs`), `builder.AddEmbeddings()` (`EmbeddingExtensions.cs`), and `builder.AddAgents()` (`AgentExtensions.cs`).
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`. Never call `AddTransient<Page, ViewModel>()`: register them separately with `AddTransient<Page>().AddTransient<ViewModel>()`.
 - Use Shell for navigation: one page per top-level section, and routes for detail pages. Never fake tabs by toggling `IsVisible` on one page.
 - One view model per page, with commands (`CommunityToolkit.Mvvm`) rather than event handlers in code-behind.

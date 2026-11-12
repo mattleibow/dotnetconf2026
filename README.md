@@ -4,7 +4,7 @@
 
 This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
 
-`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up through `builder.AddConferenceAI()` in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/).
+`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) through `builder.AddChatClients()`, `builder.AddEmbeddings()`, and `builder.AddAgents()`.
 
 - **Part 1 — Agents Building Apps:** Use a coding agent (such as GitHub Copilot), the Mobile Device canvas, the MAUI DevFlow Web Inspector, and the `impeccable` design skill to inspect the wireframe, add an inline favourite toggle on Agenda cards, style the entire app against [`DESIGN.md`](DESIGN.md), and verify layout diagnostics and `Preferences` live.
 - **Part 2 — Giving the App That Same AI:** Walk through [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) and demo on-device chat (`IChatClient`), data ingestion and enrichment (`Microsoft.Extensions.DataIngestion`), ONNX MiniLM semantic search (`IEmbeddingGenerator`), source-generated tools with user approval (`[AIToolSource]`), and the **Plan my day** workflow (`Microsoft.Agents.AI.Workflows`) while streaming live `[AI]` logs in DevFlow.
@@ -14,7 +14,7 @@ This repository is the companion to the .NET Conf 2026 South Africa talk and a h
 | Path | Contents |
 |---|---|
 | [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with semantic search and favourites filter), Speakers, Assistant, and DevFlow |
-| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` |
+| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `AddChatClients()`, `AddEmbeddings()`, and `AddAgents()` |
 | [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-inspect-and-drive` and `02-make-it-beautiful`) |
 | [`docs/demo.md`](docs/demo.md) | Speaker runbook & file-by-file talking points (.NET 11, MAUI 11, DevFlow, and in-app AI walkthrough) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
@@ -56,12 +56,11 @@ maui devflow logs --follow --no-json
 
 | File | Feature |
 |---|---|
-| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) | `builder.AddConferenceAI()` registering `IChatClient` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient`) and `IEmbeddingGenerator` with `.UseLogging()` |
-| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddConferenceAgents()` wiring `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
-| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) |
-| [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` + hybrid vector search |
-| [`AI/SessionRagProvider.cs`](src/ConferenceApp/AI/SessionRagProvider.cs) | Agent Framework `TextSearchProvider` (`BeforeAIInvoke`) injecting the top 3 matching session abstracts before each turn |
+| [`AI/ChatExtensions.cs`](src/ConferenceApp/AI/ChatExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddChatClients()` registering `IChatClient` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient`) with `.UseLogging()` |
+| [`AI/EmbeddingExtensions.cs`](src/ConferenceApp/AI/EmbeddingExtensions.cs) & [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | `builder.AddEmbeddings()` registering the 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>`, `SessionEnrichmentService`, and `SearchService` |
+| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) + hybrid vector search |
 | [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) |
+| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddAgents()` wiring `TextSearchProvider` RAG, `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
 
 ## Refreshing the data and model
 
