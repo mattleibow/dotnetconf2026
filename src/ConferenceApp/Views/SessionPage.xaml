@@ -7,7 +7,7 @@
             <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
             <Label Text="{Binding Session.Time}" />
             <Label Text="{Binding Session.Track}" />
-            <Button AutomationId="favorite-button" Text="{Binding FavoriteText}" Command="{Binding ToggleFavoriteCommand}" />
+            <Button AutomationId="favorite-button" Text="{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}" Command="{Binding ToggleFavoriteCommand}" />
             <VerticalStackLayout AutomationId="session-speakers" BindableLayout.ItemsSource="{Binding Speakers}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="Speaker">

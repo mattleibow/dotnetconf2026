@@ -13,9 +13,9 @@
                     <DataTemplate x:DataType="SessionItem">
                         <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='speaker-session-{0}'}">
                             <Label Text="{Binding Meta}" />
-                            <Label Text="{Binding Topic}" IsVisible="{Binding HasTopic}" />
+                            <Label Text="{Binding Topic}" IsVisible="{!string.IsNullOrWhiteSpace(Topic)}" />
                             <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
-                            <Label Text="{Binding Summary}" IsVisible="{Binding HasSummary}" MaxLines="2" LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding Summary}" IsVisible="{!string.IsNullOrWhiteSpace(Summary)}" MaxLines="2" LineBreakMode="TailTruncation" />
                             <VerticalStackLayout.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                       CommandParameter="{Binding .}" />

@@ -15,8 +15,5 @@ public partial class ChatItem(bool isUser, string text = "") : ObservableObject
     public partial string Text { get; set; } = text;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasProgress))]
     public partial string Progress { get; set; } = "";
-
-    public bool HasProgress => !string.IsNullOrWhiteSpace(Progress);
 }

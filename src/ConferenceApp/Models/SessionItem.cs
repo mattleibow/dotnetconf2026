@@ -23,13 +23,8 @@ public partial class SessionItem(
     };
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSummary))]
     public partial string? Summary { get; set; } = summary;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasTopic))]
     public partial string? Topic { get; set; } = topic;
-
-    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
-    public bool HasTopic => !string.IsNullOrWhiteSpace(Topic);
 }

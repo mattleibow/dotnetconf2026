@@ -16,21 +16,21 @@
                    ClearButtonVisibility="WhileEditing" />
             <Button Grid.Column="1"
                     AutomationId="favorites-filter"
-                    Text="{Binding FilterText}"
+                    Text="{ShowFavoritesOnly ? 'Showing: Favourites' : 'Showing: All Sessions'}"
                     Command="{Binding ToggleFavoritesFilterCommand}" />
         </Grid>
         <Label Grid.Row="1"
                AutomationId="search-status"
                Text="{Binding SearchStatus}"
-               IsVisible="{Binding HasSearchStatus}" />
+               IsVisible="{!string.IsNullOrWhiteSpace(SearchStatus)}" />
         <CollectionView Grid.Row="2" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="SessionItem">
                     <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='session-{0}'}">
                         <Label Text="{Binding Meta}" />
-                        <Label Text="{Binding Topic}" IsVisible="{Binding HasTopic}" />
+                        <Label Text="{Binding Topic}" IsVisible="{!string.IsNullOrWhiteSpace(Topic)}" />
                         <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
-                        <Label Text="{Binding Summary}" IsVisible="{Binding HasSummary}" MaxLines="2" LineBreakMode="TailTruncation" />
+                        <Label Text="{Binding Summary}" IsVisible="{!string.IsNullOrWhiteSpace(Summary)}" MaxLines="2" LineBreakMode="TailTruncation" />
                         <Label Text="{Binding Speakers}" />
                         <VerticalStackLayout.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"

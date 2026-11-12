@@ -21,17 +21,13 @@ public partial class ChatApproval : ObservableObject
 
     public string Id { get; } = Guid.NewGuid().ToString("N");
     public IReadOnlyList<Session> Sessions { get; }
-    public string PrimarySessionId => Sessions[0].Id;
     public string Title { get; }
     public string Description { get; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsResolved))]
     [NotifyCanExecuteChangedFor(nameof(ApproveCommand))]
     [NotifyCanExecuteChangedFor(nameof(DenyCommand))]
     public partial bool IsPending { get; set; } = true;
-
-    public bool IsResolved => !IsPending;
 
     [ObservableProperty]
     public partial string Status { get; set; } = "Only you can approve this change.";

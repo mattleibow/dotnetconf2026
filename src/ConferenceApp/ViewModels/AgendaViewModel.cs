@@ -40,18 +40,10 @@ public partial class AgendaViewModel : ObservableObject,
     public partial string SearchQuery { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSearchStatus))]
     public partial string SearchStatus { get; set; } = "";
 
-    public bool HasSearchStatus => !string.IsNullOrWhiteSpace(SearchStatus);
-
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FilterText))]
     public partial bool ShowFavoritesOnly { get; set; }
-
-    public string FilterText => ShowFavoritesOnly
-        ? "Showing: Favourites"
-        : "Showing: All Sessions";
 
     partial void OnSearchQueryChanged(string value) =>
         _ = LoadAsync();

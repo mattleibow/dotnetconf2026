@@ -17,10 +17,7 @@ public partial class SessionViewModel(ConferenceDatabase database, UserPreferenc
     public partial string Description { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(FavoriteText))]
     public partial bool IsFavorite { get; set; }
-
-    public string FavoriteText => IsFavorite ? "Remove from favourites" : "Add to favourites";
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {

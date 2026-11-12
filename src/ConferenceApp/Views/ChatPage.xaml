@@ -16,7 +16,7 @@
         <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
             <Button AutomationId="plan-my-day"
                     Text="Plan my day"
-                    IsEnabled="{Binding CanSend}"
+                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                     Command="{Binding PlanMyDayCommand}" />
             <ScrollView Grid.Column="1" Orientation="Horizontal">
                 <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
@@ -38,7 +38,7 @@
         <Label Grid.Row="1"
                AutomationId="chat-unavailable"
                Text="{Binding UnavailableReason}"
-               IsVisible="{Binding HasUnavailableReason}" />
+               IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}" />
 
         <CollectionView Grid.Row="2" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.ItemTemplate>
@@ -47,7 +47,7 @@
                         <Label AutomationId="chat-progress"
                                Text="{Binding Progress}"
                                FontAttributes="Italic"
-                               IsVisible="{Binding HasProgress}" />
+                               IsVisible="{!string.IsNullOrWhiteSpace(Progress)}" />
                         <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}" />
 
                         <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Sessions}">
@@ -59,7 +59,7 @@
                                         <Label Text="{Binding Metadata}" />
                                         <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
                                         <Label Text="{Binding Speakers}" />
-                                        <Label Text="{Binding Reason}" IsVisible="{Binding HasReason}" />
+                                        <Label Text="{Binding Reason}" IsVisible="{!string.IsNullOrWhiteSpace(Reason)}" />
                                         <VerticalStackLayout.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                                                                   CommandParameter="{Binding .}" />
@@ -74,7 +74,7 @@
                                 <DataTemplate x:DataType="ChatApproval">
                                     <VerticalStackLayout Padding="8"
                                                          Spacing="6"
-                                                         AutomationId="{Binding PrimarySessionId, StringFormat='chat-approval-{0}'}">
+                                                         AutomationId="{$'chat-approval-{Sessions[0].Id}'}">
                                         <Label Text="{Binding Title}" FontAttributes="Bold" />
                                         <Label Text="{Binding Description}" />
                                         <Label Text="{Binding Status}" />
@@ -99,12 +99,12 @@
             <Entry AutomationId="chat-input"
                    Placeholder="Ask about sessions, speakers, or your schedule..."
                    Text="{Binding Prompt}"
-                   IsEnabled="{Binding CanSend}"
+                   IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                    ReturnCommand="{Binding SendCommand}" />
             <Button Grid.Column="1"
                     AutomationId="chat-send"
                     Text="Send"
-                    IsEnabled="{Binding CanSend}"
+                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                     Command="{Binding SendCommand}" />
         </Grid>
     </Grid>

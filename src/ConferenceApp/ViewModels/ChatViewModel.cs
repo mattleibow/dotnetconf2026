@@ -32,18 +32,10 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     public partial string Prompt { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSend))]
     public partial bool IsBusy { get; set; }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsChatAvailable))]
-    [NotifyPropertyChangedFor(nameof(HasUnavailableReason))]
-    [NotifyPropertyChangedFor(nameof(CanSend))]
     public partial string? UnavailableReason { get; set; }
-
-    public bool IsChatAvailable => string.IsNullOrEmpty(UnavailableReason);
-    public bool HasUnavailableReason => !IsChatAvailable;
-    public bool CanSend => IsChatAvailable && !IsBusy;
 
     public void Receive(CityChangedMessage message) =>
         _ = LoadAsync();
@@ -107,7 +99,7 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
             return;
 
         UnavailableReason = await chat.GetUnavailableReasonAsync();
-        if (!IsChatAvailable)
+        if (!string.IsNullOrEmpty(UnavailableReason))
             return;
 
         using var turn = new CancellationTokenSource();
