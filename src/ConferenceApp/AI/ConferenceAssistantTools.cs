@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 using Microsoft.Extensions.Logging;
@@ -256,5 +257,13 @@ public sealed class ConferenceAssistantTools(
             throw new InvalidOperationException("The city changed. Ask again using the current city.");
     }
 
-    private static TimeOnly ParseTime(string value) => ConferenceTime.ParseDaytime(value);
+    private static TimeOnly ParseTime(string value)
+    {
+        var text = value.Trim().ToLowerInvariant();
+        if (int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var hour) && hour is >= 1 and <= 23)
+            return new(hour < 8 ? hour + 12 : hour, 0);
+        if (TimeOnly.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.None, out var time))
+            return time.Hour is >= 1 and <= 7 && !text.EndsWith("am") ? time.AddHours(12) : time;
+        throw new ArgumentException("Use a daytime hour or an HH:mm time.", nameof(value));
+    }
 }

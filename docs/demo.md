@@ -154,16 +154,14 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (6 focused files) plus `Searc
      - Show that only the recommended talk card appears under the reply (because `search_sessions` passes `addCards: false` while `get_session` / `ChangeFavoriteAsync` adds the card).
      - Click **Approve** (`chat-approve-action`), then switch to **Agenda → Favourites** to show it saved.
 
-### 5. Multi-Step Agent Workflow ("Plan my day"): [`src/ConferenceApp/AI/DayPlanService.cs`](../src/ConferenceApp/AI/DayPlanService.cs) & [`src/ConferenceApp/AI/DayPlanChatClient.cs`](../src/ConferenceApp/AI/DayPlanChatClient.cs)
+### 5. Chained Agent Workflow & Semantic Routing ("Plan my day"): [`src/ConferenceApp/AI/AIExtensions.cs`](../src/ConferenceApp/AI/AIExtensions.cs)
 
-- **Why a Workflow (`Microsoft.Agents.AI.Workflows`) instead of a single Giant Prompt?**
-  - Small on-device models are great at focused extraction and short writing, but bad at combinatorial time-slot constraint solving across 20 sessions.
-  - `DayPlanService.BuildWorkflow` uses `InProcessExecution.RunAsync` with a 4-stage pipeline mixing **AI agents** and **deterministic C# executors**:
-    1. **`PreferencesExecutor` (`ChatClientAgent` with structured output `DayPreferences`):** Extracts `Interests`, `Track`, `ArriveAfter`, `LeaveBy` from natural language (plus a deterministic C# regex fallback in `ApplyExplicitTimes` so the model never invents times).
-    2. **`CandidatesExecutor` (deterministic C# + `SearchService`):** Runs semantic search per interest and scores talks by keyword, semantic match, track, and existing favourites.
-    3. **`ScheduleExecutor` (deterministic C# dynamic programming):** Weighted interval scheduling (`BuildNonOverlappingSchedule`) guarantees zero overlapping time slots within the user's arrival/departure window.
-    4. **`ExplanationsExecutor` (`Task.WhenAll` concurrent `ChatClientAgent`s):** Runs one lightweight local agent per chosen talk to write a 12-word personalized "Why it fits you" reason.
+- **Chaining Agents with `AsAIAgent` + `AgentWorkflowBuilder.BuildSequential`:**
+  - Instead of writing custom workflow state classes or manual `IChatClient` wrappers, `AIExtensions.CreateAssistantRouter` defines two focused agents with plain string instructions and chains them in one line:
+    1. **`PreferencesAgent` (`localClient.AsAIAgent(name: "PreferencesAgent", instructions: ...)`):** Extracts the attendee's topic interests, arrival time, and departure time.
+    2. **`ScheduleAgent` (`localClient.AsAIAgent(new ChatClientAgentOptions { Name = "ScheduleAgent", AIContextProviders = [ragProvider], ... })`):** Automatically receives `PreferencesAgent`'s output, runs `SessionRagProvider` to inject the matching session abstracts, and picks a conflict-free schedule with a 1-sentence reason per talk.
+    3. **`AgentWorkflowBuilder.BuildSequential("DayPlanWorkflow", [preferencesAgent, scheduleAgent])`:** Chains the two agents sequentially.
+    4. **`dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)`:** Turns the workflow directly into an `IChatClient` so `SemanticRoutingChatClient` can route to it!
 - **Live Demo on Assistant tab:**
-  - Type **`I'm into mobile and AI, leaving at 3`** in the chat input and tap **Plan my day** (`plan-my-day`).
-  - Watch the live progress steps in the chat bubble (`Workflow 1/4` → `4/4`) and the concurrent `TalkFit` agent invocations in `maui devflow logs`.
-  - Review the conflict-free schedule cards and single bulk approval card (`Add all N talks to favourites?`), tap **Approve**, and show the updated schedule in **Agenda → Favourites**.
+  - Type **`I'm into mobile and AI, leaving at 3`** in the chat input and tap **Plan my day** (`plan-my-day`)—or just type **`Build me a conflict-free schedule for today around AI, leaving at 3`** and hit **Send**.
+  - Watch `PreferencesAgent` and `ScheduleAgent` run in sequence in `maui devflow logs`, review the recommended session cards and bulk approval card (`Add all N talks to favourites?`), tap **Approve**, and show the updated schedule in **Agenda → Favourites**.

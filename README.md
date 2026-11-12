@@ -56,12 +56,11 @@ maui devflow logs --follow --no-json
 
 | File | Feature |
 |---|---|
-| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` registering `AppleIntelligenceChatClient` with `.UseLogging()`, `UseAIContextProviders`, `SemanticRoutingChatClient`, and `ChatClientAgent` |
+| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` wiring `IChatClient`, `AsAIAgent`, `AgentWorkflowBuilder.BuildSequential`, and `SemanticRoutingChatClient` |
 | [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) |
 | [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` + hybrid vector search |
 | [`AI/SessionRagProvider.cs`](src/ConferenceApp/AI/SessionRagProvider.cs) | Agent Framework `TextSearchProvider` (`BeforeAIInvoke`) injecting the top 3 matching session abstracts before each turn |
 | [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) |
-| [`AI/DayPlanService.cs`](src/ConferenceApp/AI/DayPlanService.cs) & [`AI/DayPlanChatClient.cs`](src/ConferenceApp/AI/DayPlanChatClient.cs) | `Microsoft.Agents.AI.Workflows` 4-step pipeline (`preferences` → `candidates` → `schedule` → concurrent `explanations`) routed via `SemanticRoutingChatClient` |
 
 ## Refreshing the data and model
 

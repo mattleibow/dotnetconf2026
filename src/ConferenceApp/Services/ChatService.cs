@@ -99,19 +99,27 @@ public class ChatService(
             else
                 history.Add(new(message.IsUser ? ChatRole.User : ChatRole.Assistant, message.Text));
 
-        var agent = scope.ServiceProvider.GetRequiredService<ChatClientAgent>();
-        var agentSession = await agent.CreateSessionAsync(cancellationToken);
-        var runOptions = new ChatClientAgentRunOptions(new ChatOptions
-        {
-            Temperature = 0,
-            MaxOutputTokens = 700,
-            Tools = [.. ConferenceToolContext.Default.Tools]
-        });
+        var router = scope.ServiceProvider.GetRequiredService<SemanticRoutingChatClient>();
 
         var receivedText = false;
-        var updates = new List<AgentResponseUpdate>();
-        await foreach (var update in agent.RunStreamingAsync(history, agentSession, runOptions, cancellationToken))
+        var isDayPlan = false;
+        var updates = new List<ChatResponseUpdate>();
+        await foreach (var update in router.GetStreamingResponseAsync(history, cancellationToken: cancellationToken))
         {
+            if (update.AuthorName == "PreferencesAgent")
+            {
+                isDayPlan = true;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = "PreferencesAgent: reading your interests and time window...");
+                continue;
+            }
+            if (update.AuthorName == "ScheduleAgent" && !receivedText)
+            {
+                isDayPlan = true;
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = "ScheduleAgent: building your conflict-free schedule...");
+            }
+
             updates.Add(update);
             if ((update.Role is null || update.Role == ChatRole.Assistant) && !string.IsNullOrEmpty(update.Text))
             {
@@ -125,9 +133,26 @@ public class ChatService(
         }
         if (!receivedText)
             throw new InvalidOperationException("The on-device model returned no text.");
-        reply.ResponseMessages = updates.ToAgentResponse().Messages.ToArray();
+        reply.ResponseMessages = updates.ToChatResponse().Messages.ToArray();
         if (reply.Sessions.Count == 0)
             await tools.AddReferencedSessionsAsync(reply.Text, cancellationToken);
+
+        if (isDayPlan && reply.Sessions.Count > 0 && reply.Approvals.Count == 0)
+        {
+            var approval = new ChatApproval(reply.Sessions.Select(card => card.Session).ToArray(), add: true);
+            await MainThread.InvokeOnMainThreadAsync(() => reply.Approvals.Add(approval));
+            if (await approval.WaitAsync(cancellationToken))
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    preferences.SetFavorites(reply.Sessions.Select(card => card.Session.Id), isFavorite: true));
+                yield return $"\n\nAdded all {reply.Sessions.Count} recommended talks to favourites.";
+            }
+            else
+            {
+                yield return "\n\nPlan not saved. Your favourites haven't changed.";
+            }
+        }
+
         logger.LogInformation("[AI Chat] Completed reply ({Length} chars, {Cards} session cards).",
             reply.Text.Length, reply.Sessions.Count);
     }
