@@ -30,9 +30,13 @@ public static class AgentExtensions
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var contextProvider = CreateContextProvider(services, loggerFactory);
 
-        // 1. General assistant agent: uses RAG summaries + user context + source-generated tools.
+        var userContextProvider = new UserContextProvider(
+            services.GetRequiredService<ConferenceDatabase>(),
+            services.GetRequiredService<UserPreferencesService>());
+        var ragProvider = CreateRagProvider(services, loggerFactory);
+
+        // 1. General assistant agent: uses user context + RAG summaries + source-generated tools.
         var assistantAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
@@ -51,22 +55,32 @@ public static class AgentExtensions
                     MaxOutputTokens = 700,
                     Tools = [.. ConferenceToolContext.Default.Tools]
                 },
-                AIContextProviders = [contextProvider]
+                AIContextProviders = [userContextProvider, ragProvider]
             },
             loggerFactory,
             services);
 
         // 2. Sequential "Plan my day" workflow: PreferencesAgent -> ScheduleAgent.
         var preferencesAgent = localClient.AsAIAgent(
-            name: "PreferencesAgent",
-            instructions: """
-                Do NOT list or pick any talks or sessions.
-                Output ONLY one short line in this exact format:
-                "Preferences — Topics: <topics>; Arrive: <HH:mm>; Leave: <HH:mm>. Now build the full schedule."
-                Use 24-hour daytime ("leaving at 3" means 15:00; default Arrive 08:00, Leave 17:00).
-                """,
-            loggerFactory: loggerFactory,
-            services: services);
+            new ChatClientAgentOptions
+            {
+                Name = "PreferencesAgent",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        Do NOT list or pick any talks or sessions.
+                        Output ONLY one short line in this exact format:
+                        "Preferences — Topics: <topics>; Arrive: <HH:mm>; Leave: <HH:mm>. Now build the full schedule."
+                        Use 24-hour daytime ("leaving at 3" means 15:00; default Arrive 08:00, Leave 17:00).
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 120
+                },
+                AIContextProviders = [userContextProvider]
+            },
+            loggerFactory,
+            services);
 
         var scheduleAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
@@ -86,7 +100,7 @@ public static class AgentExtensions
                     MaxOutputTokens = 700,
                     Tools = [.. ConferenceToolContext.Default.Tools]
                 },
-                AIContextProviders = [contextProvider]
+                AIContextProviders = [userContextProvider, ragProvider]
             },
             loggerFactory,
             services);
@@ -109,9 +123,40 @@ public static class AgentExtensions
             leaveOpen: true);
     }
 
-    // Injects the current city, venue, saved favourites, and top RAG session summaries (title + topic + 1-line summary)
+    // Context Provider 1: Injects the user's current city, event date, venue, and saved favourites.
+    private sealed class UserContextProvider(
+        ConferenceDatabase database,
+        UserPreferencesService preferences) : AIContextProvider
+    {
+        protected override async ValueTask<AIContext> ProvideAIContextAsync(
+            InvokingContext context,
+            CancellationToken cancellationToken = default)
+        {
+            var city = await preferences.GetSelectedCityAsync(database);
+            var conference = await database.GetConferenceAsync();
+            var venue = conference.Venues.First(v => v.Id == city.VenueId);
+            var allCitySessions = await database.GetSessionsAsync(city.Id);
+            var favoriteTitles = allCitySessions
+                .Where(s => preferences.IsFavorite(s.Id))
+                .Select(s => $"{s.Time} {s.Title}")
+                .ToArray();
+
+            return new AIContext
+            {
+                Instructions = $"""
+                    CURRENT USER & EVENT CONTEXT
+                    Event: {conference.Name}
+                    Selected City: {city.Name} | Date: {city.Date:dddd, yyyy-MM-dd}
+                    Venue: {venue.Name} ({venue.Address})
+                    Saved Favourites: {(favoriteTitles.Length > 0 ? string.Join("; ", favoriteTitles) : "None yet")}
+                    """
+            };
+        }
+    }
+
+    // Context Provider 2 (RAG): Injects the top matching session summaries (title + topic + 1-line summary)
     // before each turn. For full multi-paragraph abstracts, the model calls the get_session tool on demand.
-    private static TextSearchProvider CreateContextProvider(IServiceProvider services, ILoggerFactory loggerFactory)
+    private static TextSearchProvider CreateRagProvider(IServiceProvider services, ILoggerFactory loggerFactory)
     {
         var database = services.GetRequiredService<ConferenceDatabase>();
         var preferences = services.GetRequiredService<UserPreferencesService>();
@@ -122,53 +167,31 @@ public static class AgentExtensions
         return new TextSearchProvider(
             async (query, cancellationToken) =>
             {
-                var city = await preferences.GetSelectedCityAsync(database);
-                var conference = await database.GetConferenceAsync();
-                var venue = conference.Venues.First(v => v.Id == city.VenueId);
-                var allCitySessions = await database.GetSessionsAsync(city.Id);
-                var favoriteTitles = allCitySessions
-                    .Where(s => preferences.IsFavorite(s.Id))
-                    .Select(s => $"{s.Time} {s.Title}")
-                    .ToArray();
-
-                var results = new List<TextSearchProvider.TextSearchResult>
-                {
-                    new()
-                    {
-                        SourceName = $"Current Event Context ({city.Name})",
-                        SourceLink = city.Id,
-                        Text = $"""
-                            Event: {conference.Name}
-                            Selected City: {city.Name} | Date: {city.Date:dddd, yyyy-MM-dd}
-                            Venue: {venue.Name} ({venue.Address})
-                            Saved Favourites: {(favoriteTitles.Length > 0 ? string.Join("; ", favoriteTitles) : "None yet")}
-                            """
-                    }
-                };
-
                 var trimmed = string.Join(" ", query.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
-                if (!string.IsNullOrWhiteSpace(trimmed))
-                {
-                    var matches = (await search.SearchSessionsAsync(city.Id, trimmed))
-                        .Where(session => session.IsTalk)
-                        .Take(TopRagSessions)
-                        .ToList();
+                if (string.IsNullOrWhiteSpace(trimmed))
+                    return [];
 
-                    if (matches.Count > 0)
+                var city = await preferences.GetSelectedCityAsync(database);
+                var matches = (await search.SearchSessionsAsync(city.Id, trimmed))
+                    .Where(session => session.IsTalk)
+                    .Take(TopRagSessions)
+                    .ToList();
+
+                if (matches.Count == 0)
+                    return [];
+
+                logger.LogInformation("[AI RAG] Injected {Count} session summaries in {City} for '{Query}': {Titles}",
+                    matches.Count, city.Name, trimmed, string.Join(" | ", matches.Select(s => s.Title)));
+
+                return
+                [
+                    new TextSearchProvider.TextSearchResult
                     {
-                        results.Add(new TextSearchProvider.TextSearchResult
-                        {
-                            SourceName = $"Top Semantic Matches for '{trimmed}'",
-                            SourceLink = "rag-matches",
-                            Text = await tools.FormatSessionsAsync(city, matches)
-                        });
+                        SourceName = $"Top Semantic Matches in {city.Name}",
+                        SourceLink = city.Id,
+                        Text = await tools.FormatSessionsAsync(city, matches)
                     }
-
-                    logger.LogInformation("[AI RAG] Injected {City} context + {Count} session summaries for '{Query}': {Titles}",
-                        city.Name, matches.Count, trimmed, string.Join(" | ", matches.Select(s => s.Title)));
-                }
-
-                return results;
+                ];
             },
             new TextSearchProviderOptions
             {
