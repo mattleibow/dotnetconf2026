@@ -49,15 +49,15 @@ public static class AIExtensions
 #if IOS || MACCATALYST
         if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
             return (await AppleIntelligenceChatClient.GetModelStatusAsync(cancellationToken)).Availability;
-        return ChatModelAvailability.NotSupported;
 #elif ANDROID
-        return (await GeminiNanoChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+            return (await GeminiNanoChatClient.GetModelStatusAsync(cancellationToken)).Availability;
 #elif WINDOWS
-        return (await WindowsAIChatClient.GetModelStatusAsync(cancellationToken)).Availability;
-#else
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+            return (await WindowsAIChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+#endif
         await Task.CompletedTask;
         return ChatModelAvailability.NotSupported;
-#endif
     }
 
     private static IChatClient CreateLocalChatClient(IServiceProvider services)
@@ -71,22 +71,26 @@ public static class AIExtensions
                 .UseLogging(loggerFactory)
                 .Build();
         }
-        throw new PlatformNotSupportedException("Apple Intelligence requires iOS or Mac Catalyst 26.0 or later.");
 #elif ANDROID
-        return new GeminiNanoChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(loggerFactory)
-            .UseLogging(loggerFactory)
-            .Build();
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            return new GeminiNanoChatClient()
+                .AsBuilder()
+                .UseFunctionInvocation(loggerFactory)
+                .UseLogging(loggerFactory)
+                .Build();
+        }
 #elif WINDOWS
-        return new WindowsAIChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(loggerFactory)
-            .UseLogging(loggerFactory)
-            .Build();
-#else
-        throw new PlatformNotSupportedException("On-device chat is not supported on this platform.");
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+        {
+            return new WindowsAIChatClient()
+                .AsBuilder()
+                .UseFunctionInvocation(loggerFactory)
+                .UseLogging(loggerFactory)
+                .Build();
+        }
 #endif
+        throw new PlatformNotSupportedException("On-device chat is not supported on this OS version.");
     }
 
     private static ChatClientAgent CreateAssistantAgent(IServiceProvider services)
