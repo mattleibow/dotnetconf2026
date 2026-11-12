@@ -15,7 +15,7 @@ This repository is the companion to the .NET Conf 2026 South Africa talk and a h
 |---|---|
 | [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with semantic search and favourites filter), Speakers, Assistant, and DevFlow |
 | [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` |
-| [`.github/prompts/`](.github/prompts/) | Live demo prompts (`01`–`02`) plus full workshop prompts (`03`–`08` and [extras](.github/prompts/extras/)) |
+| [`.github/prompts/`](.github/prompts/) | Live demo prompts (`01`–`02`), plus [workshop prompts](.github/prompts/workshop/) (`03`–`08`) and [extras](.github/prompts/extras/) |
 | [`docs/demo.md`](docs/demo.md) | Speaker runbook & file-by-file talking points (.NET 11, MAUI 11, DevFlow, and in-app AI walkthrough) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
@@ -56,12 +56,12 @@ maui devflow logs --follow --no-json
 
 | File | Feature | Workshop prompt (to build from scratch) |
 |---|---|---|
-| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` registering `AppleIntelligenceChatClient` with `.UseLogging()` | [03 — On-device chat](.github/prompts/03-on-device-chat.prompt.md) |
-| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) | [04 — Ingestion and enrichment](.github/prompts/04-ingestion-and-enrichment.prompt.md) |
-| [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Hybrid keyword + vector search (`VectorStoreCollection` with city pre-filtering) | [05 — Apple semantic search](.github/prompts/05-apple-semantic-search.prompt.md) |
-| [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` | [06 — ONNX semantic search](.github/prompts/06-onnx-semantic-search.prompt.md) |
-| [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) | [07 — Tools and actions](.github/prompts/07-tools-and-actions.prompt.md) |
-| [`AI/DayPlanService.cs`](src/ConferenceApp/AI/DayPlanService.cs) | `Microsoft.Agents.AI.Workflows` 4-step pipeline (`preferences` → `candidates` → `schedule` → concurrent `explanations`) | [08 — Plan my day](.github/prompts/08-plan-my-day.prompt.md) |
+| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` registering `AppleIntelligenceChatClient` with `.UseLogging()` | [03 — On-device chat](.github/prompts/workshop/03-on-device-chat.prompt.md) |
+| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) | [04 — Ingestion and enrichment](.github/prompts/workshop/04-ingestion-and-enrichment.prompt.md) |
+| [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Hybrid keyword + vector search (`VectorStoreCollection` with city pre-filtering) | [05 — Apple semantic search](.github/prompts/workshop/05-apple-semantic-search.prompt.md) |
+| [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` | [06 — ONNX semantic search](.github/prompts/workshop/06-onnx-semantic-search.prompt.md) |
+| [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) | [07 — Tools and actions](.github/prompts/workshop/07-tools-and-actions.prompt.md) |
+| [`AI/DayPlanService.cs`](src/ConferenceApp/AI/DayPlanService.cs) | `Microsoft.Agents.AI.Workflows` 4-step pipeline (`preferences` → `candidates` → `schedule` → concurrent `explanations`) | [08 — Plan my day](.github/prompts/workshop/08-plan-my-day.prompt.md) |
 
 ### Workshop extras
 
