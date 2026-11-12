@@ -1,20 +1,63 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using ConferenceApp.AI;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakerViewModel(ConferenceDatabase database, UserPreferencesService preferences) : ObservableObject, IQueryAttributable
+public partial class SpeakerSessionItem(Session session, string cityName,
+    string? summary = null, string? topic = null) : ObservableObject
 {
-    public ObservableCollection<Session> Sessions { get; } = [];
+    public Session Session { get; } = session;
+    public string Meta => Session.Track is { Length: > 0 } track
+        ? $"{cityName} · {Session.Time} · {track}"
+        : $"{cityName} · {Session.Time}";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSummary))]
+    public partial string? Summary { get; set; } = summary;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTopic))]
+    public partial string? Topic { get; set; } = topic;
+
+    public bool HasSummary => !string.IsNullOrWhiteSpace(Summary);
+    public bool HasTopic => !string.IsNullOrWhiteSpace(Topic);
+}
+
+public partial class SpeakerViewModel : ObservableObject,
+    IQueryAttributable,
+    IRecipient<CityChangedMessage>,
+    IRecipient<SessionEnrichedMessage>
+{
+    private readonly ConferenceDatabase database;
+    private readonly UserPreferencesService preferences;
+    private readonly SessionEnrichmentService enrichment;
+
+    public SpeakerViewModel(ConferenceDatabase database, UserPreferencesService preferences, SessionEnrichmentService enrichment)
+    {
+        this.database = database;
+        this.preferences = preferences;
+        this.enrichment = enrichment;
+        WeakReferenceMessenger.Default.RegisterAll(this);
+    }
+
+    public ObservableCollection<SpeakerSessionItem> Sessions { get; } = [];
 
     [ObservableProperty]
     public partial Speaker? Speaker { get; set; }
 
     [ObservableProperty]
     public partial string Bio { get; set; } = "";
+
+    public void Receive(CityChangedMessage message) =>
+        _ = LoadSessionsAsync();
+
+    public void Receive(SessionEnrichedMessage message) =>
+        MainThread.BeginInvokeOnMainThread(() => ApplyEnrichment(message.SessionId));
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -32,10 +75,23 @@ public partial class SpeakerViewModel(ConferenceDatabase database, UserPreferenc
         var city = await preferences.GetSelectedCityAsync(database);
         Sessions.Clear();
         foreach (var session in await database.GetSessionsForSpeakerAsync(city.Id, Speaker.Id))
-            Sessions.Add(session);
+        {
+            var enriched = enrichment.GetSession(session.Id);
+            Sessions.Add(new SpeakerSessionItem(session, city.Name, enriched.Summary, enriched.HasTopic ? enriched.Topic : null));
+        }
+    }
+
+    private void ApplyEnrichment(string? sessionId)
+    {
+        foreach (var item in Sessions.Where(item => sessionId is null || item.Session.Id == sessionId))
+        {
+            var enriched = enrichment.GetSession(item.Session.Id);
+            item.Summary = enriched.Summary;
+            item.Topic = enriched.HasTopic ? enriched.Topic : null;
+        }
     }
 
     [RelayCommand]
-    private Task OpenSessionAsync(Session session) =>
-        Shell.Current.GoToAsync($"session?id={session.Id}");
+    private Task OpenSessionAsync(SpeakerSessionItem item) =>
+        Shell.Current.GoToAsync($"session?id={item.Session.Id}");
 }

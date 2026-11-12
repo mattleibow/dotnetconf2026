@@ -12,35 +12,99 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="10" RowSpacing="10">
-        <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
-            <BindableLayout.ItemTemplate>
-                <DataTemplate x:DataType="x:String">
-                    <Button Text="{Binding .}"
-                            Command="{Binding AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
-                            CommandParameter="{Binding .}" />
-                </DataTemplate>
-            </BindableLayout.ItemTemplate>
-        </HorizontalStackLayout>
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="10" RowSpacing="10">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Button AutomationId="plan-my-day"
+                    Text="Plan my day"
+                    IsEnabled="{Binding CanSend}"
+                    Command="{Binding PlanMyDayCommand}" />
+            <ScrollView Grid.Column="1" Orientation="Horizontal">
+                <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Button Text="{Binding .}"
+                                    Command="{Binding AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
+                                    CommandParameter="{Binding .}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+            <Button Grid.Column="2"
+                    AutomationId="chat-new"
+                    Text="New chat"
+                    Command="{Binding ClearChatCommand}" />
+        </Grid>
 
-        <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
+        <Label Grid.Row="1"
+               AutomationId="chat-unavailable"
+               Text="{Binding UnavailableReason}"
+               IsVisible="{Binding HasUnavailableReason}" />
+
+        <CollectionView Grid.Row="2" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="ChatItem">
-                    <VerticalStackLayout Padding="0,6">
+                    <VerticalStackLayout Padding="0,6" Spacing="6">
+                        <Label AutomationId="chat-progress"
+                               Text="{Binding Progress}"
+                               FontAttributes="Italic"
+                               IsVisible="{Binding HasProgress}" />
                         <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}" />
+
+                        <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Sessions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="ChatSessionCard">
+                                    <VerticalStackLayout Padding="8"
+                                                         Background="Transparent"
+                                                         AutomationId="{Binding Session.Id, StringFormat='chat-session-card-{0}'}">
+                                        <Label Text="{Binding Metadata}" />
+                                        <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Speakers}" />
+                                        <Label Text="{Binding Reason}" IsVisible="{Binding HasReason}" />
+                                        <VerticalStackLayout.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </VerticalStackLayout.GestureRecognizers>
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Approvals}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="ChatApproval">
+                                    <VerticalStackLayout Padding="8"
+                                                         Spacing="6"
+                                                         AutomationId="{Binding PrimarySessionId, StringFormat='chat-approval-{0}'}">
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Description}" />
+                                        <Label Text="{Binding Status}" />
+                                        <HorizontalStackLayout Spacing="8" IsVisible="{Binding IsPending}">
+                                            <Button AutomationId="chat-approve-action"
+                                                    Text="Approve"
+                                                    Command="{Binding ApproveCommand}" />
+                                            <Button AutomationId="chat-deny-action"
+                                                    Text="Deny"
+                                                    Command="{Binding DenyCommand}" />
+                                        </HorizontalStackLayout>
+                                    </VerticalStackLayout>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <Entry AutomationId="chat-input"
                    Placeholder="Ask about sessions, speakers, or your schedule..."
                    Text="{Binding Prompt}"
+                   IsEnabled="{Binding CanSend}"
                    ReturnCommand="{Binding SendCommand}" />
             <Button Grid.Column="1"
                     AutomationId="chat-send"
                     Text="Send"
+                    IsEnabled="{Binding CanSend}"
                     Command="{Binding SendCommand}" />
         </Grid>
     </Grid>

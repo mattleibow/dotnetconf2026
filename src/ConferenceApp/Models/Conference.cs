@@ -36,7 +36,11 @@ public record Speaker(
     string? Tagline,
     List<string> CityIds,
     string Content,
-    string? Image);
+    string? Image)
+{
+    public string Initials => string.Concat(Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2).Select(part => part[0]));
+}
 
 public record Venue(
     string Id,

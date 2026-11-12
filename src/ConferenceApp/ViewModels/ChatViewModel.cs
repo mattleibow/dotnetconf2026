@@ -12,6 +12,7 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     private readonly ChatService chat;
     private readonly ConferenceDatabase database;
     private readonly UserPreferencesService preferences;
+    private CancellationTokenSource? activeTurn;
 
     public ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences)
     {
@@ -21,7 +22,7 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
-    public ObservableCollection<ChatItem> Messages { get; } = [];
+    public ObservableCollection<ChatItem> Messages => chat.Messages;
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
 
     [ObservableProperty]
@@ -31,14 +32,28 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     public partial string Prompt { get; set; } = "";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSend))]
     public partial bool IsBusy { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsChatAvailable))]
+    [NotifyPropertyChangedFor(nameof(HasUnavailableReason))]
+    [NotifyPropertyChangedFor(nameof(CanSend))]
+    public partial string? UnavailableReason { get; set; }
+
+    public bool IsChatAvailable => string.IsNullOrEmpty(UnavailableReason);
+    public bool HasUnavailableReason => !IsChatAvailable;
+    public bool CanSend => IsChatAvailable && !IsBusy;
 
     public void Receive(CityChangedMessage message) =>
         _ = LoadAsync();
 
     [RelayCommand]
-    private async Task LoadAsync() =>
+    private async Task LoadAsync()
+    {
         SelectedCity = await preferences.GetSelectedCityAsync(database);
+        UnavailableReason = await chat.GetUnavailableReasonAsync();
+    }
 
     [RelayCommand]
     private Task PickCityAsync() =>
@@ -52,30 +67,81 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     }
 
     [RelayCommand]
+    private Task PlanMyDayAsync()
+    {
+        var constraints = Prompt.Trim();
+        Prompt = string.IsNullOrEmpty(constraints) || ChatService.IsDayPlanRequest(constraints)
+            ? (string.IsNullOrEmpty(constraints) ? "Plan my day" : constraints)
+            : $"Plan my day: {constraints}";
+        return SendAsync();
+    }
+
+    [RelayCommand]
+    private void ClearChat()
+    {
+        activeTurn?.Cancel();
+        foreach (var approval in Messages.SelectMany(message => message.Approvals))
+            approval.Cancel();
+        Messages.Clear();
+        Prompt = "";
+        IsBusy = false;
+    }
+
+    [RelayCommand]
+    private void ApproveAction(ChatApproval? approval) =>
+        approval?.Decide(approved: true);
+
+    [RelayCommand]
+    private void DenyAction(ChatApproval? approval) =>
+        approval?.Decide(approved: false);
+
+    [RelayCommand]
+    private Task OpenSessionAsync(ChatSessionCard? card) =>
+        card is null ? Task.CompletedTask : Shell.Current.GoToAsync($"session?id={card.Session.Id}");
+
+    [RelayCommand]
     private async Task SendAsync()
     {
         var text = Prompt.Trim();
         if (string.IsNullOrEmpty(text) || IsBusy)
             return;
 
+        UnavailableReason = await chat.GetUnavailableReasonAsync();
+        if (!IsChatAvailable)
+            return;
+
+        using var turn = new CancellationTokenSource();
+        activeTurn = turn;
         Prompt = "";
         Messages.Add(new ChatItem(isUser: true, text));
+        var history = Messages.ToList();
         var reply = new ChatItem(isUser: false);
         Messages.Add(reply);
 
         IsBusy = true;
         try
         {
-            await foreach (var chunk in chat.SendAsync(Messages))
+            await foreach (var chunk in chat.SendAsync(history, reply, turn.Token))
                 reply.Text += chunk;
+        }
+        catch (OperationCanceledException) when (turn.IsCancellationRequested)
+        {
         }
         catch (Exception ex)
         {
-            reply.Text = ex.Message;
+            reply.Progress = "";
+            foreach (var approval in reply.Approvals)
+                approval.Cancel();
+            reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
         }
         finally
         {
-            IsBusy = false;
+            reply.Progress = "";
+            if (ReferenceEquals(activeTurn, turn))
+            {
+                activeTurn = null;
+                IsBusy = false;
+            }
         }
     }
 }

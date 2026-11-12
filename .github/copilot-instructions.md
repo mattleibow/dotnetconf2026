@@ -35,15 +35,15 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 
 ## App architecture
 
-- Keep the structure flat and easy to read on a projector: `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- The baseline wireframe app lives in `src/ConferenceApp/` with `ConferenceDatabase` (stateless data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService` (plain `Contains` search on title and speaker names), and `ChatService`.
+- Keep the structure flat and easy to read on a projector: `AI/`, `Converters/`, `Models/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
+- The app lives in `src/ConferenceApp/` with `ConferenceDatabase` (stateless data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService` (literal + ONNX semantic search), `ChatService` (streaming on-device assistant), and `builder.AddConferenceAI()` in `AI/AIExtensions.cs` (which registers `AppleIntelligenceChatClient` with `.UseLogging()`, `MiniLmEmbeddingGenerator`, `SessionEnrichmentService`, `ConferenceAssistantTools`, and `DayPlanService`).
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`. Never call `AddTransient<Page, ViewModel>()`: register them separately with `AddTransient<Page>().AddTransient<ViewModel>()`.
 - Use Shell for navigation: one page per top-level section, and routes for detail pages. Never fake tabs by toggling `IsVisible` on one page.
 - One view model per page, with commands (`CommunityToolkit.Mvvm`) rather than event handlers in code-behind.
 - Conference content is linked in `ConferenceApp.csproj` directly from `data/conference/` as raw `MauiAsset` files (`LogicalName="conference/..."`) and loaded with `FileSystem.OpenAppPackageFileAsync("conference/...")`. Don't scrape the website, change the importer, or need network access for this content.
 - Store user state such as favourites locally with `Preferences` or a small JSON file. Don't add a database unless it's actually needed.
-- Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavorite`, `SearchSessionsAsync`, and navigation helpers. These should be useful on their own and easy to expose to an in-app AI assistant later.
-- Do not add AI features unless explicitly asked.
+- Put app behavior in services with small, intention-revealing methods, such as `GetSessionsAsync`, `GetSessionAsync`, `SetFavorite`, `SearchSessionsAsync`, and navigation helpers.
+- All AI services and `Microsoft.Extensions.AI` chat/function pipelines log structured `[AI]`, `[AI Search]`, `[AI Chat]`, `[AI Tool]`, and `[AI Workflow]` entries to `ILogger`, which you can watch live via `maui devflow logs --follow --no-json` or the **Logs** tab in the DevFlow Web Inspector.
 
 ## Design
 

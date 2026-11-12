@@ -10,7 +10,8 @@ Load the `maui-devflow-debug` skill, deploy and launch the wireframe app in `src
 4. **Drive the UI and inspect `Preferences`:**
    - Navigate to the **Agenda** tab (`//agenda`), open a talk, and tap `favorite-button` to favourite it.
    - Run `maui devflow storage preferences list` (and `get favorites`) to show the saved favourite IDs inside the app's sandboxed `Preferences`.
-   - Navigate back to **Agenda**, tap `favorites-filter` to filter down to **Favourites**, and use `agenda-search` to search by speaker or title.
+   - Navigate back to **Agenda**, tap `favorites-filter` to filter down to **Favourites**, and use `agenda-search` to run a semantic query such as `"football forecasts"` or `"gradient descent"`.
+   - Run `maui devflow logs --limit 25 --no-json` to show the live `[AI]` and `[AI Search]` logs captured by the DevFlow agent.
    - Switch to **Speakers** (`//speakers`), open a speaker detail page, and then check **Assistant** (`//assistant`).
 
-Don't change any code in this step—just summarize what you found in the visual tree, diagnostics, and `Preferences` so we're ready to style the app in the next step.
+Don't change any code in this step—just summarize what you found in the visual tree, diagnostics, `Preferences`, and AI logs so we're ready to style the app in the next step.

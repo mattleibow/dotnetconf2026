@@ -10,10 +10,12 @@
             <Label Text="Sessions" FontAttributes="Bold" />
             <VerticalStackLayout AutomationId="speaker-sessions" BindableLayout.ItemsSource="{Binding Sessions}">
                 <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="Session">
-                        <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Id, StringFormat='speaker-session-{0}'}">
-                            <Label Text="{Binding Time}" />
-                            <Label Text="{Binding Title}" />
+                    <DataTemplate x:DataType="SpeakerSessionItem">
+                        <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{Binding Session.Id, StringFormat='speaker-session-{0}'}">
+                            <Label Text="{Binding Meta}" />
+                            <Label Text="{Binding Topic}" IsVisible="{Binding HasTopic}" />
+                            <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
+                            <Label Text="{Binding Summary}" IsVisible="{Binding HasSummary}" MaxLines="2" LineBreakMode="TailTruncation" />
                             <VerticalStackLayout.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                       CommandParameter="{Binding .}" />

@@ -2,20 +2,24 @@
 
 > Use AI to build the app, then give the app that same AI.
 
-This repository starts with a working wireframe .NET MAUI 11 conference app in `src/ConferenceApp/`. A coding agent such as GitHub Copilot styles it into a polished conference companion app, then adds on-device AI step by step: local chat, data ingestion and enrichment, semantic search (comparing Apple's built-in embeddings with a bundled ONNX model), tool calling and approved actions, and an Agent Framework workflow.
+This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
 
-It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands-on workshop.
+`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up through `builder.AddConferenceAI()` in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/).
+
+- **Part 1 — Agents Building Apps:** Use a coding agent (such as GitHub Copilot), the Mobile Device canvas, the MAUI DevFlow Web Inspector, and the `impeccable` design skill to inspect the wireframe, add an inline favourite toggle on Agenda cards, style the entire app against [`DESIGN.md`](DESIGN.md), and verify layout diagnostics and `Preferences` live.
+- **Part 2 — Giving the App That Same AI:** Walk through [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) and demo on-device chat (`IChatClient`), data ingestion and enrichment (`Microsoft.Extensions.DataIngestion`), ONNX MiniLM semantic search (`IEmbeddingGenerator`), source-generated tools with user approval (`[AIToolSource]`), and the **Plan my day** workflow (`Microsoft.Agents.AI.Workflows`) while streaming live `[AI]` logs in DevFlow.
 
 ## What's here
 
 | Path | Contents |
 |---|---|
-| [`src/ConferenceApp/`](src/ConferenceApp/) | The starting wireframe app: Event (with sponsors and map), Agenda (with search and favourites filter), Speakers, Assistant, and DevFlow |
-| [`.github/prompts/`](.github/prompts/) | Eight prompts (`01`–`08`), plus optional [extras](.github/prompts/extras/). Copy each into your agent in order |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and how to test with DevFlow |
+| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with semantic search and favourites filter), Speakers, Assistant, and DevFlow |
+| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` |
+| [`.github/prompts/`](.github/prompts/) | Live demo prompts (`01`–`02`) plus full workshop prompts (`03`–`08` and [extras](.github/prompts/extras/)) |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
-| [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions and images |
-| [`models/`](models/README.md) | A small ONNX embedding model (`all-MiniLM-L6-v2`) for cross-platform semantic search |
+| [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions, and images |
+| [`models/`](models/README.md) | Bundled ONNX embedding model (`all-MiniLM-L6-v2`) for cross-platform semantic search |
 
 ## Before you start
 
@@ -30,34 +34,39 @@ It's the companion to the .NET Conf 2026 South Africa talk, and works as a hands
   copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
   copilot plugin install dotnet/skills:plugins/dotnet   # optional: C# and MSBuild
   ```
-- **For on-device AI** (steps 03 onwards): a Mac with Apple Intelligence works best (run the app as Mac Catalyst). Android and Windows use the ONNX model for search; local chat there needs supported hardware (Gemini Nano or Windows AI).
+- **For on-device AI:** a Mac with Apple Intelligence works best (run the app as Mac Catalyst or iOS Simulator). Android and Windows use the bundled ONNX model for semantic search; local chat there uses Gemini Nano or Windows AI on supported hardware.
 
-## The steps
+## Live Demo Flow
 
-Run the prompts in order, one at a time, and check the app after each. Each builds on the last.
+### Part 1: Agents Building Apps (Prompts `01`–`02`)
 
-| # | Prompt | Adds |
+| # | Prompt | What happens |
 |---|---|---|
-| 01 | [Inspect and drive](.github/prompts/01-inspect-and-drive.prompt.md) | Launches the wireframe in the Mobile Canvas + DevFlow Web Inspector, drives the UI, and inspects `Preferences` |
-| 02 | [Make it beautiful](.github/prompts/02-make-it-beautiful.prompt.md) | Styles the wireframe app with `impeccable` and `DESIGN.md`, checking light/dark themes and `ui diagnostics` |
-| 03 | [On-device chat](.github/prompts/03-on-device-chat.prompt.md) | Connects the Assistant tab to the local chat model (`IChatClient`) with titles and times |
-| 04 | [Ingestion and enrichment](.github/prompts/04-ingestion-and-enrichment.prompt.md) | `Microsoft.Extensions.DataIngestion` pipeline generating cached summaries and topics |
-| 05 | [Apple semantic search](.github/prompts/05-apple-semantic-search.prompt.md) | `VectorStoreWriter` and semantic search with Apple's built-in sentence embeddings |
-| 06 | [ONNX semantic search](.github/prompts/06-onnx-semantic-search.prompt.md) | Swaps `IEmbeddingGenerator` to the bundled ONNX MiniLM model for accurate retrieval |
-| 07 | [Tools and actions](.github/prompts/07-tools-and-actions.prompt.md) | Read-only tools (including semantic search RAG), navigation, and approval-gated favourites |
-| 08 | [Plan my day](.github/prompts/08-plan-my-day.prompt.md) | An Agent Framework workflow that builds a conflict-free schedule |
+| 01 | [Inspect and drive](.github/prompts/01-inspect-and-drive.prompt.md) | Opens the Mobile Device canvas + DevFlow Web Inspector (`http://localhost:19223/inspector/<agent-id>/`), checks `ui tree` and `ui diagnostics`, drives the wireframe UI, inspects sandboxed `Preferences`, and shows live `[AI]` logs |
+| 02 | [Make it beautiful](.github/prompts/02-make-it-beautiful.prompt.md) | Uses `impeccable` and `DESIGN.md` to style all 4 tabs and detail pages, adds an inline heart toggle (`session-favorite-<id>`) on Agenda talk cards, and verifies light/dark themes and `ui diagnostics` |
+
+### Part 2: Giving the App That Same AI (`src/ConferenceApp/AI/`)
+
+Watch what the on-device model and tools are doing in real time from a terminal (or in the **Logs** tab of the DevFlow Web Inspector):
+
+```sh
+maui devflow logs --follow --no-json
+```
+
+| File | Feature | Workshop prompt (to build from scratch) |
+|---|---|---|
+| [`AI/AIExtensions.cs`](src/ConferenceApp/AI/AIExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddConferenceAI()` registering `AppleIntelligenceChatClient` with `.UseLogging()` | [03 — On-device chat](.github/prompts/03-on-device-chat.prompt.md) |
+| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) | [04 — Ingestion and enrichment](.github/prompts/04-ingestion-and-enrichment.prompt.md) |
+| [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | Hybrid keyword + vector search (`VectorStoreCollection` with city pre-filtering) | [05 — Apple semantic search](.github/prompts/05-apple-semantic-search.prompt.md) |
+| [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | Cross-platform 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>` | [06 — ONNX semantic search](.github/prompts/06-onnx-semantic-search.prompt.md) |
+| [`AI/ConferenceAssistantTools.cs`](src/ConferenceApp/AI/ConferenceAssistantTools.cs) | Source-generated `[AIToolSource]` tools (`search_sessions`, `get_session`, `get_speaker`, `open_*`, and approval-gated `add_favorite` / `remove_favorite`) | [07 — Tools and actions](.github/prompts/07-tools-and-actions.prompt.md) |
+| [`AI/DayPlanService.cs`](src/ConferenceApp/AI/DayPlanService.cs) | `Microsoft.Agents.AI.Workflows` 4-step pipeline (`preferences` → `candidates` → `schedule` → concurrent `explanations`) | [08 — Plan my day](.github/prompts/08-plan-my-day.prompt.md) |
 
 ### Workshop extras
 
 - [Create the app from scratch](.github/prompts/extras/create-app-from-scratch.prompt.md)
 - [Chat RAG middleware](.github/prompts/extras/chat-rag-middleware.prompt.md) (for local models without tool calling)
 - [Cloud routing](.github/prompts/extras/cloud-routing.prompt.md) (`SemanticRoutingChatClient` failover to a cloud model)
-
-Tips:
-
-- Commit after each step, so you can go back if a step goes wrong.
-- Start each step in a fresh agent session; the prompts are written to stand alone.
-- The AI packages are experimental. If a step fails because an API changed, tell the agent to check the linked docs.
 
 ## Refreshing the data and model
 

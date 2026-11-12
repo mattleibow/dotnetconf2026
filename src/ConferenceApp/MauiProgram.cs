@@ -1,3 +1,4 @@
+using ConferenceApp.AI;
 using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;
@@ -24,8 +25,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<ConferenceDatabase>();
 		builder.Services.AddSingleton<UserPreferencesService>();
-		builder.Services.AddSingleton<SearchService>();
-		builder.Services.AddSingleton<ChatService>();
+		builder.AddConferenceAI();
 
 		builder.Services.AddTransient<EventPage>().AddTransient<EventViewModel>();
 		builder.Services.AddTransient<AgendaPage>().AddTransient<AgendaViewModel>();
@@ -36,7 +36,13 @@ public static class MauiProgram
 
 #if DEBUG
 		builder.Logging.AddDebug();
-		builder.AddMauiDevFlowAgent();
+		builder.Logging.SetMinimumLevel(LogLevel.Information);
+		builder.AddMauiDevFlowAgent(options =>
+		{
+			options.EnableLayoutDiagnostics = true;
+			options.EnableProfiler = true;
+			options.RequireMutationLease = false;
+		});
 #endif
 
 		return builder.Build();

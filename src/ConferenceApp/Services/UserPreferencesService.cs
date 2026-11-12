@@ -47,10 +47,16 @@ public class UserPreferencesService
 
     public bool IsFavorite(string sessionId) => GetFavoriteIds().Contains(sessionId);
 
-    public void SetFavorite(string sessionId, bool isFavorite)
+    public void SetFavorite(string sessionId, bool isFavorite) =>
+        SetFavorites([sessionId], isFavorite);
+
+    public void SetFavorites(IEnumerable<string> sessionIds, bool isFavorite)
     {
         var ids = GetFavoriteIds().ToHashSet();
-        if (isFavorite ? !ids.Add(sessionId) : !ids.Remove(sessionId))
+        var changed = false;
+        foreach (var sessionId in sessionIds)
+            changed |= isFavorite ? ids.Add(sessionId) : ids.Remove(sessionId);
+        if (!changed)
             return;
         Preferences.Set(FavoritesKey, string.Join(',', ids));
         WeakReferenceMessenger.Default.Send(new FavoritesChangedMessage());

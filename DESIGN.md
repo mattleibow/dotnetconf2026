@@ -18,27 +18,22 @@ typography:
     fontFamily: "OpenSansSemibold"
     fontSize: "32"
     fontWeight: 700
-    lineHeight: 1.15
   title:
     fontFamily: "OpenSansSemibold"
     fontSize: "22"
     fontWeight: 700
-    lineHeight: 1.2
   subtitle:
     fontFamily: "OpenSansSemibold"
     fontSize: "17"
     fontWeight: 600
-    lineHeight: 1.3
   body:
     fontFamily: "OpenSansRegular"
     fontSize: "15"
     fontWeight: 400
-    lineHeight: 1.45
   caption:
     fontFamily: "OpenSansRegular"
     fontSize: "13"
     fontWeight: 400
-    lineHeight: 1.35
   label:
     fontFamily: "OpenSansSemibold"
     fontSize: "12"
@@ -132,11 +127,11 @@ The .NET Conf 2026 brand palette pairs deep .NET purple with vibrant magenta aga
 **Character:** Clean, open humanist sans-serif tuned for rapid scanning on mobile screens and comfortable reading across multi-paragraph talk abstracts.
 
 ### Hierarchy
-- **Display** (Bold, 32pt, line-height 1.15): Hero headings (event name, page header).
-- **Title** (Bold, 22pt, line-height 1.2): Page and section titles, speaker names on detail views.
-- **Subtitle** (Semibold, 17pt, line-height 1.3): Card titles and session titles (max 2 lines on cards, full length on detail pages).
-- **Body** (Regular, 15pt, line-height 1.45): Abstracts, speaker bios, venue descriptions, and chat messages (constrained to ~70ch on wide windows).
-- **Caption** (Regular, 13pt, line-height 1.35): Speaker names on cards and secondary metadata.
+- **Display** (Bold, 32pt): Hero headings (event name, page header).
+- **Title** (Bold, 22pt): Page and section titles, speaker names on detail views.
+- **Subtitle** (Semibold, 17pt): Card titles and session titles (max 2 lines on cards, full length on detail pages).
+- **Body** (Regular, 15pt): Abstracts, speaker bios, venue descriptions, and chat messages (constrained to ~70ch on wide windows).
+- **Caption** (Regular, 13pt): Speaker names on cards and secondary metadata.
 - **Label** (Semibold, 12pt, uppercase, character spacing 0.5): Time slots, track chips, room badges, and section headers.
 
 ## Layout
@@ -167,16 +162,17 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 
 ### Agenda & Session Cards
 - **Search & Filter Bar:** Top bar on Agenda with a rounded search input (`AutomationId="agenda-search"`) and the **All Sessions** / **Favourites** filter toggle (`AutomationId="favorites-filter"`).
-- **Talk Cards:** 16pt rounded `Surface` card with time and track chip along the top, session title in `Subtitle` (max 2 lines), speaker avatars + names in `Caption`, and a 44×44pt heart toggle aligned top-right (filled `Accent` heart when favourited, outline `TextSecondary` heart otherwise). Entire card is tappable with `Background="Transparent"` on hit targets.
+- **Talk Cards:** 16pt rounded `Surface` card with time, track chip, and AI topic chip (`Topic` when `HasTopic`) along the top, session title in `Subtitle` (max 2 lines), AI summary (`Summary` when `HasSummary`, max 2 lines), speaker avatars + names in `Caption`, and a 44×44pt heart toggle aligned top-right (filled `Accent` heart when favourited, outline `TextSecondary` heart otherwise). Entire card is tappable with `Background="Transparent"` on hit targets.
 - **General Items** (registration, breaks, lunch): Compact single row with time and title—no card chrome and no favourite heart.
 
 ### Detail Pages (Session & Speaker)
 - **Session Page:** Gradient header with title, time and room chips, tappable speaker rows with 40pt photos, full abstract in `Body`, and a full-width `Accent` favourite button.
-- **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards.
+- **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards with time, track/topic chips, title, and AI summary.
 
 ### Assistant
-- **Suggestion Chips:** Horizontal scrollable pill chips at the top (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke).
-- **Message Bubbles:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter`.
+- **Top Action & Suggestion Bar:** Pinned **Plan my day** pill button (`AutomationId="plan-my-day"`), horizontal scrollable suggestion chips (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke), and a **New chat** button (`AutomationId="chat-new"`).
+- **Message Bubbles & Live Progress:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and an inline italic progress status label (`Progress` when `HasProgress`, `AutomationId="chat-progress"`).
+- **Referenced Session Cards & Approval Cards:** Tappable session cards (`Sessions`, `AutomationId="chat-session-card-<id>"`) and inline favourite approval cards (`Approvals`, `AutomationId="chat-approval-<id>"` with `chat-approve-action` and `chat-deny-action` buttons) rendered cleanly below the assistant reply bubble.
 - **Input Bar:** Pinned bottom bar with a rounded `Surface` `Entry` and a `Primary` Send button.
 
 ## Do's and Don'ts
@@ -188,5 +184,6 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 
 ### Don't:
 - **Don't** put raw hex colours, magic font sizes, or ad-hoc spacing in individual page XAML files.
+- **Don't** set `LineHeight` on `Label` styles or controls (let the native platform typography metrics handle line spacing so multi-line labels never clip on Mac Catalyst/iOS).
 - **Don't** place pink text on purple backgrounds or use white text smaller than 18pt bold on `Accent` pink.
 - **Don't** use emoji, stock illustrations, or invented conference slogans anywhere in the UI.
