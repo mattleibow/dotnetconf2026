@@ -123,20 +123,22 @@ All in-app AI lives in **`src/ConferenceApp/AI/`** (5 focused files) plus `Searc
 ### 5. Agents, Per-Workflow Context Providers & Semantic Routing: [`src/ConferenceApp/AI/AgentExtensions.cs`](../src/ConferenceApp/AI/AgentExtensions.cs)
 
 - **Entry point:** `builder.AddAgents()` in `MauiProgram.cs`.
-- **Three Tailored `AIContextProvider`s (picked per agent):**
+- **Four Tailored `AIContextProvider`s (picked per agent):**
   - `ChatClientAgentOptions.AIContextProviders` accepts a list of context providers, so each agent gets only the context that fits its job:
-    1. **`UserContextProvider`:** Injects the selected city, event date, venue name/address, and the user's saved favourites.
-    2. **`CreateRagProvider` (`Microsoft.Agents.AI.TextSearchProvider`):** Used by `ConferenceAssistant` to find the top 5 matching sessions by semantic similarity and inject each session's ID (`SourceLink`), title (`SourceName`), and 1-line summary (`Text`). When the assistant needs the schedule time, room, speakers, or full Markdown abstract, it calls `get_session`!
-    3. **`AgendaContextProvider`:** Used by the `PanelDebate` agents to inject the current city's compact talk catalog (`Time | Track [Topic] | Title — Summary`) so all panelists can pitch and counter across tracks without tool round-trips.
-- **Multi-Turn Routing (`RoutingChatClient.Create` + `SemanticRoutingChatClient`) across 3 Agentic Patterns:**
+    1. **`UserContextProvider`:** Injects the selected city, event date, current conference time, venue name/address, and the user's saved favourites (with `[Topic]` tags).
+    2. **`ScheduleContextProvider`:** Injects the full day schedule of times, rooms, `[Topic]` tags, titles, and speakers for the current city so `ConferenceAssistant` and `SessionResearcher` can answer schedule/speaker questions immediately without redundant search calls.
+    3. **`AgendaContextProvider`:** Used by the recommendation/debate panelists to inject the current city's talk catalog (`Time | Track [Topic] | Title — Summary`).
+    4. **`CreateRagProvider` (`Microsoft.Agents.AI.TextSearchProvider`):** Finds the top matching sessions by semantic similarity and injects each session's ID (`SourceLink`), title (`SourceName`), and 1-line summary (`Text`).
+- **Multi-Turn Routing (`RoutingChatClient.Create` + `SemanticRoutingChatClient`) across 3 Non-Overlapping Routes:**
   - `AgentExtensions.CreateAssistantRouter` combines `SemanticRoutingChatClient` (embedding similarity router) with `RoutingChatClient.Create` (which inspects the full `RoutingContext.Messages` history, including `AuthorName`):
-    1. **Route 1 (Default — `CreateAssistantAgent`):** A single `localClient.AsAIAgent(...)` with `[userContext, ragContext]` and `[.. ConferenceDataToolContext.Default.Tools, .. FavoritesToolContext.Default.Tools]` for Q&A, speaker bios, schedule queries, and favourites.
-    2. **Route 2 (Sequential Workflow — `CreateDayPlanWorkflow` via `AgentWorkflowBuilder.BuildSequential`):**
-       - Chains `PreferencesAgent` (outputs `Topics:` / `Arrive:` / `Leave:` lines) $\rightarrow$ `ScheduleAgent` (uses `[.. ConferenceDataToolContext.Default.Tools]` to call `list_sessions` and build a conflict-free schedule).
-    3. **Route 3 (Multi-Turn Group Chat Workflow — `CreateDebateWorkflow` via `AgentWorkflowBuilder.CreateGroupChatBuilderWith`):**
-       - Uses `RoundRobinGroupChatManager` with a custom `shouldTerminateFunc` and 5 personas (`Concierge`, `DepthAdvocate`, `BreadthAdvocate`, `PracticalAdvocate`, `Moderator`):
-         - **Turn 1:** `Concierge` checks the user's `Saved Favourites` (with their `[Topic]` tags) and asks the user to confirm or expand the topics they want to debate; `shouldTerminateFunc` pauses after `Concierge` (`IterationCount >= 1`).
-         - **Turn 2:** When the user replies to confirm or pick topics, `RoutingChatClient.Create` sees `lastAssistant?.AuthorName == "Concierge"` in `context.Messages` and routes straight back to the Debate workflow, which runs `Concierge` $\rightarrow$ `DepthAdvocate` ("Go Deep") $\rightarrow$ `BreadthAdvocate` ("Go Wide") $\rightarrow$ `PracticalAdvocate` ("Hands-On") $\rightarrow$ `Moderator` ("Verdict")!
+    1. **Route 1 (Default — `CreateAssistantAgent`):** Generic assistant with `[userContext, scheduleContext, ragContext]` and `[.. ConferenceDataToolContext.Default.Tools, .. FavoritesToolContext.Default.Tools]` for fast factual Q&A, speaker bios, time-clash checks, and managing favourites.
+    2. **Route 2 (Session Deep-Dive — `CreateDeepDiveWorkflow` via `BuildSequential` + `BuildConcurrent` Fan-Out):**
+       - **Step 1 (`SessionResearcher`):** Calls `get_session` and `get_speaker` to gather the target talk's full abstract and speaker biography.
+       - **Step 2 (`AgentWorkflowBuilder.BuildConcurrent`):** Fans out in parallel to **`TakeawaysAgent`** (what to expect & 3 key takeaways) and **`QuestionsCoachAgent`** (things to think about & 2 Q&A questions to ask the speaker).
+    3. **Route 3 (Talk Recommendation & Debate — `CreateRecommendationWorkflow` via `CreateGroupChatBuilderWith`):**
+       - Uses `RoundRobinGroupChatManager` with a custom `shouldTerminateFunc` and 6 personas (`Concierge`, `DepthAdvocate`, `BreadthAdvocate`, `PracticalAdvocate`, `Timekeeper`, `Moderator`):
+         - **Turn 1:** `Concierge` checks the user's `Saved Favourites` (as a starting point) and asks the user to confirm or expand the topics they want to explore and any arrival/departure time constraints; `shouldTerminateFunc` pauses after `Concierge` (`IterationCount >= 1`).
+         - **Turn 2:** When the user replies, `RoutingChatClient.Create` sees `lastAssistant?.AuthorName == "Concierge"` in `context.Messages` and routes back to the workflow, which runs `Concierge` $\rightarrow$ `DepthAdvocate` ("Go Deep") $\rightarrow$ `BreadthAdvocate` ("Go Wide") $\rightarrow$ `PracticalAdvocate` ("Hands-On") $\rightarrow$ `Timekeeper` (checks time window & clashes) $\rightarrow$ `Moderator` (final conflict-free lineup)!
 - **Live Demo on Assistant tab:**
   - **Single Agent + RAG + Tools:** Tap **`When is Matthew's talk?`** or **`What's on after lunch?`**.
   - **Sequential Workflow (`BuildSequential`):** Type **`I'm into mobile and AI, leaving at 3`** and tap **`Plan my day`** (`plan-my-day`). Watch `PreferencesAgent` $\rightarrow$ `ScheduleAgent` run in sequence in `maui devflow logs` and trigger the bulk approval card (`Add all N talks to favourites?`).

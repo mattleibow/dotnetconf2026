@@ -20,8 +20,8 @@ public class ChatService(
     public IReadOnlyList<string> Suggestions { get; } =
     [
         "When is Matthew's talk?",
-        "What's on after lunch?",
-        "Debate: Help me pick talks",
+        "Prepare me for Matthew's talk: takeaways and questions",
+        "Can you suggest some talks for me?",
         "Do my favourites clash?"
     ];
 
@@ -61,39 +61,52 @@ public class ChatService(
         var receivedText = false;
         var isDebateFollowUp = history.LastOrDefault(m =>
             m.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(m.AuthorName))?.AuthorName == "Concierge";
-        string? activeDebateSpeaker = null;
+        string? activeSpeaker = null;
+        var bufferedQuestions = new System.Text.StringBuilder();
         var updates = new List<ChatResponseUpdate>();
 
-        // Stream from the keyed "assistant" IChatClient (routes to ConferenceAssistant, DayPlanWorkflow, or PanelDebateWorkflow).
+        // Stream from the keyed "assistant" IChatClient (routes to ConferenceAssistant, SessionDeepDive, or TalkRecommendations).
         await foreach (var update in chatClient.GetStreamingResponseAsync(history, cancellationToken: cancellationToken))
         {
-            if (update.AuthorName == "PreferencesAgent")
+            // Step 1 of SessionDeepDiveWorkflow gathers the session abstract and speaker bio for the parallel analysts.
+            if (update.AuthorName == "SessionResearcher")
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "PreferencesAgent: reading your interests and time window...");
+                    reply.Progress = "SessionResearcher: reading session abstract and speaker bio...");
                 continue;
             }
 
-            if (update.AuthorName == "ScheduleAgent" && !receivedText)
-            {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "ScheduleAgent: building your conflict-free schedule...");
-            }
-
-            // On Turn 2 of the debate (after the user confirmed their topics), Concierge's 1-line
-            // "Confirmed topics: ..." is internal handoff state for the panelists.
+            // On Turn 2 of TalkRecommendations (after the user confirmed their topics), Concierge's 2-line
+            // summary is internal handoff state for the panelists.
             if (update.AuthorName == "Concierge" && isDebateFollowUp)
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "Concierge: locking in your topics for the panel...");
+                    reply.Progress = "Concierge: locking in your topics and time window...");
                 continue;
             }
 
-            if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
+            if (update.AuthorName is "TakeawaysAgent" or "QuestionsCoachAgent"
+                && !receivedText)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = "Running TakeawaysAgent & QuestionsCoachAgent in parallel...");
+            }
+
+            if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Timekeeper" or "Moderator"
                 && !receivedText)
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>
                     reply.Progress = $"{update.AuthorName}: preparing argument...");
+            }
+
+            // When TakeawaysAgent and QuestionsCoachAgent run concurrently via BuildConcurrent,
+            // stream TakeawaysAgent live and buffer QuestionsCoachAgent so their sentences don't interleave.
+            if (update.AuthorName == "QuestionsCoachAgent")
+            {
+                updates.Add(update);
+                if (!string.IsNullOrEmpty(update.Text))
+                    bufferedQuestions.Append(update.Text);
+                continue;
             }
 
             updates.Add(update);
@@ -105,19 +118,31 @@ public class ChatService(
                     await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "");
                 }
 
-                // In a multi-agent Group Chat workflow, label each speaker as they take the floor.
-                if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
-                    && update.AuthorName != activeDebateSpeaker)
+                // Label each multi-agent workflow participant as they take the floor.
+                if (update.AuthorName is "TakeawaysAgent" or "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Timekeeper" or "Moderator"
+                    && update.AuthorName != activeSpeaker)
                 {
-                    var prefix = activeDebateSpeaker is null
-                        ? $"**{update.AuthorName}:** "
-                        : $"\n\n**{update.AuthorName}:** ";
-                    activeDebateSpeaker = update.AuthorName;
+                    var label = update.AuthorName == "TakeawaysAgent" ? "Key Takeaways" : update.AuthorName;
+                    var prefix = activeSpeaker is null
+                        ? $"**{label}:** "
+                        : $"\n\n**{label}:** ";
+                    activeSpeaker = update.AuthorName;
                     yield return prefix;
                 }
 
                 yield return update.Text;
             }
+        }
+
+        if (bufferedQuestions.Length > 0)
+        {
+            if (!receivedText)
+                await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "");
+
+            var prefix = activeSpeaker is null
+                ? "**Things to Think About & Ask:** "
+                : "\n\n**Things to Think About & Ask:** ";
+            yield return prefix + bufferedQuestions;
         }
 
         reply.ResponseMessages = updates
