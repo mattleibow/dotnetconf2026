@@ -3,7 +3,6 @@ using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.VectorData;
 using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
@@ -11,12 +10,11 @@ namespace ConferenceApp.AI;
 public record SessionsEnrichedMessage;
 
 /// <summary>
-/// Background AI enrichment worker: indexes Session vectors into VectorStoreCollection
-/// and populates in-memory Session.Summary and Session.Topic using DataIngestion enrichers.
+/// Background AI enrichment worker: populates in-memory Session.Summary and Session.Topic
+/// using Microsoft.Extensions.DataIngestion enrichers and the local IChatClient.
 /// </summary>
 public sealed class SessionEnrichmentService(
     ConferenceDbProvider dbProvider,
-    VectorStoreCollection<string, Session> sessionVectors,
     ILoggerFactory loggerFactory,
     ILogger<SessionEnrichmentService> logger,
     IChatClient? client = null)
@@ -30,19 +28,13 @@ public sealed class SessionEnrichmentService(
     {
         try
         {
+            if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+                return;
+
             var db = await dbProvider.GetDatabaseAsync();
             var sessions = db.Sessions
                 .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
                 .ToList();
-
-            // 1. Index the loaded Session models into the DI-registered VectorStoreCollection<string, Session>.
-            await sessionVectors.EnsureCollectionExistsAsync();
-            await sessionVectors.UpsertAsync(sessions);
-            logger.LogInformation("[AI] Indexed {Count} session abstracts into VectorStoreCollection<string, Session>.", sessions.Count);
-
-            // 2. Enrich in-memory Session.Summary and Session.Topic in the background.
-            if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
-                return;
 
             var enricherOptions = new EnricherOptions(client)
             {
@@ -58,7 +50,7 @@ public sealed class SessionEnrichmentService(
             {
                 logger.LogInformation("[AI] Enriching session {SessionId} with SummaryEnricher + ClassificationEnricher...", session.Id);
                 var chunk = new IngestionChunk<string>(
-                    $"{session.Title}\n\n{session.Description}",
+                    session.EmbeddingText,
                     new IngestionDocument(session.Id));
 
                 await foreach (var enriched in classifier.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))

@@ -4,9 +4,10 @@ namespace ConferenceApp;
 
 public partial class App : Application
 {
-	public App(SessionEnrichmentService enrichment)
+	public App(SessionIndexingService indexing, SessionEnrichmentService enrichment)
 	{
 		InitializeComponent();
+		_ = indexing.StartAsync();
 		_ = enrichment.StartAsync();
 	}
 
