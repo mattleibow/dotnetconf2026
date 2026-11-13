@@ -26,8 +26,8 @@ public partial class ChatItem(bool isUser, string text = "") : ObservableObject
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    [FromKeyedServices("assistant")] IChatClient chatClient,
-    ILogger<ChatService> logger)
+    ILogger<ChatService> logger,
+    [FromKeyedServices("assistant")] IChatClient? chatClient = null)
 {
     public ObservableCollection<ChatItem> Messages { get; } = [];
 
@@ -59,6 +59,9 @@ public class ChatService(
             yield return reason;
             yield break;
         }
+
+        if (chatClient is null)
+            yield break;
 
         reply.Progress = "Thinking on device...";
 

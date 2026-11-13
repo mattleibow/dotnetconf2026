@@ -8,7 +8,8 @@ public static class AgentExtensions
 {
     public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
-        builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
+        if (builder.Services.Any(d => d.ServiceType == typeof(IChatClient)))
+            builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;
     }
