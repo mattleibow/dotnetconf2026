@@ -26,7 +26,7 @@ public static class TalkRecommendationWorkflow
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var userContext = new UserContextProvider(services);
+        var userContext = services.GetRequiredService<UserContextProvider>();
 
         var concierge = localClient.AsAIAgent(
             new ChatClientAgentOptions

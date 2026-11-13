@@ -7,11 +7,10 @@ namespace ConferenceApp.AI;
 /// <summary>
 /// Injects the user's current city, event date, current time, venue, and saved favourites.
 /// </summary>
-public sealed class UserContextProvider(IServiceProvider services) : AIContextProvider
+public sealed class UserContextProvider(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences) : AIContextProvider
 {
-    private readonly ConferenceDbProvider dbProvider = services.GetRequiredService<ConferenceDbProvider>();
-    private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
-
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
         CancellationToken cancellationToken = default)

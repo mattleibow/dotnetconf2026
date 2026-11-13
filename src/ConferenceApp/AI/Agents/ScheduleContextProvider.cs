@@ -7,11 +7,10 @@ namespace ConferenceApp.AI;
 /// <summary>
 /// Injects the full day schedule of times, rooms, topics, and titles for the current city.
 /// </summary>
-public sealed class ScheduleContextProvider(IServiceProvider services) : AIContextProvider
+public sealed class ScheduleContextProvider(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences) : AIContextProvider
 {
-    private readonly ConferenceDbProvider dbProvider = services.GetRequiredService<ConferenceDbProvider>();
-    private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
-
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
         CancellationToken cancellationToken = default)
