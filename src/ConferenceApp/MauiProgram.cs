@@ -1,4 +1,5 @@
 using ConferenceApp.AI;
+using ConferenceApp.Data;
 using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;

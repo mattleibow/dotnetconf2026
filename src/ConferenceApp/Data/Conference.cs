@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.VectorData;
 
-namespace ConferenceApp.Models;
+namespace ConferenceApp.Data;
 
 public record Conference(
     string Name,
@@ -27,7 +27,6 @@ public class Session
     [VectorStoreKey]
     public string Id { get; set; } = "";
 
-    [VectorStoreData]
     public string Title { get; set; } = "";
 
     [VectorStoreData(IsIndexed = true)]

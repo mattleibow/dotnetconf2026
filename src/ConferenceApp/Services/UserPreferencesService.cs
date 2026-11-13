@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 
 namespace ConferenceApp.Services;
 

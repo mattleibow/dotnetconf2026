@@ -1,7 +1,6 @@
 using System.Text.Json;
-using ConferenceApp.Models;
 
-namespace ConferenceApp.Services;
+namespace ConferenceApp.Data;
 
 /// <summary>
 /// Provides on-demand initialization of the in-memory ConferenceDatabase,

@@ -1,4 +1,4 @@
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.VectorData;
 

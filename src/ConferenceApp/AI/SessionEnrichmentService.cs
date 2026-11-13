@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
-using ConferenceApp.Models;
-using ConferenceApp.Services;
+using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;

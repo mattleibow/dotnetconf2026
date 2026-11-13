@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;

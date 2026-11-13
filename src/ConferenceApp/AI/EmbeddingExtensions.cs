@@ -1,4 +1,4 @@
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;

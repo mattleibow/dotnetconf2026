@@ -1,6 +1,4 @@
-using ConferenceApp.Models;
-
-namespace ConferenceApp.Services;
+namespace ConferenceApp.Data;
 
 public class ConferenceDatabase(
     string name,

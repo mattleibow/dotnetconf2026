@@ -1,3 +1,4 @@
+using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;

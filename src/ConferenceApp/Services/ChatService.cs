@@ -1,13 +1,27 @@
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
+
+public partial class ChatItem(bool isUser, string text = "") : ObservableObject
+{
+    public bool IsUser { get; } = isUser;
+    public ObservableCollection<Session> Sessions { get; } = [];
+    public IReadOnlyList<ChatMessage> ResponseMessages { get; set; } = [];
+
+    [ObservableProperty]
+    public partial string Text { get; set; } = text;
+
+    [ObservableProperty]
+    public partial string Progress { get; set; } = "";
+}
 
 public class ChatService(
     ConferenceDbProvider dbProvider,

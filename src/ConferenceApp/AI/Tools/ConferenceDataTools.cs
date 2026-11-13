@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using ConferenceApp.Models;
+using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
