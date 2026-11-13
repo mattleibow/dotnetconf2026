@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
-using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
@@ -11,15 +10,14 @@ public record SessionsEnrichedMessage;
 
 /// <summary>
 /// Background AI enrichment worker: populates in-memory Session.Summary and Session.Topic
-/// using Microsoft.Extensions.DataIngestion enrichers and the local IChatClient.
+/// using the DI-registered SummaryEnricher and ClassificationEnricher.
 /// </summary>
 public sealed class SessionEnrichmentService(
     ConferenceDbProvider dbProvider,
-    ILoggerFactory loggerFactory,
     ILogger<SessionEnrichmentService> logger,
-    IChatClient? client = null)
+    SummaryEnricher? summaryEnricher = null,
+    ClassificationEnricher? classifier = null)
 {
-    private static readonly string[] Topics = ["AI", "Mobile", "Web", "Cloud", "Data", "IoT"];
     private Task? processing;
 
     public Task StartAsync() => processing ??= Task.Run(EnrichAsync);
@@ -28,23 +26,14 @@ public sealed class SessionEnrichmentService(
     {
         try
         {
-            if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+            if (summaryEnricher is null || classifier is null ||
+                await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
                 return;
 
             var db = await dbProvider.GetDbAsync();
             var sessions = db.Sessions
                 .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
                 .ToList();
-
-            var enricherOptions = new EnricherOptions(client)
-            {
-                BatchSize = 1,
-                ChatOptions = new ChatOptions { Temperature = 0, MaxOutputTokens = 160 },
-                LoggerFactory = loggerFactory
-            };
-
-            var summaryEnricher = new SummaryEnricher(enricherOptions, maxWordCount: 24);
-            var classifier = new ClassificationEnricher(enricherOptions, Topics, fallbackClass: "None");
 
             foreach (var session in sessions)
             {
@@ -59,7 +48,7 @@ public sealed class SessionEnrichmentService(
                     var topic = ReadMetadata(enriched, ClassificationEnricher.MetadataKey);
 
                     session.Summary = summary;
-                    session.Topic = Topics.Contains(topic, StringComparer.Ordinal) ? topic : null;
+                    session.Topic = DataExtensions.Topics.Contains(topic, StringComparer.Ordinal) ? topic : null;
                 }
 
                 WeakReferenceMessenger.Default.Send(new SessionsEnrichedMessage());

@@ -1,5 +1,4 @@
 using System.Runtime.Versioning;
-using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
@@ -21,8 +20,6 @@ public static class ChatExtensions
             builder.Services.AddTransient<IChatClient>(CreateWindowsChatClient);
 #endif
 
-        builder.Services.AddSingleton<SessionEnrichmentService>();
-        builder.Services.AddSingleton<ChatService>();
         return builder;
     }
 

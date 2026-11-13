@@ -6,6 +6,7 @@ public static class ConferenceAIExtensions
     {
         builder.AddChatClients();
         builder.AddEmbeddings();
+        builder.AddDataEnrichment();
         builder.AddAITools();
         builder.AddAgents();
 

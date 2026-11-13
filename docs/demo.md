@@ -70,15 +70,16 @@ When Step 02 finishes, show the result on screen:
 
 ## Part 3: Giving the App That Same AI — Code Walkthrough & Live Demo (20 mins)
 
-All in-app AI lives in **`src/ConferenceApp/AI/`** organized into 4 clean folders behind [`ConferenceAIExtensions.cs`](../src/ConferenceApp/AI/ConferenceAIExtensions.cs) (`builder.AddConferenceAI()`):
+All in-app AI lives in **`src/ConferenceApp/AI/`** organized into 5 clean folders behind [`ConferenceAIExtensions.cs`](../src/ConferenceApp/AI/ConferenceAIExtensions.cs) (`builder.AddConferenceAI()`):
 1. **`ChatClients/`** (`builder.AddChatClients()`)
 2. **`Embeddings/`** (`builder.AddEmbeddings()`)
-3. **`Tools/`** (`builder.AddAITools()`)
-4. **`Agents/`** (`builder.AddAgents()`)
+3. **`Data/`** (`builder.AddDataEnrichment()`)
+4. **`Tools/`** (`builder.AddAITools()`)
+5. **`Agents/`** (`builder.AddAgents()`)
 
 Keep `maui devflow logs --follow --no-json` running in a terminal (or open the **Logs** tab in the DevFlow Web Inspector) so the audience sees every model call, embedding query, RAG context injection, semantic route selection, tool invocation, and workflow step in real time.
 
-### 1. Local Chat Clients & Data Ingestion Enrichment: [`src/ConferenceApp/AI/ChatClients/`](../src/ConferenceApp/AI/ChatClients/)
+### 1. Local Chat Clients: [`src/ConferenceApp/AI/ChatClients/`](../src/ConferenceApp/AI/ChatClients/)
 
 - **[`ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) (`builder.AddChatClients()`):**
   - `Microsoft.Maui.Essentials.AI` (`11.0.0-preview.8.26555.2`) provides local on-device `IChatClient` implementations for every platform:
@@ -86,15 +87,16 @@ Keep `maui devflow logs --follow --no-json` running in a terminal (or open the *
     - **Android (`OperatingSystem.IsAndroidVersionAtLeast(26)`):** `GeminiNanoChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
     - **Windows (`OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100)`):** `WindowsAIChatClient().AsBuilder().UseFunctionInvocation(loggerFactory)`
   - Wraps each in a `ChatClientBuilder` pipeline with `.UseLogging(loggerFactory)` so every prompt, streaming response, and function call shows up automatically in `maui devflow logs`!
-  - `ChatExtensions.GetModelAvailabilityAsync()` checks `ChatModelStatus.Availability` (`Available`, `Disabled`, `Downloading`, `NotReady`) uniformly across all platforms.
-- **[`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/ChatClients/SessionEnrichmentService.cs) (`Microsoft.Extensions.DataIngestion`):**
-  - Why: Putting all 54 full Markdown abstracts into a small on-device model's context window overflows or degrades accuracy.
-  - How: Takes each talk's `session.EmbeddingText` (`Title + Description` already cached on `ConferenceDb`) as an `IngestionChunk<string>` and runs two built-in enrichers backed by the local `IChatClient`:
-    1. **`SummaryEnricher`** (`maxWordCount: 24`) — populates `session.Summary` in memory for Agenda cards.
-    2. **`ClassificationEnricher`** (`AI`, `Mobile`, `Web`, `Cloud`, `Data`, `IoT`, fallback `None`) — populates `session.Topic` in memory for Agenda topic chips.
-  - Broadcasts `SessionsEnrichedMessage` via `WeakReferenceMessenger` as each talk finishes so Agenda and Speaker cards update live.
+  - Only registers `IChatClient` when the OS supports local AI (never throws `PlatformNotSupportedException` at startup).
 
-### 2. Semantic Search & Vector Store: [`src/ConferenceApp/AI/Embeddings/`](../src/ConferenceApp/AI/Embeddings/) & [`src/ConferenceApp/Services/SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs)
+### 2. Data Ingestion & Background Enrichment: [`src/ConferenceApp/AI/Data/`](../src/ConferenceApp/AI/Data/)
+
+- **[`DataExtensions.cs`](../src/ConferenceApp/AI/Data/DataExtensions.cs) (`builder.AddDataEnrichment()`) & [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs):**
+  - Why: Putting all 54 full Markdown abstracts into a small on-device model's context window overflows or degrades accuracy.
+  - How: `DataExtensions.cs` registers `EnricherOptions`, `SummaryEnricher` (`maxWordCount: 24`), and `ClassificationEnricher` (`AI`, `Mobile`, `Web`, `Cloud`, `Data`, `IoT`, fallback `None`) from `Microsoft.Extensions.DataIngestion` when `IChatClient` is available.
+  - `SessionEnrichmentService` passes each talk's `session.EmbeddingText` (`Title + Description`) as an `IngestionChunk<string>` through `SummaryEnricher` + `ClassificationEnricher`, populates `session.Summary` and `session.Topic` in memory, and broadcasts `SessionsEnrichedMessage` via `WeakReferenceMessenger` so Agenda and Speaker cards update live.
+
+### 3. Semantic Search & Vector Store: [`src/ConferenceApp/AI/Embeddings/`](../src/ConferenceApp/AI/Embeddings/) & [`src/ConferenceApp/Services/SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs)
 
 - **Declarative Vector Model ([`Data/Session.cs`](../src/ConferenceApp/Data/Session.cs)):**
   - Uses `Microsoft.Extensions.VectorData` attributes directly on `Session`:
