@@ -17,7 +17,7 @@ This repository is the companion to the .NET Conf 2026 South Africa talk and a h
 | [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
 | [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` across `ChatClients/`, `Embeddings/`, `Tools/`, and `Agents/` |
 | [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-inspect-and-drive` and `02-make-it-beautiful`) |
-| [`docs/demo.md`](docs/demo.md) | Speaker runbook & file-by-file talking points (.NET 11, MAUI 11, DevFlow, and in-app AI walkthrough) |
+| [`docs/`](docs/README.md) | Speaker runbook split into [`01-whats-new-net11-maui11.md`](docs/01-whats-new-net11-maui11.md), [`02-agents-building-apps.md`](docs/02-agents-building-apps.md), and [`03-giving-the-app-ai.md`](docs/03-giving-the-app-ai.md) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions, and images |

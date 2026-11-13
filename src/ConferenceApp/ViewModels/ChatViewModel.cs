@@ -38,18 +38,6 @@ public partial class ChatViewModel(
     }
 
     [RelayCommand]
-    private Task PlanMyDayAsync()
-    {
-        var constraints = Prompt.Trim();
-        Prompt = constraints.Length == 0
-            ? "Plan my day"
-            : ChatService.IsDayPlanRequest(constraints)
-                ? constraints
-                : $"Plan my day: {constraints}";
-        return SendAsync();
-    }
-
-    [RelayCommand]
     private void ClearChat()
     {
         activeTurn?.Cancel();

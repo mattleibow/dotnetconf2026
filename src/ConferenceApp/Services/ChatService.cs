@@ -193,9 +193,4 @@ public class ChatService(
             reply.Sessions.Add(session);
         }
     }
-
-    internal static bool IsDayPlanRequest(string request) =>
-        request.Equals("Plan my day", StringComparison.OrdinalIgnoreCase) ||
-        request.StartsWith("Plan my day:", StringComparison.OrdinalIgnoreCase) ||
-        request.StartsWith("Plan my day ", StringComparison.OrdinalIgnoreCase);
 }

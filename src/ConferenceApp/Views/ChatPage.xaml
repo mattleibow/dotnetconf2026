@@ -12,16 +12,17 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,Auto,*,Auto" Padding="10" RowSpacing="10">
-        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-            <Button AutomationId="plan-my-day"
-                    Text="Plan my day"
-                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
-                    Command="{Binding PlanMyDayCommand}" />
-            <ScrollView Grid.Column="1" Orientation="Horizontal">
-                <HorizontalStackLayout Spacing="8"
-                                       IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
-                                       BindableLayout.ItemsSource="{Binding Suggestions}">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="10" RowSpacing="10">
+        <Label AutomationId="chat-unavailable"
+               Text="{Binding UnavailableReason}"
+               IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}" />
+
+        <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Spacing="8"
+                                     VerticalOptions="Center"
+                                     IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                                     BindableLayout.ItemsSource="{Binding Suggestions}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
                             <Button Text="{Binding .}"
@@ -29,20 +30,9 @@
                                     CommandParameter="{Binding .}" />
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
-                </HorizontalStackLayout>
-            </ScrollView>
-            <Button Grid.Column="2"
-                    AutomationId="chat-new"
-                    Text="New chat"
-                    Command="{Binding ClearChatCommand}" />
-        </Grid>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
 
-        <Label Grid.Row="1"
-               AutomationId="chat-unavailable"
-               Text="{Binding UnavailableReason}"
-               IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}" />
-
-        <CollectionView Grid.Row="2" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="ChatItem">
                     <VerticalStackLayout Padding="0,6" Spacing="6">
@@ -74,13 +64,17 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="3" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry AutomationId="chat-input"
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Button AutomationId="chat-new"
+                    Text="New chat"
+                    Command="{Binding ClearChatCommand}" />
+            <Entry Grid.Column="1"
+                   AutomationId="chat-input"
                    Placeholder="Ask about sessions, speakers, or your schedule..."
                    Text="{Binding Prompt}"
                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                    ReturnCommand="{Binding SendCommand}" />
-            <Button Grid.Column="1"
+            <Button Grid.Column="2"
                     AutomationId="chat-send"
                     Text="Send"
                     IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
