@@ -77,11 +77,18 @@ public class ChatService(
             }
 
             // On Turn 2 of TalkRecommendations (after the user confirmed their topics), Concierge's 2-line
-            // summary is internal handoff state for the panelists.
+            // summary and Timekeeper's filtered session list are internal handoff state for the panelists.
             if (update.AuthorName == "Concierge" && isDebateFollowUp)
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>
                     reply.Progress = "Concierge: locking in your topics and time window...");
+                continue;
+            }
+
+            if (update.AuthorName == "Timekeeper")
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = "Timekeeper: filtering talks to your time window...");
                 continue;
             }
 
@@ -92,7 +99,7 @@ public class ChatService(
                     reply.Progress = "Running TakeawaysAgent & QuestionsCoachAgent in parallel...");
             }
 
-            if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Timekeeper" or "Moderator"
+            if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
                 && !receivedText)
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>

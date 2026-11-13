@@ -97,8 +97,9 @@ public sealed class ConferenceDataTools(
 
         var sessions = await database.GetSessionsAsync(city.Id);
         var matching = sessions.Where(s =>
-            TimeOnly.FromDateTime(s.Start.DateTime) < end &&
-            TimeOnly.FromDateTime(s.End.DateTime) > start);
+            s.IsTalk &&
+            TimeOnly.FromDateTime(s.Start.DateTime) >= start &&
+            TimeOnly.FromDateTime(s.Start.DateTime) < end);
 
         return await FormatSessionsAsync(city, matching);
     }

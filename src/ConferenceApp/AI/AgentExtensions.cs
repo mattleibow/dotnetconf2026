@@ -210,13 +210,12 @@ public static class AgentExtensions
 
     // 3. Talk Recommendation & Debate Workflow (Multi-Turn Group Chat):
     //    Turn 1: Concierge clarifies/confirms topics (using saved favourites as a starting point) & time window.
-    //    Turn 2: DepthAdvocate -> BreadthAdvocate -> PracticalAdvocate -> Timekeeper -> Moderator.
+    //    Turn 2: Concierge -> Timekeeper (filters talks by time window via list_sessions) -> Depth -> Breadth -> Practical -> Moderator.
     private static Workflow CreateRecommendationWorkflow(IServiceProvider services)
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
         var userContext = new UserContextProvider(services);
-        var agendaContext = new AgendaContextProvider(services);
 
         var concierge = localClient.AsAIAgent(
             new ChatClientAgentOptions
@@ -241,13 +240,38 @@ public static class AgentExtensions
                         Keep this to 1 or 2 short sentences and do NOT pitch talks yet.
 
                         If the attendee is replying to confirm or choose their topics:
-                        - Output ONLY these two short lines (default Window 08:00–17:00;
-                          "leaving at 3" means 08:00–15:00):
+                        - Output ONLY these two short lines in 24-hour time (default
+                          08:00 to 17:00; "before noon" means 08:00 to 12:00; "leaving
+                          at 3" means 08:00 to 15:00):
                           Confirmed topics: <topics>
-                          Time window: <HH:mm>–<HH:mm>
+                          Time window: <HH:mm> to <HH:mm>
                         """,
                     Temperature = 0,
                     MaxOutputTokens = 150
+                },
+                AIContextProviders = [userContext]
+            },
+            loggerFactory,
+            services);
+
+        var timekeeper = localClient.AsAIAgent(
+            new ChatClientAgentOptions
+            {
+                Name = "Timekeeper",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are Timekeeper on the conference panel.
+
+                        Read the Time window line from Concierge (for example 08:00 to
+                        12:00) and call list_sessions with that exact start and end time.
+                        Then output ONLY the matching talks returned by list_sessions
+                        so the panel only debates talks that fit the attendee's schedule.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 450,
+                    Tools = [.. ConferenceDataToolContext.Default.Tools]
                 },
                 AIContextProviders = [userContext]
             },
@@ -264,14 +288,15 @@ public static class AgentExtensions
                     Instructions = """
                         You are DepthAdvocate on the conference panel.
 
-                        Pitch 1 or 2 sessions from the current city's agenda that dive
-                        deepest into the attendee's Confirmed topics in 2 short
-                        sentences. Always use exact session titles and times.
+                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 sessions
+                        that dive deepest into the attendee's Confirmed topics in 2
+                        short sentences. Never mention talks outside Timekeeper's list.
+                        Always use exact session titles and times.
                         """,
                     Temperature = 0,
                     MaxOutputTokens = 180
                 },
-                AIContextProviders = [userContext, agendaContext]
+                AIContextProviders = [userContext]
             },
             loggerFactory,
             services);
@@ -286,15 +311,15 @@ public static class AgentExtensions
                     Instructions = """
                         You are BreadthAdvocate on the conference panel.
 
-                        Look at what DepthAdvocate pitched and the attendee's Confirmed
-                        topics, then pitch 1 or 2 sessions from a DIFFERENT topic in the
-                        current city's agenda to expand their horizons in 2 short
-                        sentences. Always use exact session titles and times.
+                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 sessions
+                        from a DIFFERENT topic than DepthAdvocate's pick to expand the
+                        attendee's horizons in 2 short sentences. Never mention talks
+                        outside Timekeeper's list. Always use exact session titles and times.
                         """,
                     Temperature = 0,
                     MaxOutputTokens = 180
                 },
-                AIContextProviders = [userContext, agendaContext]
+                AIContextProviders = [userContext]
             },
             loggerFactory,
             services);
@@ -309,38 +334,15 @@ public static class AgentExtensions
                     Instructions = """
                         You are PracticalAdvocate on the conference panel.
 
-                        Pitch 1 or 2 hands-on, code-first or demo-heavy sessions from
-                        the current city's agenda that the attendee can apply right away
-                        in 2 short sentences. Always use exact session titles and times.
+                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 hands-on,
+                        code-first or demo-heavy sessions the attendee can apply right
+                        away in 2 short sentences. Never mention talks outside
+                        Timekeeper's list. Always use exact session titles and times.
                         """,
                     Temperature = 0,
                     MaxOutputTokens = 180
                 },
-                AIContextProviders = [userContext, agendaContext]
-            },
-            loggerFactory,
-            services);
-
-        var timekeeper = localClient.AsAIAgent(
-            new ChatClientAgentOptions
-            {
-                Name = "Timekeeper",
-                UseProvidedChatClientAsIs = true,
-                ChatOptions = new ChatOptions
-                {
-                    Instructions = """
-                        You are Timekeeper on the conference panel.
-
-                        Check the sessions pitched by DepthAdvocate, BreadthAdvocate,
-                        and PracticalAdvocate against the attendee's Time window and the
-                        current time in context. In 2 short sentences, flag any talks
-                        that clash in the same time slot or fall outside the attendee's
-                        Time window, and state which ones fit cleanly.
-                        """,
-                    Temperature = 0,
-                    MaxOutputTokens = 180
-                },
-                AIContextProviders = [userContext, agendaContext]
+                AIContextProviders = [userContext]
             },
             loggerFactory,
             services);
@@ -355,9 +357,10 @@ public static class AgentExtensions
                     Instructions = """
                         You are Moderator wrapping up the panel debate.
 
-                        Using the advocates' pitches and Timekeeper's schedule check,
-                        present a final conflict-free recommended list of 2 to 4 talks
-                        (with exact times and titles) in 2 or 3 short sentences.
+                        From ONLY the talks pitched by DepthAdvocate, BreadthAdvocate,
+                        and PracticalAdvocate within Timekeeper's window, present a
+                        conflict-free recommended lineup (one talk per time slot, with
+                        exact times and titles) in 2 or 3 short sentences.
                         """,
                     Temperature = 0,
                     MaxOutputTokens = 200
@@ -374,7 +377,7 @@ public static class AgentExtensions
                 {
                     // Before the panel debates, pause after Concierge (Iteration 1) so the user
                     // can confirm or adjust their topics. Once the user replies to Concierge,
-                    // run all 6 participants (Concierge -> Depth -> Breadth -> Practical -> Timekeeper -> Moderator).
+                    // run all 6 participants (Concierge -> Timekeeper -> Depth -> Breadth -> Practical -> Moderator).
                     var messages = history.ToList();
                     var lastUserIndex = messages.FindLastIndex(m =>
                         m.Role == ChatRole.User && string.IsNullOrEmpty(m.AuthorName));
@@ -386,7 +389,7 @@ public static class AgentExtensions
 
                     return ValueTask.FromResult(manager.IterationCount >= agents.Count);
                 }))
-            .AddParticipants(concierge, depthAdvocate, breadthAdvocate, practicalAdvocate, timekeeper, moderator)
+            .AddParticipants(concierge, timekeeper, depthAdvocate, breadthAdvocate, practicalAdvocate, moderator)
             .WithName("TalkRecommendationWorkflow")
             .Build();
     }
@@ -465,39 +468,7 @@ public static class AgentExtensions
         }
     }
 
-    // Context Provider 3: Injects the talk catalog with 1-line summaries for the Group Chat recommendation panel.
-    private sealed class AgendaContextProvider(IServiceProvider services) : AIContextProvider
-    {
-        private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
-        private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
-        private readonly SessionEnrichmentService enrichment = services.GetRequiredService<SessionEnrichmentService>();
-
-        protected override async ValueTask<AIContext> ProvideAIContextAsync(
-            InvokingContext context,
-            CancellationToken cancellationToken = default)
-        {
-            var city = await preferences.GetSelectedCityAsync(database);
-            var talks = (await database.GetSessionsAsync(city.Id)).Where(s => s.IsTalk);
-
-            var lines = talks.Select(session =>
-            {
-                var enriched = enrichment.GetSession(session.Id);
-                var topic = enriched.HasTopic ? $" [{enriched.Topic}]" : "";
-                var summary = !string.IsNullOrWhiteSpace(enriched.Summary) ? $" — {enriched.Summary}" : "";
-                return $"- {session.Time} | {session.Track ?? "All attendees"}{topic} | {session.Title}{summary}";
-            });
-
-            return new AIContext
-            {
-                Instructions = $"""
-                    AVAILABLE TALKS IN {city.Name.ToUpperInvariant()}
-                    {string.Join('\n', lines)}
-                    """
-            };
-        }
-    }
-
-    // Context Provider 4 (RAG): Finds the top matching sessions by semantic similarity and injects
+    // Context Provider 3 (RAG): Finds the top matching sessions by semantic similarity and injects
     // each session's ID, title, and summary so SessionResearcher can call get_session / get_speaker.
     private static TextSearchProvider CreateRagProvider(IServiceProvider services)
     {
