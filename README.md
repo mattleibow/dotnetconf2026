@@ -4,17 +4,18 @@
 
 This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
 
-`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) through `builder.AddChatClients()`, `builder.AddEmbeddings()`, and `builder.AddAgents()`.
+`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) through `builder.AddConferenceAI()` (`AddChatClients()`, `AddEmbeddings()`, `AddAITools()`, and `AddAgents()`).
 
 - **Part 1 — Agents Building Apps:** Use a coding agent (such as GitHub Copilot), the Mobile Device canvas, the MAUI DevFlow Web Inspector, and the `impeccable` design skill to inspect the wireframe, add an inline favourite toggle on Agenda cards, style the entire app against [`DESIGN.md`](DESIGN.md), and verify layout diagnostics and `Preferences` live.
-- **Part 2 — Giving the App That Same AI:** Walk through [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) and demo on-device chat (`IChatClient`), data ingestion and enrichment (`Microsoft.Extensions.DataIngestion`), ONNX MiniLM semantic search (`IEmbeddingGenerator`), source-generated tools with user approval (`[AIToolSource]`), and the **Plan my day** workflow (`Microsoft.Agents.AI.Workflows`) while streaming live `[AI]` logs in DevFlow.
+- **Part 2 — Giving the App That Same AI:** Walk through [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) and demo on-device chat (`IChatClient`), data ingestion and enrichment (`Microsoft.Extensions.DataIngestion`), ONNX MiniLM semantic search (`IEmbeddingGenerator` + `VectorStoreCollection<string, Session>`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`) while streaming live `[AI]` logs in DevFlow.
 
 ## What's here
 
 | Path | Contents |
 |---|---|
 | [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with semantic search and favourites filter), Speakers, Assistant, and DevFlow |
-| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `AddChatClients()`, `AddEmbeddings()`, and `AddAgents()` |
+| [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
+| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` across `ChatClients/`, `Embeddings/`, `Tools/`, and `Agents/` |
 | [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-inspect-and-drive` and `02-make-it-beautiful`) |
 | [`docs/demo.md`](docs/demo.md) | Speaker runbook & file-by-file talking points (.NET 11, MAUI 11, DevFlow, and in-app AI walkthrough) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
@@ -54,13 +55,13 @@ Watch what the on-device model and tools are doing in real time from a terminal 
 maui devflow logs --follow --no-json
 ```
 
-| File | Feature |
+| Path | Feature |
 |---|---|
-| [`AI/ChatExtensions.cs`](src/ConferenceApp/AI/ChatExtensions.cs) & [`Services/ChatService.cs`](src/ConferenceApp/Services/ChatService.cs) | `builder.AddChatClients()` registering `IChatClient` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient`) with `.UseLogging()` |
-| [`AI/EmbeddingExtensions.cs`](src/ConferenceApp/AI/EmbeddingExtensions.cs) & [`AI/MiniLmEmbeddingGenerator.cs`](src/ConferenceApp/AI/MiniLmEmbeddingGenerator.cs) | `builder.AddEmbeddings()` registering the 384-dim ONNX `all-MiniLM-L6-v2` `IEmbeddingGenerator<string, Embedding<float>>`, `SessionEnrichmentService`, and `SearchService` |
-| [`AI/SessionEnrichmentService.cs`](src/ConferenceApp/AI/SessionEnrichmentService.cs) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `Microsoft.Extensions.DataIngestion` pipeline (`MarkdownReader`, `SummaryEnricher`, `ClassificationEnricher`, `VectorStoreWriter`) + hybrid vector search |
-| [`AI/ConferenceDataTools.cs`](src/ConferenceApp/AI/ConferenceDataTools.cs) & [`AI/FavoritesTools.cs`](src/ConferenceApp/AI/FavoritesTools.cs) | Focused `[AIToolSource]` tool sets (`ConferenceDataToolContext` for read-only sessions/speakers/schedule; `FavoritesToolContext` for `get_favorites`, `add_favorite`, and `remove_favorite`) |
-| [`AI/AgentExtensions.cs`](src/ConferenceApp/AI/AgentExtensions.cs) | `builder.AddAgents()` wiring custom `AIContextProvider`s, `TextSearchProvider` RAG, `AsAIAgent`, `BuildSequential`, `CreateGroupChatBuilderWith`, and `SemanticRoutingChatClient` |
+| [`AI/ConferenceAIExtensions.cs`](src/ConferenceApp/AI/ConferenceAIExtensions.cs) | `builder.AddConferenceAI()` calling `AddChatClients()`, `AddEmbeddings()`, `AddAITools()`, and `AddAgents()` |
+| [`AI/ChatClients/`](src/ConferenceApp/AI/ChatClients/) | `ChatExtensions.cs` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient` with `.UseLogging()`) and `SessionEnrichmentService.cs` (`SummaryEnricher` + `ClassificationEnricher`) |
+| [`AI/Embeddings/`](src/ConferenceApp/AI/Embeddings/) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `EmbeddingExtensions.cs` (`AddEmbeddingGenerator`, `AddInMemoryVectorStore`, `AddInMemoryVectorStoreRecordCollection<string, Session>("sessions")`), `MiniLmEmbeddingGenerator.cs`, and `SessionIndexingService.cs` |
+| [`AI/Tools/`](src/ConferenceApp/AI/Tools/) | `ToolExtensions.cs`, `ConferenceDataTools.cs` (`ConferenceDataToolContext`), and `FavoritesTools.cs` (`FavoritesToolContext`) using `[FromServices]` |
+| [`AI/Agents/`](src/ConferenceApp/AI/Agents/) | `AgentExtensions.cs` (`RoutingChatClient.Create` + `SemanticRoutingChatClient`), `ConferenceAssistantAgent.cs`, `SessionDeepDiveWorkflow.cs`, `TalkRecommendationWorkflow.cs`, and `UserContextProvider.cs`, `ScheduleContextProvider.cs`, `RagContextProvider.cs` |
 
 ## Refreshing the data and model
 
