@@ -44,7 +44,7 @@ public partial class SpeakerViewModel : ObservableObject,
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var id = (string)query["id"];
         Speaker = db.Speakers.FirstOrDefault(s => s.Id == id);
         if (Speaker is null)
@@ -57,7 +57,7 @@ public partial class SpeakerViewModel : ObservableObject,
     {
         if (Speaker is null)
             return;
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         Sessions.Clear();
         foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))

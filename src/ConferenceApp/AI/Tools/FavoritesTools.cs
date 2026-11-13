@@ -22,7 +22,7 @@ public sealed class FavoritesTools(
     [Description("List the user's saved favourite sessions in the current city.")]
     public async Task<string> GetFavoritesAsync(CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] get_favorites() in {CityId}", city.Id);
 
@@ -46,7 +46,7 @@ public sealed class FavoritesTools(
 
     private async Task<string> ChangeFavoriteAsync(string session, bool add)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         var match = db.Sessions.FirstOrDefault(s =>
             s.CityId == city.Id && (

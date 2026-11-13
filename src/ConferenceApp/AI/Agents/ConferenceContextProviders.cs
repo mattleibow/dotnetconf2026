@@ -18,7 +18,7 @@ public sealed class UserContextProvider(IServiceProvider services) : AIContextPr
         InvokingContext context,
         CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         var favoriteTitles = db.Sessions
             .Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id))
@@ -55,7 +55,7 @@ public sealed class ScheduleContextProvider(IServiceProvider services) : AIConte
         InvokingContext context,
         CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         var sessions = db.Sessions.Where(s => s.CityId == city.Id);
 

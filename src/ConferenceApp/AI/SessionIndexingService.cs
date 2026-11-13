@@ -6,7 +6,7 @@ namespace ConferenceApp.AI;
 
 /// <summary>
 /// Background vector indexing service: populates VectorStoreCollection&lt;string, Session&gt;
-/// from the loaded ConferenceDatabase using the [VectorStoreVector] EmbeddingText property.
+/// from the loaded ConferenceDb using the [VectorStoreVector] EmbeddingText property.
 /// </summary>
 public sealed class SessionIndexingService(
     ConferenceDbProvider dbProvider,
@@ -21,7 +21,7 @@ public sealed class SessionIndexingService(
     {
         try
         {
-            var db = await dbProvider.GetDatabaseAsync();
+            var db = await dbProvider.GetDbAsync();
             var sessions = db.Sessions
                 .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
                 .ToList();

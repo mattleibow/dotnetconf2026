@@ -21,7 +21,7 @@ public partial class SessionViewModel(ConferenceDbProvider dbProvider, UserPrefe
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var id = (string)query["id"];
         Session = db.Sessions.FirstOrDefault(s => s.Id == id);
         if (Session is null)

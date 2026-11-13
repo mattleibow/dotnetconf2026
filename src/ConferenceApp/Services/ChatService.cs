@@ -175,7 +175,7 @@ public class ChatService(
     // Attaches tappable session cards under the assistant reply for any talk mentioned in the response.
     private async Task AddReferencedSessionsAsync(ChatItem reply)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
 
         var referenced = db.Sessions

@@ -13,7 +13,7 @@ public class SearchService(
 
     public async Task<IReadOnlyList<Session>> SearchSessionsAsync(string cityId, string query)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var sessions = db.Sessions.Where(s => s.CityId == cityId).ToList();
         var trimmed = query.Trim();
         if (string.IsNullOrEmpty(trimmed))

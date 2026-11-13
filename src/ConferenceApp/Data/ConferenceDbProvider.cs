@@ -2,7 +2,7 @@ namespace ConferenceApp.Data;
 
 public class ConferenceDbProvider
 {
-    private readonly Lazy<Task<ConferenceDatabase>> database = new(ConferenceDatabase.LoadAsync);
+    private readonly Lazy<Task<ConferenceDb>> db = new(ConferenceDb.LoadAsync);
 
-    public Task<ConferenceDatabase> GetDatabaseAsync() => database.Value;
+    public Task<ConferenceDb> GetDbAsync() => db.Value;
 }

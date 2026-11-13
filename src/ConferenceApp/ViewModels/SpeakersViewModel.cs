@@ -30,7 +30,7 @@ public partial class SpeakersViewModel : ObservableObject, IRecipient<CityChange
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         SelectedCity = city;
         Speakers.Clear();

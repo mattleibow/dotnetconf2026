@@ -28,7 +28,7 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider)
 
     public async Task<City> GetSelectedCityAsync()
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = db.GetCity(SelectedCityId);
         if (SelectedCityId != city.Id)
             Preferences.Set(CityKey, city.Id);
@@ -37,7 +37,7 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider)
 
     public async Task<City?> PickCityAsync()
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var names = db.Cities.Select(c => c.Name).ToArray();
         var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
         if (db.Cities.FirstOrDefault(c => c.Name == choice) is { } city)

@@ -3,25 +3,6 @@ using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Data;
 
-public record Conference(
-    string Name,
-    string TimeZone,
-    List<City> Cities,
-    List<Session> Sessions,
-    List<Speaker> Speakers,
-    List<Venue> Venues,
-    List<Sponsor> Sponsors);
-
-public record City(
-    string Id,
-    string Name,
-    DateOnly Date,
-    string VenueId)
-{
-    [JsonIgnore]
-    public Venue Venue { get; set; } = null!;
-}
-
 public class Session
 {
     [VectorStoreKey]
@@ -68,42 +49,3 @@ public class Session
     [VectorStoreVector(384, DistanceFunction = DistanceFunction.CosineSimilarity)]
     public string EmbeddingText => $"{Title}\n\n{Description}";
 }
-
-public record Speaker(
-    string Id,
-    string Name,
-    string? Tagline,
-    List<string> CityIds,
-    string Content,
-    string? Image)
-{
-    public string? Bio { get; set; }
-
-    [JsonIgnore]
-    public string Initials => string.Concat(
-        Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
-            .Take(2)
-            .Select(part => part[0]));
-}
-
-public record Venue(
-    string Id,
-    string Name,
-    string CityId,
-    string Address,
-    double Latitude,
-    double Longitude,
-    string MapUrl,
-    string Content,
-    string? Image)
-{
-    public string? Description { get; set; }
-}
-
-public record Sponsor(
-    string Id,
-    string Name,
-    string Tier,
-    List<string> CityIds,
-    string Url,
-    string? Image);

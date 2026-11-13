@@ -38,7 +38,7 @@ public sealed class ConferenceDataTools(
         [Description("Session ID or title.")] string session,
         CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         var match = db.Sessions.FirstOrDefault(s =>
             s.CityId == city.Id && (
@@ -61,7 +61,7 @@ public sealed class ConferenceDataTools(
         [Description("Speaker ID or name.")] string speaker,
         CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         var queries = speaker.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -92,7 +92,7 @@ public sealed class ConferenceDataTools(
         [Description("End time in 24-hour HH:mm format (e.g. 12:00).")] TimeOnly end,
         CancellationToken cancellationToken = default)
     {
-        var db = await dbProvider.GetDatabaseAsync();
+        var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] list_sessions(start: {Start}, end: {End}) in {CityId}", start, end, city.Id);
 

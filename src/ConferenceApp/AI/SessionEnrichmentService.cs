@@ -31,7 +31,7 @@ public sealed class SessionEnrichmentService(
             if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
                 return;
 
-            var db = await dbProvider.GetDatabaseAsync();
+            var db = await dbProvider.GetDbAsync();
             var sessions = db.Sessions
                 .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
                 .ToList();
