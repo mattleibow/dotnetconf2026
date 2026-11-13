@@ -9,17 +9,7 @@ public static class ChatExtensions
 {
     public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
     {
-#if IOS || MACCATALYST
-        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
-            builder.Services.AddTransient<IChatClient>(CreateAppleChatClient);
-#elif ANDROID
-        if (OperatingSystem.IsAndroidVersionAtLeast(26))
-            builder.Services.AddTransient<IChatClient>(CreateAndroidChatClient);
-#elif WINDOWS
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
-            builder.Services.AddTransient<IChatClient>(CreateWindowsChatClient);
-#endif
-
+        builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
         return builder;
     }
 
@@ -39,38 +29,36 @@ public static class ChatExtensions
         return ChatModelAvailability.NotSupported;
     }
 
+    private static IChatClient CreateLocalChatClient(IServiceProvider services)
+    {
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 #if IOS || MACCATALYST
-    [SupportedOSPlatform("ios26.0")]
-    [SupportedOSPlatform("maccatalyst26.0")]
-    private static IChatClient CreateAppleChatClient(IServiceProvider services)
-    {
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        return new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
-            .AsBuilder()
-            .UseLogging(loggerFactory)
-            .Build();
-    }
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+        {
+            return new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
+                .AsBuilder()
+                .UseLogging(loggerFactory)
+                .Build();
+        }
 #elif ANDROID
-    [SupportedOSPlatform("android26.0")]
-    private static IChatClient CreateAndroidChatClient(IServiceProvider services)
-    {
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        return new GeminiNanoChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(loggerFactory)
-            .UseLogging(loggerFactory)
-            .Build();
-    }
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            return new GeminiNanoChatClient()
+                .AsBuilder()
+                .UseFunctionInvocation(loggerFactory)
+                .UseLogging(loggerFactory)
+                .Build();
+        }
 #elif WINDOWS
-    [SupportedOSPlatform("windows10.0.26100.0")]
-    private static IChatClient CreateWindowsChatClient(IServiceProvider services)
-    {
-        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        return new WindowsAIChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(loggerFactory)
-            .UseLogging(loggerFactory)
-            .Build();
-    }
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+        {
+            return new WindowsAIChatClient()
+                .AsBuilder()
+                .UseFunctionInvocation(loggerFactory)
+                .UseLogging(loggerFactory)
+                .Build();
+        }
 #endif
+        return new UnavailableChatClient();
+    }
 }

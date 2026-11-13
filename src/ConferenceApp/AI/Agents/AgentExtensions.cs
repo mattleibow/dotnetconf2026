@@ -11,9 +11,7 @@ public static class AgentExtensions
         builder.Services.AddSingleton<UserContextProvider>();
         builder.Services.AddSingleton<ScheduleContextProvider>();
         builder.Services.AddSingleton(RagContextProvider.Create);
-
-        if (builder.Services.Any(d => d.ServiceType == typeof(IChatClient)))
-            builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
+        builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;
     }

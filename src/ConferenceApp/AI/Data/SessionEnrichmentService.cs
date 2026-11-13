@@ -14,9 +14,9 @@ public record SessionsEnrichedMessage;
 /// </summary>
 public sealed class SessionEnrichmentService(
     ConferenceDbProvider dbProvider,
-    ILogger<SessionEnrichmentService> logger,
-    SummaryEnricher? summaryEnricher = null,
-    ClassificationEnricher? classifier = null)
+    SummaryEnricher summaryEnricher,
+    ClassificationEnricher classifier,
+    ILogger<SessionEnrichmentService> logger)
 {
     private Task? processing;
 
@@ -26,8 +26,7 @@ public sealed class SessionEnrichmentService(
     {
         try
         {
-            if (summaryEnricher is null || classifier is null ||
-                await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+            if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
                 return;
 
             var db = await dbProvider.GetDbAsync();
