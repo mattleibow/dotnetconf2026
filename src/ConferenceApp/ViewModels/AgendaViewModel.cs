@@ -71,8 +71,7 @@ public partial class AgendaViewModel : ObservableObject,
         Sessions.Clear();
         foreach (var session in matching)
         {
-            session.IsFavorite = favoriteIds.Contains(session.Id);
-            if (favoritesOnly && !session.IsFavorite)
+            if (favoritesOnly && !favoriteIds.Contains(session.Id))
                 continue;
             Sessions.Add(session);
         }

@@ -1,32 +1,20 @@
 using System.Text.Json;
 using ConferenceApp.Models;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Services;
 
 /// <summary>
 /// Provides on-demand initialization of the in-memory ConferenceDatabase,
-/// loading conference.json, caching all Markdown descriptions, linking navigation properties,
-/// and indexing session abstracts into the vector store.
+/// loading conference.json, caching all Markdown descriptions, and linking navigation properties.
 /// </summary>
 public class ConferenceDbProvider
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private readonly Lazy<Task<ConferenceDatabase>> database;
-
-    public ConferenceDbProvider(
-        VectorStoreCollection<string, Session> sessionVectors,
-        ILogger<ConferenceDbProvider> logger)
-    {
-        database = new(() => LoadDatabaseAsync(sessionVectors, logger));
-    }
+    private readonly Lazy<Task<ConferenceDatabase>> database = new(LoadDatabaseAsync);
 
     public Task<ConferenceDatabase> GetDatabaseAsync() => database.Value;
 
-    private static async Task<ConferenceDatabase> LoadDatabaseAsync(
-        VectorStoreCollection<string, Session> sessionVectors,
-        ILogger<ConferenceDbProvider> logger)
+    private static async Task<ConferenceDatabase> LoadDatabaseAsync()
     {
         await using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
         var conference = await JsonSerializer.DeserializeAsync<Conference>(stream, JsonOptions)
@@ -52,11 +40,6 @@ public class ConferenceDbProvider
             session.Description = await ReadMarkdownBodyAsync(session.Content);
         }
 
-        var talks = conference.Sessions.Where(s => s.IsTalk).ToList();
-        await sessionVectors.EnsureCollectionExistsAsync();
-        await sessionVectors.UpsertAsync(talks);
-        logger.LogInformation("[AI] Indexed {Count} session abstracts into VectorStoreCollection<string, Session>.", talks.Count);
-
         return new ConferenceDatabase(
             conference.Name,
             conference.TimeZone,
@@ -64,8 +47,7 @@ public class ConferenceDbProvider
             [.. conference.Sessions.OrderBy(s => s.Start)],
             [.. conference.Speakers.OrderBy(s => s.Name)],
             conference.Venues,
-            conference.Sponsors,
-            sessionVectors);
+            conference.Sponsors);
     }
 
     // Session, speaker and venue Markdown files start with a "# Title" heading line.

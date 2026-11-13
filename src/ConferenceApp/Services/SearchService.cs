@@ -1,10 +1,12 @@
 using ConferenceApp.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Services;
 
 public class SearchService(
     ConferenceDbProvider dbProvider,
+    VectorStoreCollection<string, Session> sessionVectors,
     ILogger<SearchService> logger)
 {
     private const int SemanticResultLimit = 5;
@@ -25,8 +27,11 @@ public class SearchService(
 
         try
         {
+            if (!await sessionVectors.CollectionExistsAsync())
+                return results;
+
             var seen = results.Select(session => session.Id).ToHashSet();
-            await foreach (var match in db.SessionVectors.SearchAsync(
+            await foreach (var match in sessionVectors.SearchAsync(
                 trimmed,
                 top: SemanticResultLimit + results.Count,
                 new() { Filter = s => s.CityId == cityId }))

@@ -1,5 +1,4 @@
 using ConferenceApp.Models;
-using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Services;
 
@@ -10,8 +9,7 @@ public class ConferenceDatabase(
     IReadOnlyList<Session> sessions,
     IReadOnlyList<Speaker> speakers,
     IReadOnlyList<Venue> venues,
-    IReadOnlyList<Sponsor> sponsors,
-    VectorStoreCollection<string, Session> sessionVectors)
+    IReadOnlyList<Sponsor> sponsors)
 {
     public string Name { get; } = name;
     public string TimeZone { get; } = timeZone;
@@ -20,7 +18,6 @@ public class ConferenceDatabase(
     public IReadOnlyList<Speaker> Speakers { get; } = speakers;
     public IReadOnlyList<Venue> Venues { get; } = venues;
     public IReadOnlyList<Sponsor> Sponsors { get; } = sponsors;
-    public VectorStoreCollection<string, Session> SessionVectors { get; } = sessionVectors;
 
     public City GetCity(string? cityId = null)
     {

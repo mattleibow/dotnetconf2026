@@ -43,7 +43,6 @@ public class Session
     public string? Description { get; set; }
     public string? Summary { get; set; }
     public string? Topic { get; set; }
-    public bool IsFavorite { get; set; }
 
     [JsonIgnore]
     public City City { get; set; } = null!;

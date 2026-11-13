@@ -4,6 +4,7 @@ using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.VectorData;
 using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
@@ -11,11 +12,12 @@ namespace ConferenceApp.AI;
 public record SessionsEnrichedMessage;
 
 /// <summary>
-/// Background AI enrichment worker: populates in-memory Session.Summary and Session.Topic
-/// on ConferenceDatabase using Microsoft.Extensions.DataIngestion enrichers.
+/// Background AI enrichment worker: indexes Session vectors into VectorStoreCollection
+/// and populates in-memory Session.Summary and Session.Topic using DataIngestion enrichers.
 /// </summary>
 public sealed class SessionEnrichmentService(
     ConferenceDbProvider dbProvider,
+    VectorStoreCollection<string, Session> sessionVectors,
     ILoggerFactory loggerFactory,
     ILogger<SessionEnrichmentService> logger,
     IChatClient? client = null)
@@ -29,13 +31,19 @@ public sealed class SessionEnrichmentService(
     {
         try
         {
-            if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
-                return;
-
             var db = await dbProvider.GetDatabaseAsync();
             var sessions = db.Sessions
                 .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
                 .ToList();
+
+            // 1. Index the loaded Session models into the DI-registered VectorStoreCollection<string, Session>.
+            await sessionVectors.EnsureCollectionExistsAsync();
+            await sessionVectors.UpsertAsync(sessions);
+            logger.LogInformation("[AI] Indexed {Count} session abstracts into VectorStoreCollection<string, Session>.", sessions.Count);
+
+            // 2. Enrich in-memory Session.Summary and Session.Topic in the background.
+            if (client is null || await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+                return;
 
             var enricherOptions = new EnricherOptions(client)
             {

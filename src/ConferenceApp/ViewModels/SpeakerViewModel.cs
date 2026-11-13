@@ -59,13 +59,9 @@ public partial class SpeakerViewModel : ObservableObject,
             return;
         var db = await dbProvider.GetDatabaseAsync();
         var city = await preferences.GetSelectedCityAsync();
-        var favoriteIds = preferences.GetFavoriteIds();
         Sessions.Clear();
         foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))
-        {
-            session.IsFavorite = favoriteIds.Contains(session.Id);
             Sessions.Add(session);
-        }
     }
 
     [RelayCommand]
