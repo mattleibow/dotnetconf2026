@@ -27,7 +27,7 @@ public partial class Session : ObservableObject
     public partial string? Summary { get; set; }
 
     [ObservableProperty]
-    public partial string? Topic { get; set; }
+    public partial IReadOnlyList<string> Topics { get; set; } = [];
 
     [JsonIgnore]
     public City City { get; set; } = null!;

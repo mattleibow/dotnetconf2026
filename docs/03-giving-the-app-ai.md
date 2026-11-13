@@ -24,10 +24,10 @@ Keep `maui devflow logs --follow --no-json` visible in a terminal (or open the *
 [AI] Loading ONNX embedding model 'all-MiniLM-L6-v2' (384 dimensions)...
 LoggingEmbeddingGenerator: GenerateAsync generated 51 embedding(s).
 [AI] Indexed 51 session abstracts into VectorStoreCollection<string, Session>.
-[AI] Enriching session durban-agents-building-agentic-apps-ai-goes-mobile-with-net-maui with SummaryEnricher + ClassificationEnricher...
+[AI] Enriching session durban-agents-building-agentic-apps-ai-goes-mobile-with-net-maui with SummaryEnricher + KeywordEnricher...
 [AI Search] Query 'football forecasts' in durban -> Top match: 'Developing A .NET Sports Predictor' (5 results)
 [AI RAG] Injected 3 matching sessions in Durban for 'When is Matthew's talk?'
-[AI Tool] list_sessions(start: 08:00, end: 12:00) in durban
+[AI Tool] get_session('durban-agents-building-agentic-apps-ai-goes-mobile-with-net-maui')
 [AI Chat] Completed reply (563 chars, 1 session cards).
 ```
 
@@ -163,7 +163,7 @@ builder.Services.AddSingleton(services =>
         confidenceThreshold: 0.75));
 ```
 
-In the background, [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) enriches the active city's talks first, wraps each talk's `session.EmbeddingText` in an `IngestionChunk<string>`, pipes it through `summaryEnricher` and `keywordEnricher`, and sets `session.Summary` and `session.Topic` (for example `"Data · Cloud · AI"` or `"Cloud · IoT · AI"`). Because `Session` inherits `ObservableObject` and `Summary` and `Topic` are `[ObservableProperty]`s, XAML bindings update each card in place automatically without rebuilding or resetting the `CollectionView`:
+In the background, [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) enriches the active city's talks first, wraps each talk's `session.EmbeddingText` in an `IngestionChunk<string>`, pipes it through `summaryEnricher` and `keywordEnricher`, and sets `session.Summary` and `session.Topics` (an `IReadOnlyList<string>` of up to 3 topics, rendered as horizontal pills via `BindableLayout.ItemsSource="{Binding Topics}"`). Because `Session` inherits `ObservableObject` and `Summary` and `Topics` are `[ObservableProperty]`s, XAML bindings update each card in place automatically without rebuilding or resetting the `CollectionView`:
 
 ```csharp
 await foreach (var enriched in keywordEnricher.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
@@ -173,8 +173,8 @@ await foreach (var enriched in keywordEnricher.ProcessAsync(summaryEnricher.Proc
 
     if (!string.IsNullOrWhiteSpace(summary))
         session.Summary = summary;
-    if (!string.IsNullOrWhiteSpace(topics))
-        session.Topic = topics;
+    if (topics.Count > 0)
+        session.Topics = topics;
 }
 ```
 
@@ -193,10 +193,10 @@ public partial class ConferenceDataToolContext : AIToolContext;
 
 | Tool Context | Tools | Purpose |
 |---|---|---|
-| **`ConferenceDataToolContext`** | `search_sessions`, `get_session`, `get_speaker`, `list_sessions` | Read-only schedule, abstract, and speaker bio lookup. |
+| **`ConferenceDataToolContext`** | `search_sessions`, `get_session`, `get_speaker` | Read-only schedule, abstract, and speaker bio lookup. |
 | **`FavoritesToolContext`** | `get_favorites`, `add_favorite`, `remove_favorite` | Reads and mutates saved favourites in `UserPreferencesService` (visible live in DevFlow's **Storage** tab). |
 
-Point out two `Microsoft.Extensions.AI` features in [`ConferenceDataTools.cs`](../src/ConferenceApp/AI/Tools/ConferenceDataTools.cs):
+Point out Method-Level DI with `[FromServices]` in [`ConferenceDataTools.cs`](../src/ConferenceApp/AI/Tools/ConferenceDataTools.cs):
 
 ### Method-Level DI with `[FromServices]`
 
@@ -211,19 +211,6 @@ public async Task<string> SearchSessionsAsync(
     CancellationToken cancellationToken = default)
 ```
 
-### Strongly-Typed `TimeOnly` Tool Schemas
-
-`ListSessionsAsync` takes `TimeOnly start` and `TimeOnly end` directly—`AIJsonUtilities` generates `"format": "time"` in the JSON schema and deserializes `"08:00"` and `"12:00"` without manual string parsing:
-
-```csharp
-[ExportAIFunction("list_sessions")]
-[Description("List sessions in the current city between two 24-hour daytime times (for example 08:00 to 12:00).")]
-public async Task<string> ListSessionsAsync(
-    [Description("Start time in 24-hour HH:mm format (e.g. 08:00).")] TimeOnly start,
-    [Description("End time in 24-hour HH:mm format (e.g. 12:00).")] TimeOnly end,
-    CancellationToken cancellationToken = default)
-```
-
 ---
 
 ## 5. Context Providers, Multi-Agent Workflows & Semantic Routing (`AI/Agents/` — ~4 mins)
@@ -232,19 +219,21 @@ Open [`src/ConferenceApp/AI/Agents/AgentExtensions.cs`](../src/ConferenceApp/AI/
 
 ### Keyed `AIContextProvider` Singletons
 
-In `AgentExtensions.AddAgents()`, three composable context providers are registered as keyed `AIContextProvider` singletons so each agent or workflow can request only the context slices it needs:
+In `AgentExtensions.AddAgents()`, four composable context providers are registered as keyed `AIContextProvider` singletons so each agent or workflow can request only the context slices it needs:
 
 ```csharp
 builder.Services.AddKeyedSingleton<AIContextProvider, UserContextProvider>("user");
 builder.Services.AddKeyedSingleton<AIContextProvider, ScheduleContextProvider>("schedule");
+builder.Services.AddKeyedSingleton<AIContextProvider, AvailableSessionsContextProvider>("available-sessions");
 builder.Services.AddKeyedSingleton<AIContextProvider>("rag", (services, _) => RagContextProvider.Create(services));
 builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 ```
 
 | Key | File | What it injects into `AIContext` |
 |---|---|---|
-| `"user"` | [`UserContextProvider.cs`](../src/ConferenceApp/AI/Agents/UserContextProvider.cs) | Active city, event date, current conference time (`08:30`), venue name/address, and saved favourites with `[Topic]` tags. |
-| `"schedule"` | [`ScheduleContextProvider.cs`](../src/ConferenceApp/AI/Agents/ScheduleContextProvider.cs) | Full day schedule (`Time \| Track [Topic] \| Title (Speakers)`) for the active city so agents answer schedule and clash questions without extra tool calls. |
+| `"user"` | [`UserContextProvider.cs`](../src/ConferenceApp/AI/Agents/UserContextProvider.cs) | Active city, event date, current conference time (`08:30`), venue name/address, and saved favourites with `[Topics]` tags. |
+| `"schedule"` | [`ScheduleContextProvider.cs`](../src/ConferenceApp/AI/Agents/ScheduleContextProvider.cs) | Full day schedule (`Time \| Track [Topics] \| Title (Speakers)`) for the active city so agents answer schedule and clash questions without extra tool calls. |
+| `"available-sessions"` | [`AvailableSessionsContextProvider.cs`](../src/ConferenceApp/AI/Agents/AvailableSessionsContextProvider.cs) | Candidate talks in the active city excluding sessions already saved in the attendee's favourites, used by the recommendation panel. |
 | `"rag"` | [`RagContextProvider.cs`](../src/ConferenceApp/AI/Agents/RagContextProvider.cs) | `TextSearchProvider` (`BeforeAIInvoke`) that filters to the latest user message, finds the top 3 talks via `SearchService`, and injects their IDs, titles, and AI-enriched summaries (`session.Summary`). |
 
 Notice how the whole pipeline connects: `SessionEnrichmentService` pre-computes compact `session.Summary` strings $\rightarrow$ `RagContextProvider` injects the top 3 summaries into context $\rightarrow$ the agent calls `get_session` / `get_speaker` only when it needs a full abstract or bio. Every agent is also configured with `UseProvidedChatClientAsIs = true`, `Temperature = 0`, and tight `MaxOutputTokens` budgets tailored for an on-device model.
@@ -268,16 +257,16 @@ return AgentWorkflowBuilder.BuildSequential(
 ```
 
 #### Talk Recommendation & Debate Workflow ([`TalkRecommendationWorkflow.cs`](../src/ConferenceApp/AI/Agents/TalkRecommendationWorkflow.cs) — `CreateGroupChatBuilderWith`)
-A multi-turn 6-agent group chat managed by `RoundRobinGroupChatManager`:
+A multi-turn 5-agent group chat managed by `RoundRobinGroupChatManager` with zero tool calls—relying purely on `UserContextProvider` and `AvailableSessionsContextProvider`:
 
 ```text
 Turn 1 (Pause):  Concierge ──► (pauses at IterationCount >= 1 for user confirmation)
-Turn 2 (Debate): Concierge ──► Timekeeper ──► DepthAdvocate ──► BreadthAdvocate ──► PracticalAdvocate ──► Moderator
+Turn 2 (Debate): Concierge ──► DepthAdvocate ──► BreadthAdvocate ──► PracticalAdvocate ──► Moderator
 ```
 
-On **Turn 1**, `Concierge` checks the attendee's `Saved Favourites` (as a starting point) and asks them to confirm or pick their topics and any arrival/departure time constraints; the custom `shouldTerminateFunc` pauses the group chat after `Concierge` (`IterationCount >= 1`) so the user can reply.
+On **Turn 1**, `Concierge` checks the attendee's `Saved Favourites` (as a starting point) and asks them to confirm or pick their topics; the custom `shouldTerminateFunc` pauses the group chat after `Concierge` (`IterationCount >= 1`) so the user can reply.
 
-On **Turn 2**, `Concierge` outputs the confirmed topics and 24-hour time window (e.g. `08:00 to 12:00`), `Timekeeper` calls `list_sessions(start, end)` *first* so only talks inside that window are on the table, `DepthAdvocate`, `BreadthAdvocate`, and `PracticalAdvocate` each pitch 1–2 talks from `Timekeeper`'s list, and `Moderator` wraps up with a conflict-free recommended lineup.
+On **Turn 2**, `Concierge` locks in the confirmed and avoided topics, `DepthAdvocate`, `BreadthAdvocate`, and `PracticalAdvocate` each pitch a distinct talk from `AvailableSessionsContextProvider` (which automatically excludes already-favourited sessions), and `Moderator` wraps up with a 3-talk recommendation list.
 
 ### Two-Layer Routing: `RoutingChatClient.Create` + `SemanticRoutingChatClient` ([`AgentExtensions.cs`](../src/ConferenceApp/AI/Agents/AgentExtensions.cs))
 
@@ -317,7 +306,7 @@ return RoutingChatClient.Create((context, _) =>
 Open [`src/ConferenceApp/Services/ChatService.cs`](../src/ConferenceApp/Services/ChatService.cs) to show how a mobile UI makes multi-agent workflows feel fast and readable:
 
 ### Progress Status & Hiding Internal Handoff Steps
-Internal research/filtering turns (`SessionResearcher`, `Timekeeper`, and `Concierge`'s 2-line handoff on Turn 2) update `reply.Progress` (bound to `chat-progress` in `ChatPage.xaml`, e.g. *"Timekeeper: filtering talks to your time window..."*) instead of dumping raw intermediate tool output into the chat bubble. Their actual tool calls (`[AI Tool] list_sessions(start: 08:00, end: 12:00)`) remain visible in `maui devflow logs`.
+Internal research/handoff turns (`SessionResearcher` and `Concierge`'s 2-line handoff on Turn 2) update `reply.Progress` (bound to `chat-progress` in `ChatPage.xaml`, e.g. *"SessionResearcher: reading session abstract and speaker bio..."*) instead of dumping raw intermediate handoff state into the chat bubble.
 
 ### De-Interleaving Concurrent Streams (`BuildConcurrent`)
 When `TakeawaysAgent` and `QuestionsCoachAgent` run in parallel via `BuildConcurrent`, both stream tokens at the same time. `ChatService` streams `TakeawaysAgent` live into the bubble under **`**Key Takeaways:**`** while buffering `QuestionsCoachAgent` into a `StringBuilder`, then appends **`**Things to Think About & Ask:**`** cleanly once `TakeawaysAgent` finishes.
@@ -333,4 +322,4 @@ When you open the **Assistant** tab with an empty chat, `<CollectionView.EmptyVi
 
 1. **Default Assistant + Schedule Context + Tools:** Tap **`When is Matthew's talk?`** (or **`Do my favourites clash?`**). Point out `[AI RAG]` in the logs and tap the resulting `chat-session-card-*` card underneath the reply.
 2. **Sequential + Concurrent Fan-Out Workflow (`BuildSequential` + `BuildConcurrent`):** Tap **`New chat`**, then tap **`Prepare me for Matthew's talk: takeaways and questions`**. Watch the progress indicator show `SessionResearcher` reading the abstract and speaker bio (`[AI Tool] get_session` + `get_speaker` in logs), followed by `TakeawaysAgent` and `QuestionsCoachAgent` running in parallel!
-3. **Multi-Turn Group Chat Workflow (`CreateGroupChatBuilderWith`):** Tap **`New chat`**, then tap **`Can you suggest some talks for me?`**. When `Concierge` asks to confirm your topics and time window, reply with **`AI and Cloud, and I have to leave before noon`**. Watch the progress status show `Timekeeper` filtering the schedule (`[AI Tool] list_sessions(start: 08:00, end: 12:00)` in logs) before `DepthAdvocate`, `BreadthAdvocate`, `PracticalAdvocate`, and `Moderator` debate only morning talks and produce tappable session cards!
+3. **Multi-Turn Group Chat Workflow (`CreateGroupChatBuilderWith`):** Tap **`New chat`**, then tap **`Can you suggest some talks for me?`**. When `Concierge` asks to confirm your topics, reply with **`AI and Cloud, no Web`**. Watch `DepthAdvocate`, `BreadthAdvocate`, `PracticalAdvocate`, and `Moderator` debate candidate sessions from `AvailableSessionsContextProvider` (automatically excluding already-favourited talks) and produce tappable session cards!

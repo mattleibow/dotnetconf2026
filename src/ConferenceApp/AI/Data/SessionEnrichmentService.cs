@@ -53,8 +53,8 @@ public sealed class SessionEnrichmentService(
 
                     if (!string.IsNullOrWhiteSpace(summary))
                         session.Summary = summary;
-                    if (!string.IsNullOrWhiteSpace(topics))
-                        session.Topic = topics;
+                    if (topics.Count > 0)
+                        session.Topics = topics;
                 }
             }
         }
@@ -69,21 +69,22 @@ public sealed class SessionEnrichmentService(
             ? string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
             : "";
 
-    private static string ReadTopics(IngestionChunk<string> chunk)
+    private static IReadOnlyList<string> ReadTopics(IngestionChunk<string> chunk)
     {
         if (!chunk.Metadata.TryGetValue(KeywordEnricher.MetadataKey, out var value) ||
             value is not IEnumerable<string> keywords)
         {
-            return "";
+            return [];
         }
 
-        var matched = keywords
-            .Select(k => DataExtensions.Topics.FirstOrDefault(t => k.Contains(t, StringComparison.OrdinalIgnoreCase)))
-            .Where(t => t is not null)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Take(3);
-
-        return string.Join(" · ", matched);
+        return
+        [
+            .. keywords
+                .Select(k => DataExtensions.Topics.FirstOrDefault(t => k.Contains(t, StringComparison.OrdinalIgnoreCase)))
+                .OfType<string>()
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(3)
+        ];
     }
 
     private static async IAsyncEnumerable<IngestionChunk<string>> SingleChunk(IngestionChunk<string> chunk)

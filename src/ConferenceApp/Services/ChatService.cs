@@ -91,16 +91,10 @@ public class ChatService(
             }
 
             // On Turn 2 of TalkRecommendations (after the user confirmed their topics), Concierge's 2-line
-            // summary and Timekeeper's filtered session list are internal handoff state for the panelists.
+            // summary is internal handoff state for the panelists.
             if (update.AuthorName == "Concierge" && isDebateFollowUp)
             {
-                reply.Progress = "Concierge: locking in your topics and time window...";
-                continue;
-            }
-
-            if (update.AuthorName == "Timekeeper")
-            {
-                reply.Progress = "Timekeeper: filtering talks to your time window...";
+                reply.Progress = "Concierge: locking in your topics...";
                 continue;
             }
 

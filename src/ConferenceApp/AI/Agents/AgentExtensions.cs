@@ -10,6 +10,7 @@ public static class AgentExtensions
     {
         builder.Services.AddKeyedSingleton<AIContextProvider, UserContextProvider>("user");
         builder.Services.AddKeyedSingleton<AIContextProvider, ScheduleContextProvider>("schedule");
+        builder.Services.AddKeyedSingleton<AIContextProvider, AvailableSessionsContextProvider>("available-sessions");
         builder.Services.AddKeyedSingleton<AIContextProvider>("rag", (services, _) => RagContextProvider.Create(services));
         builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 

@@ -21,7 +21,7 @@ public sealed class ScheduleContextProvider(
 
         var lines = sessions.Select(session =>
         {
-            var tag = !string.IsNullOrWhiteSpace(session.Topic) ? $" [{session.Topic}]" : "";
+            var tag = session.Topics.Count > 0 ? $" [{string.Join(", ", session.Topics)}]" : "";
             var byline = !string.IsNullOrWhiteSpace(session.SpeakerNames) ? $" ({session.SpeakerNames})" : "";
             return $"- {session.Time} | {session.Track ?? "All attendees"}{tag} | {session.Title}{byline}";
         });

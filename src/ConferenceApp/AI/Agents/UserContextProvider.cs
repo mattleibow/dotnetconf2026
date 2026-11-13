@@ -21,7 +21,7 @@ public sealed class UserContextProvider(
             .Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id))
             .Select(s =>
             {
-                var tag = !string.IsNullOrWhiteSpace(s.Topic) ? $" [{s.Topic}]" : "";
+                var tag = s.Topics.Count > 0 ? $" [{string.Join(", ", s.Topics)}]" : "";
                 return $"{s.Time}{tag} {s.Title}";
             })
             .ToArray();

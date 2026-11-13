@@ -13,7 +13,15 @@
                     <DataTemplate x:DataType="Session">
                         <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{$'speaker-session-{Id}'}">
                             <Label Text="{Binding CityMeta}" />
-                            <Label Text="{Binding Topic}" IsVisible="{!string.IsNullOrWhiteSpace(Topic)}" />
+                            <HorizontalStackLayout Spacing="6"
+                                                   IsVisible="{Topics.Count > 0}"
+                                                   BindableLayout.ItemsSource="{Binding Topics}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Label Text="{Binding .}" />
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
                             <Label Text="{Binding Title}" FontAttributes="Bold" />
                             <Label Text="{Binding Summary}" IsVisible="{!string.IsNullOrWhiteSpace(Summary)}" MaxLines="2" LineBreakMode="TailTruncation" />
                             <VerticalStackLayout.GestureRecognizers>
