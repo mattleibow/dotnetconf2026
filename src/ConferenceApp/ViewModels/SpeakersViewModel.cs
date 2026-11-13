@@ -7,16 +7,11 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakersViewModel : BaseViewModel
+public partial class SpeakersViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher)
 {
-    public SpeakersViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-    }
-
     public ObservableCollection<Speaker> Speakers { get; } = [];
 
     protected override async Task OnLoadAsync()

@@ -8,19 +8,14 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakerViewModel : BaseViewModel,
+public partial class SpeakerViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
     IQueryAttributable,
     IRecipient<SessionsEnrichedMessage>
 {
     private string? speakerId;
-
-    public SpeakerViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-    }
 
     public ObservableCollection<Session> Sessions { get; } = [];
 

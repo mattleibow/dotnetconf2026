@@ -8,22 +8,15 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class AgendaViewModel : BaseViewModel,
+public partial class AgendaViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    SearchService search,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
     IRecipient<FavoritesChangedMessage>,
     IRecipient<SessionsEnrichedMessage>
 {
-    private readonly SearchService search;
     private int loadVersion;
-
-    public AgendaViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        SearchService search,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-        this.search = search;
-    }
 
     public ObservableCollection<Session> Sessions { get; } = [];
 

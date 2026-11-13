@@ -6,18 +6,13 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SessionViewModel : BaseViewModel,
+public partial class SessionViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
     IQueryAttributable
 {
     private string? sessionId;
-
-    public SessionViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-    }
 
     public ObservableCollection<Speaker> Speakers { get; } = [];
 

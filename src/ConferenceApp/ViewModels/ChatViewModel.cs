@@ -7,20 +7,13 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel : BaseViewModel
+public partial class ChatViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    ChatService chat,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher)
 {
-    private readonly ChatService chat;
     private CancellationTokenSource? activeTurn;
-
-    public ChatViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        ChatService chat,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-        this.chat = chat;
-    }
 
     public ObservableCollection<ChatItem> Messages => chat.Messages;
     public IReadOnlyList<string> Suggestions => chat.Suggestions;

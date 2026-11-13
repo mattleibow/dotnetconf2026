@@ -7,16 +7,11 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class EventViewModel : BaseViewModel
+public partial class EventViewModel(
+    ConferenceDbProvider dbProvider,
+    UserPreferencesService preferences,
+    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher)
 {
-    public EventViewModel(
-        ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences,
-        IDispatcher dispatcher)
-        : base(dbProvider, preferences, dispatcher)
-    {
-    }
-
     public ObservableCollection<Sponsor> Sponsors { get; } = [];
 
     [ObservableProperty]
