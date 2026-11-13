@@ -8,9 +8,9 @@ public static class AgentExtensions
 {
     public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
-        builder.Services.AddSingleton<UserContextProvider>();
-        builder.Services.AddSingleton<ScheduleContextProvider>();
-        builder.Services.AddSingleton(RagContextProvider.Create);
+        builder.Services.AddKeyedSingleton<AIContextProvider, UserContextProvider>("user");
+        builder.Services.AddKeyedSingleton<AIContextProvider, ScheduleContextProvider>("schedule");
+        builder.Services.AddKeyedSingleton<AIContextProvider>("rag", (services, _) => RagContextProvider.Create(services));
         builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;

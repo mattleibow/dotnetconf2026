@@ -14,9 +14,9 @@ public static class ConferenceAssistantAgent
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var userContext = services.GetRequiredService<UserContextProvider>();
-        var scheduleContext = services.GetRequiredService<ScheduleContextProvider>();
-        var ragContext = services.GetRequiredService<TextSearchProvider>();
+        var userContext = services.GetRequiredKeyedService<AIContextProvider>("user");
+        var scheduleContext = services.GetRequiredKeyedService<AIContextProvider>("schedule");
+        var ragContext = services.GetRequiredKeyedService<AIContextProvider>("rag");
 
         return localClient.AsAIAgent(
             new ChatClientAgentOptions

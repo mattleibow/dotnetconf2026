@@ -24,8 +24,8 @@ public static class SessionDeepDiveWorkflow
     {
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
-        var userContext = services.GetRequiredService<UserContextProvider>();
-        var scheduleContext = services.GetRequiredService<ScheduleContextProvider>();
+        var userContext = services.GetRequiredKeyedService<AIContextProvider>("user");
+        var scheduleContext = services.GetRequiredKeyedService<AIContextProvider>("schedule");
 
         var sessionResearcher = localClient.AsAIAgent(
             new ChatClientAgentOptions
