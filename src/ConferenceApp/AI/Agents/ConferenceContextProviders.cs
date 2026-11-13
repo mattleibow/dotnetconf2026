@@ -12,7 +12,6 @@ public sealed class UserContextProvider(IServiceProvider services) : AIContextPr
 {
     private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
     private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
-    private readonly SessionEnrichmentService enrichment = services.GetRequiredService<SessionEnrichmentService>();
 
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
@@ -26,8 +25,7 @@ public sealed class UserContextProvider(IServiceProvider services) : AIContextPr
             .Where(s => preferences.IsFavorite(s.Id))
             .Select(s =>
             {
-                var topic = enrichment.GetSession(s.Id).Topic;
-                var tag = !string.IsNullOrWhiteSpace(topic) ? $" [{topic}]" : "";
+                var tag = !string.IsNullOrWhiteSpace(s.Topic) ? $" [{s.Topic}]" : "";
                 return $"{s.Time}{tag} {s.Title}";
             })
             .ToArray();
@@ -53,7 +51,6 @@ public sealed class ScheduleContextProvider(IServiceProvider services) : AIConte
 {
     private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
     private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
-    private readonly SessionEnrichmentService enrichment = services.GetRequiredService<SessionEnrichmentService>();
 
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
@@ -67,8 +64,7 @@ public sealed class ScheduleContextProvider(IServiceProvider services) : AIConte
         {
             var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
                 conference.Speakers.First(s => s.Id == id).Name));
-            var topic = enrichment.GetSession(session.Id).Topic;
-            var tag = !string.IsNullOrWhiteSpace(topic) ? $" [{topic}]" : "";
+            var tag = !string.IsNullOrWhiteSpace(session.Topic) ? $" [{session.Topic}]" : "";
             var byline = !string.IsNullOrWhiteSpace(speakers) ? $" ({speakers})" : "";
             return $"- {session.Time} | {session.Track ?? "All attendees"}{tag} | {session.Title}{byline}";
         });
@@ -96,7 +92,6 @@ public static class RagContextProvider
         var database = services.GetRequiredService<ConferenceDatabase>();
         var preferences = services.GetRequiredService<UserPreferencesService>();
         var search = services.GetRequiredService<SearchService>();
-        var enrichment = services.GetRequiredService<SessionEnrichmentService>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
         var logger = loggerFactory.CreateLogger("ConferenceApp.AI.RagContextProvider");
 
@@ -123,7 +118,7 @@ public static class RagContextProvider
                 {
                     SourceName = session.Title,
                     SourceLink = session.Id,
-                    Text = enrichment.GetSession(session.Id).Summary
+                    Text = session.Summary ?? ""
                 });
             },
             new TextSearchProviderOptions

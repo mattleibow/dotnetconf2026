@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.Messaging;
 using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
@@ -12,7 +12,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
 
-public record SessionEnrichedMessage(string? SessionId);
+public record SessionsEnrichedMessage;
 
 public sealed class SessionEnrichmentService(
     ConferenceDatabase database,
@@ -24,7 +24,6 @@ public sealed class SessionEnrichmentService(
     private static readonly string[] Topics = ["AI", "Mobile", "Web", "Cloud", "Data", "IoT"];
     private const int VectorDimensions = 384;
 
-    private readonly ConcurrentDictionary<string, SessionEnrichment> results = new();
     private readonly TaskCompletionSource<VectorStoreCollection<object, Dictionary<string, object?>>?> searchReady =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
     private VectorStoreWriter<string>? vectorWriter;
@@ -38,9 +37,6 @@ public sealed class SessionEnrichmentService(
         return searchReady.Task;
     }
 
-    public SessionEnrichment GetSession(string sessionId) =>
-        results.TryGetValue(sessionId, out var result) ? result : SessionEnrichment.Empty;
-
     private async Task EnrichAsync()
     {
         var cachePath = Path.Combine(FileSystem.AppDataDirectory, "session-enrichment.json");
@@ -50,7 +46,7 @@ public sealed class SessionEnrichmentService(
             var sessions = (await database.GetConferenceAsync()).Sessions.Where(s => s.IsTalk).ToList();
             var chunks = new Dictionary<string, IngestionChunk<string>>();
 
-            // 1. Read session Markdown files with MarkdownReader and index them into InMemoryVectorStore.
+            // 1. Read session Markdown streams with MarkdownReader and index them into InMemoryVectorStore.
             if (embeddingGenerator is not null)
             {
                 var store = new InMemoryVectorStore(new() { EmbeddingGenerator = embeddingGenerator });
@@ -77,7 +73,7 @@ public sealed class SessionEnrichmentService(
                 searchReady.TrySetResult(null);
             }
 
-            // 2. Seed and load cached summaries and topics from session-enrichment.json.
+            // 2. Seed and load cached summaries and topics onto the ConferenceDatabase Session models.
             if (!File.Exists(cachePath))
             {
                 await using var packaged = await FileSystem.OpenAppPackageFileAsync("session-enrichment.json");
@@ -85,24 +81,28 @@ public sealed class SessionEnrichmentService(
                 await packaged.CopyToAsync(dest);
             }
 
+            var cached = new Dictionary<string, CachedEnrichment>();
             if (File.Exists(cachePath))
             {
                 await using var cache = File.OpenRead(cachePath);
-                var saved = await JsonSerializer.DeserializeAsync(cache,
-                    EnrichmentJsonContext.Default.DictionaryStringSessionEnrichment);
+                cached = await JsonSerializer.DeserializeAsync(cache,
+                    EnrichmentJsonContext.Default.DictionaryStringCachedEnrichment) ?? [];
 
-                if (saved is not null)
+                foreach (var session in sessions)
                 {
-                    foreach (var entry in saved)
-                        results[entry.Key] = entry.Value;
-
-                    logger.LogInformation("[AI] Loaded enrichment (summaries & topics) for {Count} sessions from local cache.", saved.Count);
-                    await PublishAsync(null);
+                    if (cached.TryGetValue(session.Id, out var entry))
+                    {
+                        session.Summary = entry.Summary;
+                        session.Topic = entry.Topic != "None" ? entry.Topic : null;
+                    }
                 }
+
+                logger.LogInformation("[AI] Loaded enrichment (summaries & topics) for {Count} sessions from local cache.", cached.Count);
+                WeakReferenceMessenger.Default.Send(new SessionsEnrichedMessage());
             }
 
             // 3. Enrich any new/uncached talks in the background using SummaryEnricher + ClassificationEnricher.
-            var remaining = sessions.Where(s => !results.ContainsKey(s.Id)).ToList();
+            var remaining = sessions.Where(s => string.IsNullOrWhiteSpace(s.Summary)).ToList();
             if (remaining.Count == 0 || client is null)
                 return;
 
@@ -131,17 +131,17 @@ public sealed class SessionEnrichmentService(
                     if (!Topics.Contains(topic, StringComparer.Ordinal))
                         topic = "None";
 
-                    results[session.Id] = new(summary, topic);
+                    session.Summary = summary;
+                    session.Topic = topic != "None" ? topic : null;
+                    cached[session.Id] = new(summary, topic);
                 }
 
-                await using (var cache = File.Create(cachePath))
-                {
-                    await JsonSerializer.SerializeAsync(cache, results.ToDictionary(),
-                        EnrichmentJsonContext.Default.DictionaryStringSessionEnrichment);
-                }
-
-                await PublishAsync(session.Id);
+                await using var cache = File.Create(cachePath);
+                await JsonSerializer.SerializeAsync(cache, cached,
+                    EnrichmentJsonContext.Default.DictionaryStringCachedEnrichment);
             }
+
+            WeakReferenceMessenger.Default.Send(new SessionsEnrichedMessage());
         }
         catch (Exception exception)
         {
@@ -153,10 +153,6 @@ public sealed class SessionEnrichmentService(
         }
     }
 
-    private static Task PublishAsync(string? sessionId) =>
-        MainThread.InvokeOnMainThreadAsync(() =>
-            WeakReferenceMessenger.Default.Send(new SessionEnrichedMessage(sessionId)));
-
     private static string ReadMetadata(IngestionChunk<string> chunk, string key) =>
         chunk.Metadata.TryGetValue(key, out var value) && value is string text
             ? string.Join(" ", text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
@@ -164,13 +160,8 @@ public sealed class SessionEnrichmentService(
 
     private static async Task<IngestionChunk<string>> ReadChunkAsync(Session session)
     {
-        var path = Path.Combine(FileSystem.AppDataDirectory, "conference", session.Content);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        await using (var source = await FileSystem.OpenAppPackageFileAsync($"conference/{session.Content}"))
-        await using (var destination = File.Create(path))
-            await source.CopyToAsync(destination);
-
-        var document = await new MarkdownReader().ReadAsync(new FileInfo(path), session.Id);
+        await using var stream = await FileSystem.OpenAppPackageFileAsync($"conference/{session.Content}");
+        var document = await new MarkdownReader().ReadAsync(stream, session.Id, "text/markdown");
         var text = string.Join("\n\n", document.EnumerateContent().Select(element => element.GetMarkdown()));
         return new(text, document);
     }
@@ -187,3 +178,8 @@ public sealed class SessionEnrichmentService(
         await Task.CompletedTask;
     }
 }
+
+internal record CachedEnrichment(string Summary, string Topic);
+
+[JsonSerializable(typeof(Dictionary<string, CachedEnrichment>))]
+internal partial class EnrichmentJsonContext : JsonSerializerContext;

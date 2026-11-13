@@ -28,6 +28,8 @@ public record Session(
 {
     public bool IsTalk => Kind == "session";
     public string Time => $"{Start:HH:mm} – {End:HH:mm}";
+    public string? Summary { get; set; }
+    public string? Topic { get; set; }
 }
 
 public record Speaker(

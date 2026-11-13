@@ -46,7 +46,7 @@ public class ChatService(
             yield break;
         }
 
-        await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "Thinking on device...");
+        reply.Progress = "Thinking on device...";
 
         // Build conversation history from prior chat turns.
         var history = new List<ChatMessage>();
@@ -71,8 +71,7 @@ public class ChatService(
             // Step 1 of SessionDeepDiveWorkflow gathers the session abstract and speaker bio for the parallel analysts.
             if (update.AuthorName == "SessionResearcher")
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "SessionResearcher: reading session abstract and speaker bio...");
+                reply.Progress = "SessionResearcher: reading session abstract and speaker bio...";
                 continue;
             }
 
@@ -80,30 +79,26 @@ public class ChatService(
             // summary and Timekeeper's filtered session list are internal handoff state for the panelists.
             if (update.AuthorName == "Concierge" && isDebateFollowUp)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "Concierge: locking in your topics and time window...");
+                reply.Progress = "Concierge: locking in your topics and time window...";
                 continue;
             }
 
             if (update.AuthorName == "Timekeeper")
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "Timekeeper: filtering talks to your time window...");
+                reply.Progress = "Timekeeper: filtering talks to your time window...";
                 continue;
             }
 
             if (update.AuthorName is "TakeawaysAgent" or "QuestionsCoachAgent"
                 && !receivedText)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = "Running TakeawaysAgent & QuestionsCoachAgent in parallel...");
+                reply.Progress = "Running TakeawaysAgent & QuestionsCoachAgent in parallel...";
             }
 
             if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
                 && !receivedText)
             {
-                await MainThread.InvokeOnMainThreadAsync(() =>
-                    reply.Progress = $"{update.AuthorName}: preparing argument...");
+                reply.Progress = $"{update.AuthorName}: preparing argument...";
             }
 
             // When TakeawaysAgent and QuestionsCoachAgent run concurrently via BuildConcurrent,
@@ -122,7 +117,7 @@ public class ChatService(
                 if (!receivedText)
                 {
                     receivedText = true;
-                    await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "");
+                    reply.Progress = "";
                 }
 
                 // Label each multi-agent workflow participant as they take the floor.
@@ -144,7 +139,7 @@ public class ChatService(
         if (bufferedQuestions.Length > 0)
         {
             if (!receivedText)
-                await MainThread.InvokeOnMainThreadAsync(() => reply.Progress = "");
+                reply.Progress = "";
 
             var prefix = activeSpeaker is null
                 ? "**Things to Think About & Ask:** "
@@ -176,23 +171,17 @@ public class ChatService(
                 reply.Text.Contains(s.Id, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
 
-        if (referenced.Length == 0)
-            return;
-
-        await MainThread.InvokeOnMainThreadAsync(() =>
+        foreach (var session in referenced)
         {
-            foreach (var session in referenced)
-            {
-                if (reply.Sessions.Any(card => card.Session.Id == session.Id))
-                    continue;
+            if (reply.Sessions.Any(card => card.Session.Id == session.Id))
+                continue;
 
-                var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
-                    conference.Speakers.First(s => s.Id == id).Name));
-                var meta = $"{city.Name} · {session.Time} · {session.Track ?? "All attendees"}";
+            var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
+                conference.Speakers.First(s => s.Id == id).Name));
+            var meta = $"{city.Name} · {session.Time} · {session.Track ?? "All attendees"}";
 
-                reply.Sessions.Add(new ChatSessionCard(session, meta, speakers));
-            }
-        });
+            reply.Sessions.Add(new ChatSessionCard(session, meta, speakers));
+        }
     }
 
     internal static bool IsDayPlanRequest(string request) =>

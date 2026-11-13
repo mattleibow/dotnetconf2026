@@ -11,17 +11,20 @@ namespace ConferenceApp.ViewModels;
 public partial class SpeakerViewModel : ObservableObject,
     IQueryAttributable,
     IRecipient<CityChangedMessage>,
-    IRecipient<SessionEnrichedMessage>
+    IRecipient<SessionsEnrichedMessage>
 {
     private readonly ConferenceDatabase database;
     private readonly UserPreferencesService preferences;
-    private readonly SessionEnrichmentService enrichment;
+    private readonly IDispatcher dispatcher;
 
-    public SpeakerViewModel(ConferenceDatabase database, UserPreferencesService preferences, SessionEnrichmentService enrichment)
+    public SpeakerViewModel(
+        ConferenceDatabase database,
+        UserPreferencesService preferences,
+        IDispatcher dispatcher)
     {
         this.database = database;
         this.preferences = preferences;
-        this.enrichment = enrichment;
+        this.dispatcher = dispatcher;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
@@ -34,10 +37,10 @@ public partial class SpeakerViewModel : ObservableObject,
     public partial string Bio { get; set; } = "";
 
     public void Receive(CityChangedMessage message) =>
-        _ = LoadSessionsAsync();
+        dispatcher.Dispatch(() => _ = LoadSessionsAsync());
 
-    public void Receive(SessionEnrichedMessage message) =>
-        MainThread.BeginInvokeOnMainThread(() => ApplyEnrichment(message.SessionId));
+    public void Receive(SessionsEnrichedMessage message) =>
+        dispatcher.Dispatch(() => _ = LoadSessionsAsync());
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
@@ -57,24 +60,11 @@ public partial class SpeakerViewModel : ObservableObject,
         Sessions.Clear();
         foreach (var session in await database.GetSessionsForSpeakerAsync(city.Id, Speaker.Id))
         {
-            var enriched = enrichment.GetSession(session.Id);
             Sessions.Add(new SessionItem(
                 session,
                 Speaker.Name,
                 favoriteIds.Contains(session.Id),
-                enriched.Summary,
-                enriched.HasTopic ? enriched.Topic : null,
                 city.Name));
-        }
-    }
-
-    private void ApplyEnrichment(string? sessionId)
-    {
-        foreach (var item in Sessions.Where(item => sessionId is null || item.Session.Id == sessionId))
-        {
-            var enriched = enrichment.GetSession(item.Session.Id);
-            item.Summary = enriched.Summary;
-            item.Topic = enriched.HasTopic ? enriched.Topic : null;
         }
     }
 

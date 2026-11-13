@@ -21,14 +21,13 @@ public sealed class FavoritesTools(
     [Description("List the user's saved favourite sessions in the current city.")]
     public async Task<string> GetFavoritesAsync(
         [FromServices] ConferenceDataTools dataTools,
-        [FromServices] SessionEnrichmentService enrichment,
         CancellationToken cancellationToken = default)
     {
         var city = await preferences.GetSelectedCityAsync(database);
         logger.LogInformation("[AI Tool] get_favorites() in {CityId}", city.Id);
 
         var sessions = await database.GetSessionsAsync(city.Id);
-        return await dataTools.FormatSessionsAsync(city, sessions.Where(s => preferences.IsFavorite(s.Id)), enrichment);
+        return await dataTools.FormatSessionsAsync(city, sessions.Where(s => preferences.IsFavorite(s.Id)));
     }
 
     [ExportAIFunction("add_favorite")]
@@ -58,7 +57,7 @@ public sealed class FavoritesTools(
             return $"No session matching '{session}' in {city.Name}.";
 
         var action = add ? "add_favorite" : "remove_favorite";
-        await MainThread.InvokeOnMainThreadAsync(() => preferences.SetFavorite(match.Id, add));
+        preferences.SetFavorite(match.Id, add);
         logger.LogInformation("[AI Tool] {Action}('{SessionId}') saved.", action, match.Id);
 
         return add

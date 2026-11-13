@@ -1,20 +1,12 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace ConferenceApp.Models;
 
-public partial class SessionItem(
-    Session session,
-    string speakers,
-    bool isFavorite,
-    string? summary = null,
-    string? topic = null,
-    string? cityName = null) : ObservableObject
+public record SessionItem(
+    Session Session,
+    string Speakers,
+    bool IsFavorite,
+    string? CityName = null)
 {
-    public Session Session { get; } = session;
-    public string Speakers { get; } = speakers;
-    public bool IsFavorite { get; } = isFavorite;
-
-    public string Meta => (cityName, Session.Track) switch
+    public string Meta => (CityName, Session.Track) switch
     {
         ({ Length: > 0 } city, { Length: > 0 } track) => $"{city} · {Session.Time} · {track}",
         ({ Length: > 0 } city, _) => $"{city} · {Session.Time}",
@@ -22,9 +14,6 @@ public partial class SessionItem(
         _ => Session.Time
     };
 
-    [ObservableProperty]
-    public partial string? Summary { get; set; } = summary;
-
-    [ObservableProperty]
-    public partial string? Topic { get; set; } = topic;
+    public string? Summary => Session.Summary;
+    public string? Topic => Session.Topic;
 }
