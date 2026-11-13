@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.AI.Attributes;
 
@@ -15,27 +16,28 @@ public partial class ConferenceDataToolContext : AIToolContext;
 public sealed class ConferenceDataTools(
     ConferenceDatabase database,
     UserPreferencesService preferences,
-    SearchService search,
-    SessionEnrichmentService enrichment,
     ILogger<ConferenceDataTools> logger)
 {
     [ExportAIFunction("search_sessions")]
     [Description("Search sessions by topic, title, or speaker in the current city. Returns summaries; call get_session for the full abstract.")]
     public async Task<string> SearchSessionsAsync(
         [Description("Topic, title, or speaker to search for.")] string query,
+        [FromServices] SearchService search,
+        [FromServices] SessionEnrichmentService enrichment,
         CancellationToken cancellationToken = default)
     {
         var city = await preferences.GetSelectedCityAsync(database);
         logger.LogInformation("[AI Tool] search_sessions(query: '{Query}') in {CityId}", query, city.Id);
 
         var sessions = await search.SearchSessionsAsync(city.Id, query);
-        return await FormatSessionsAsync(city, sessions.Take(5));
+        return await FormatSessionsAsync(city, sessions.Take(5), enrichment);
     }
 
     [ExportAIFunction("get_session")]
     [Description("Read the full abstract and schedule details for a specific session in the current city.")]
     public async Task<string> GetSessionAsync(
         [Description("Session ID or title.")] string session,
+        [FromServices] SessionEnrichmentService enrichment,
         CancellationToken cancellationToken = default)
     {
         var city = await preferences.GetSelectedCityAsync(database);
@@ -50,7 +52,7 @@ public sealed class ConferenceDataTools(
 
         logger.LogInformation("[AI Tool] get_session('{SessionId}')", match.Id);
 
-        var summary = await FormatSessionsAsync(city, [match]);
+        var summary = await FormatSessionsAsync(city, [match], enrichment);
         var abstractText = await database.GetTextAsync(match.Content);
         return $"{summary}\nAbstract: {abstractText}";
     }
@@ -86,10 +88,11 @@ public sealed class ConferenceDataTools(
     }
 
     [ExportAIFunction("list_sessions")]
-    [Description("List sessions in the current city between two 24-hour daytime times (for example 14:00 to 16:00).")]
+    [Description("List sessions in the current city between two 24-hour daytime times (for example 08:00 to 12:00).")]
     public async Task<string> ListSessionsAsync(
-        [Description("Start time in 24-hour HH:mm format (e.g. 13:00).")] TimeOnly start,
-        [Description("End time in 24-hour HH:mm format (e.g. 16:00).")] TimeOnly end,
+        [Description("Start time in 24-hour HH:mm format (e.g. 08:00).")] TimeOnly start,
+        [Description("End time in 24-hour HH:mm format (e.g. 12:00).")] TimeOnly end,
+        [FromServices] SessionEnrichmentService enrichment,
         CancellationToken cancellationToken = default)
     {
         var city = await preferences.GetSelectedCityAsync(database);
@@ -101,10 +104,13 @@ public sealed class ConferenceDataTools(
             TimeOnly.FromDateTime(s.Start.DateTime) >= start &&
             TimeOnly.FromDateTime(s.Start.DateTime) < end);
 
-        return await FormatSessionsAsync(city, matching);
+        return await FormatSessionsAsync(city, matching, enrichment);
     }
 
-    internal async Task<string> FormatSessionsAsync(City city, IEnumerable<Session> sessions)
+    internal async Task<string> FormatSessionsAsync(
+        City city,
+        IEnumerable<Session> sessions,
+        SessionEnrichmentService enrichment)
     {
         var matches = sessions.ToArray();
         if (matches.Length == 0)

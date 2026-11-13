@@ -48,7 +48,9 @@ public class UserPreferencesService
     }
 
     public IReadOnlySet<string> GetFavoriteIds() =>
-        Preferences.Get(FavoritesKey, "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToHashSet();
+        Preferences.Get(FavoritesKey, "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .ToHashSet();
 
     public bool IsFavorite(string sessionId) => GetFavoriteIds().Contains(sessionId);
 

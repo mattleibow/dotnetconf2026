@@ -4,10 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.Services;
 
-public class SearchService(
-    ConferenceDatabase database,
-    SessionEnrichmentService enrichment,
-    ILogger<SearchService> logger)
+public class SearchService(ConferenceDatabase database, SessionEnrichmentService enrichment, ILogger<SearchService> logger)
 {
     private const int SemanticResultLimit = 5;
 

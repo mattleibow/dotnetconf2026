@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using ConferenceApp.Services;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.AI.Attributes;
 
@@ -14,18 +15,20 @@ public partial class FavoritesToolContext : AIToolContext;
 public sealed class FavoritesTools(
     ConferenceDatabase database,
     UserPreferencesService preferences,
-    ConferenceDataTools dataTools,
     ILogger<FavoritesTools> logger)
 {
     [ExportAIFunction("get_favorites")]
     [Description("List the user's saved favourite sessions in the current city.")]
-    public async Task<string> GetFavoritesAsync(CancellationToken cancellationToken = default)
+    public async Task<string> GetFavoritesAsync(
+        [FromServices] ConferenceDataTools dataTools,
+        [FromServices] SessionEnrichmentService enrichment,
+        CancellationToken cancellationToken = default)
     {
         var city = await preferences.GetSelectedCityAsync(database);
         logger.LogInformation("[AI Tool] get_favorites() in {CityId}", city.Id);
 
         var sessions = await database.GetSessionsAsync(city.Id);
-        return await dataTools.FormatSessionsAsync(city, sessions.Where(s => preferences.IsFavorite(s.Id)));
+        return await dataTools.FormatSessionsAsync(city, sessions.Where(s => preferences.IsFavorite(s.Id)), enrichment);
     }
 
     [ExportAIFunction("add_favorite")]
