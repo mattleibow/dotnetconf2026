@@ -48,8 +48,11 @@ public sealed class FavoritesTools(
         var sessions = await database.GetSessionsAsync(city.Id);
         var match = sessions.FirstOrDefault(s =>
             s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
-            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase))
-            ?? throw new ArgumentException($"No session matching '{session}'.", nameof(session));
+            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
+            session.Contains(s.Title, StringComparison.OrdinalIgnoreCase));
+
+        if (match is null)
+            return $"No session matching '{session}' in {city.Name}.";
 
         var action = add ? "add_favorite" : "remove_favorite";
         await MainThread.InvokeOnMainThreadAsync(() => preferences.SetFavorite(match.Id, add));

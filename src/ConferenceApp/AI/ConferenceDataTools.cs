@@ -42,8 +42,11 @@ public sealed class ConferenceDataTools(
         var sessions = await database.GetSessionsAsync(city.Id);
         var match = sessions.FirstOrDefault(s =>
             s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
-            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase))
-            ?? throw new ArgumentException($"No session matching '{session}'.", nameof(session));
+            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
+            session.Contains(s.Title, StringComparison.OrdinalIgnoreCase));
+
+        if (match is null)
+            return $"No session matching '{session}' in {city.Name}.";
 
         logger.LogInformation("[AI Tool] get_session('{SessionId}')", match.Id);
 
@@ -60,16 +63,26 @@ public sealed class ConferenceDataTools(
     {
         var city = await preferences.GetSelectedCityAsync(database);
         var speakers = await database.GetSpeakersAsync(city.Id);
+        var queries = speaker.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        var match = speakers.FirstOrDefault(s =>
-            s.Id.Equals(speaker, StringComparison.OrdinalIgnoreCase) ||
-            s.Name.Contains(speaker, StringComparison.OrdinalIgnoreCase))
-            ?? throw new ArgumentException($"No speaker matching '{speaker}' in {city.Name}.", nameof(speaker));
+        var matches = speakers.Where(s => queries.Any(q =>
+            s.Id.Equals(q, StringComparison.OrdinalIgnoreCase) ||
+            s.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+            q.Contains(s.Name, StringComparison.OrdinalIgnoreCase)))
+            .ToArray();
 
-        logger.LogInformation("[AI Tool] get_speaker('{SpeakerId}')", match.Id);
+        if (matches.Length == 0)
+            return $"No speaker matching '{speaker}' in {city.Name}.";
 
-        var bio = await database.GetTextAsync(match.Content);
-        return $"Name: {match.Name} | {match.Tagline}\nBiography: {bio}";
+        var results = new List<string>(matches.Length);
+        foreach (var match in matches)
+        {
+            logger.LogInformation("[AI Tool] get_speaker('{SpeakerId}')", match.Id);
+            var bio = await database.GetTextAsync(match.Content);
+            results.Add($"Name: {match.Name} | {match.Tagline}\nBiography: {bio}");
+        }
+
+        return string.Join("\n\n", results);
     }
 
     [ExportAIFunction("list_sessions")]
