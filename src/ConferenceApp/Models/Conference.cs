@@ -43,6 +43,7 @@ public class Session
     public string? Description { get; set; }
     public string? Summary { get; set; }
     public string? Topic { get; set; }
+    public bool IsFavorite { get; set; }
 
     [JsonIgnore]
     public City City { get; set; } = null!;
@@ -55,6 +56,9 @@ public class Session
 
     [JsonIgnore]
     public string Time => $"{Start:HH:mm} – {End:HH:mm}";
+
+    [JsonIgnore]
+    public string Meta => Track is { Length: > 0 } ? $"{Time} · {Track}" : Time;
 
     [JsonIgnore]
     public string SpeakerNames => string.Join(", ", Speakers.Select(s => s.Name));

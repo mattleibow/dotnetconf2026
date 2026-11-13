@@ -28,7 +28,7 @@ public partial class SpeakerViewModel : ObservableObject,
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
-    public ObservableCollection<SessionItem> Sessions { get; } = [];
+    public ObservableCollection<Session> Sessions { get; } = [];
 
     [ObservableProperty]
     public partial Speaker? Speaker { get; set; }
@@ -63,14 +63,12 @@ public partial class SpeakerViewModel : ObservableObject,
         Sessions.Clear();
         foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))
         {
-            Sessions.Add(new SessionItem(
-                session,
-                favoriteIds.Contains(session.Id),
-                city.Name));
+            session.IsFavorite = favoriteIds.Contains(session.Id);
+            Sessions.Add(session);
         }
     }
 
     [RelayCommand]
-    private Task OpenSessionAsync(SessionItem item) =>
-        Shell.Current.GoToAsync($"session?id={item.Session.Id}");
+    private Task OpenSessionAsync(Session session) =>
+        Shell.Current.GoToAsync($"session?id={session.Id}");
 }

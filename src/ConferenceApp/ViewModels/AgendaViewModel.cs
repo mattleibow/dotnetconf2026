@@ -29,7 +29,7 @@ public partial class AgendaViewModel : ObservableObject,
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
-    public ObservableCollection<SessionItem> Sessions { get; } = [];
+    public ObservableCollection<Session> Sessions { get; } = [];
 
     [ObservableProperty]
     public partial City? SelectedCity { get; set; }
@@ -67,20 +67,15 @@ public partial class AgendaViewModel : ObservableObject,
         if (version != Volatile.Read(ref loadVersion))
             return;
 
-        var items = new List<SessionItem>(matching.Count);
-        foreach (var session in matching)
-        {
-            if (favoritesOnly && !favoriteIds.Contains(session.Id))
-                continue;
-            items.Add(new SessionItem(session, favoriteIds.Contains(session.Id)));
-        }
-        if (version != Volatile.Read(ref loadVersion))
-            return;
-
         SelectedCity = city;
         Sessions.Clear();
-        foreach (var item in items)
-            Sessions.Add(item);
+        foreach (var session in matching)
+        {
+            session.IsFavorite = favoriteIds.Contains(session.Id);
+            if (favoritesOnly && !session.IsFavorite)
+                continue;
+            Sessions.Add(session);
+        }
     }
 
     [RelayCommand]
@@ -92,6 +87,6 @@ public partial class AgendaViewModel : ObservableObject,
         preferences.PickCityAsync();
 
     [RelayCommand]
-    private Task OpenSessionAsync(SessionItem item) =>
-        Shell.Current.GoToAsync($"session?id={item.Session.Id}");
+    private Task OpenSessionAsync(Session session) =>
+        Shell.Current.GoToAsync($"session?id={session.Id}");
 }
