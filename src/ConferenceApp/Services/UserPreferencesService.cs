@@ -35,19 +35,6 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider)
         return city;
     }
 
-    public async Task<City?> PickCityAsync()
-    {
-        var db = await dbProvider.GetDbAsync();
-        var names = db.Cities.Select(c => c.Name).ToArray();
-        var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
-        if (db.Cities.FirstOrDefault(c => c.Name == choice) is { } city)
-        {
-            SelectedCityId = city.Id;
-            return city;
-        }
-        return null;
-    }
-
     public IReadOnlySet<string> GetFavoriteIds() =>
         Preferences.Get(FavoritesKey, "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries)

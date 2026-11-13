@@ -73,6 +73,6 @@ Use the installed skills rather than guessing. Load the ones that match the task
 ## Code style
 
 - Keep code small and obvious; optimize for a live demo audience.
-- Avoid speculative abstractions, base classes, and generic repositories.
+- Avoid speculative abstractions and generic repositories.
 - Comment only where the reason isn't obvious.
 - Remove template boilerplate that the app doesn't use.

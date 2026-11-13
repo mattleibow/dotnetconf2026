@@ -2,19 +2,11 @@ using ConferenceApp.ViewModels;
 
 namespace ConferenceApp.Views;
 
-public partial class ChatPage : ContentPage
+public partial class ChatPage : BasePage
 {
-    private readonly ChatViewModel viewModel;
-
     public ChatPage(ChatViewModel viewModel)
+        : base(viewModel)
     {
         InitializeComponent();
-        BindingContext = this.viewModel = viewModel;
-    }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        viewModel.LoadCommand.Execute(null);
     }
 }

@@ -7,23 +7,17 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class EventViewModel : ObservableObject,
-    IRecipient<CityChangedMessage>
+public partial class EventViewModel : BaseViewModel
 {
-    private readonly ConferenceDbProvider dbProvider;
-    private readonly UserPreferencesService preferences;
-
-    public EventViewModel(ConferenceDbProvider dbProvider, UserPreferencesService preferences)
+    public EventViewModel(
+        ConferenceDbProvider dbProvider,
+        UserPreferencesService preferences,
+        IDispatcher dispatcher)
+        : base(dbProvider, preferences, dispatcher)
     {
-        this.dbProvider = dbProvider;
-        this.preferences = preferences;
-        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     public ObservableCollection<Sponsor> Sponsors { get; } = [];
-
-    [ObservableProperty]
-    public partial City? SelectedCity { get; set; }
 
     [ObservableProperty]
     public partial Venue? Venue { get; set; }
@@ -31,24 +25,18 @@ public partial class EventViewModel : ObservableObject,
     [ObservableProperty]
     public partial string Description { get; set; } = "";
 
-    public void Receive(CityChangedMessage message) =>
-        _ = LoadAsync();
-
-    [RelayCommand]
-    private async Task LoadAsync()
+    protected override async Task OnLoadAsync()
     {
-        var db = await dbProvider.GetDbAsync();
-        var city = await preferences.GetSelectedCityAsync();
-        SelectedCity = city;
+        if (SelectedCity is not { } city)
+            return;
+
+        var db = await DbProvider.GetDbAsync();
         Venue = city.Venue;
         Description = city.Venue.Description ?? "";
         Sponsors.Clear();
         foreach (var sponsor in db.Sponsors.Where(s => s.CityIds.Contains(city.Id)))
             Sponsors.Add(sponsor);
     }
-
-    [RelayCommand]
-    private Task PickCityAsync() => preferences.PickCityAsync();
 
     [RelayCommand]
     private Task OpenMapAsync() =>

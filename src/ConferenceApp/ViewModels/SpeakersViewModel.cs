@@ -7,43 +7,28 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakersViewModel : ObservableObject,
-    IRecipient<CityChangedMessage>
+public partial class SpeakersViewModel : BaseViewModel
 {
-    private readonly ConferenceDbProvider dbProvider;
-    private readonly UserPreferencesService preferences;
-
     public SpeakersViewModel(
         ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences)
+        UserPreferencesService preferences,
+        IDispatcher dispatcher)
+        : base(dbProvider, preferences, dispatcher)
     {
-        this.dbProvider = dbProvider;
-        this.preferences = preferences;
-        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     public ObservableCollection<Speaker> Speakers { get; } = [];
 
-    [ObservableProperty]
-    public partial City? SelectedCity { get; set; }
-
-    public void Receive(CityChangedMessage message) =>
-        _ = LoadAsync();
-
-    [RelayCommand]
-    private async Task LoadAsync()
+    protected override async Task OnLoadAsync()
     {
-        var db = await dbProvider.GetDbAsync();
-        var city = await preferences.GetSelectedCityAsync();
-        SelectedCity = city;
+        if (SelectedCity is not { } city)
+            return;
+
+        var db = await DbProvider.GetDbAsync();
         Speakers.Clear();
         foreach (var speaker in db.Speakers.Where(s => s.CityIds.Contains(city.Id)))
             Speakers.Add(speaker);
     }
-
-    [RelayCommand]
-    private Task PickCityAsync() =>
-        preferences.PickCityAsync();
 
     [RelayCommand]
     private Task OpenSpeakerAsync(Speaker speaker) =>

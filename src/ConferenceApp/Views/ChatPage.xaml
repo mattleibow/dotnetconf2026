@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.ChatPage"
-             x:DataType="ChatViewModel"
-             Title="Assistant">
+<BasePage x:Class="ConferenceApp.Views.ChatPage"
+          x:DataType="ChatViewModel"
+          Title="Assistant">
     <ContentPage.Resources>
         <MarkdownToFormattedStringConverter x:Key="MarkdownConverter" />
     </ContentPage.Resources>
@@ -85,4 +85,4 @@
                     Command="{Binding SendCommand}" />
         </Grid>
     </Grid>
-</ContentPage>
+</BasePage>

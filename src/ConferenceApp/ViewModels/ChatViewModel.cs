@@ -7,25 +7,23 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel : ObservableObject,
-    IRecipient<CityChangedMessage>
+public partial class ChatViewModel : BaseViewModel
 {
     private readonly ChatService chat;
-    private readonly UserPreferencesService preferences;
     private CancellationTokenSource? activeTurn;
 
-    public ChatViewModel(ChatService chat, UserPreferencesService preferences)
+    public ChatViewModel(
+        ConferenceDbProvider dbProvider,
+        UserPreferencesService preferences,
+        ChatService chat,
+        IDispatcher dispatcher)
+        : base(dbProvider, preferences, dispatcher)
     {
         this.chat = chat;
-        this.preferences = preferences;
-        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     public ObservableCollection<ChatItem> Messages => chat.Messages;
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
-
-    [ObservableProperty]
-    public partial City? SelectedCity { get; set; }
 
     [ObservableProperty]
     public partial string Prompt { get; set; } = "";
@@ -36,19 +34,10 @@ public partial class ChatViewModel : ObservableObject,
     [ObservableProperty]
     public partial string? UnavailableReason { get; set; }
 
-    public void Receive(CityChangedMessage message) =>
-        _ = LoadAsync();
-
-    [RelayCommand]
-    private async Task LoadAsync()
+    protected override async Task OnLoadAsync()
     {
-        SelectedCity = await preferences.GetSelectedCityAsync();
         UnavailableReason = await chat.GetUnavailableReasonAsync();
     }
-
-    [RelayCommand]
-    private Task PickCityAsync() =>
-        preferences.PickCityAsync();
 
     [RelayCommand]
     private Task AskSuggestionAsync(string suggestion)

@@ -21,13 +21,11 @@
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001;IL2026;IL3050</NoWarn>
 
-
-
 		<!-- Display name -->
 		<ApplicationTitle>.NET Conf South Africa</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.companyname.conferenceapp</ApplicationId>
+		<ApplicationId>dev.cptmsdug.dotnetconfsa2026</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.SpeakerPage"
-             x:DataType="SpeakerViewModel"
-             Title="Speaker">
+<BasePage x:Class="ConferenceApp.Views.SpeakerPage"
+          x:DataType="SpeakerViewModel"
+          Title="Speaker">
     <ScrollView>
         <VerticalStackLayout Padding="10" Spacing="10">
             <Label Text="{Binding Speaker.Name}" FontAttributes="Bold" />
@@ -26,4 +26,4 @@
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
-</ContentPage>
+</BasePage>

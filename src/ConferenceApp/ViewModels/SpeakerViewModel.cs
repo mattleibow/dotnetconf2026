@@ -8,24 +8,18 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakerViewModel : ObservableObject,
+public partial class SpeakerViewModel : BaseViewModel,
     IQueryAttributable,
-    IRecipient<CityChangedMessage>,
     IRecipient<SessionsEnrichedMessage>
 {
-    private readonly ConferenceDbProvider dbProvider;
-    private readonly UserPreferencesService preferences;
-    private readonly IDispatcher dispatcher;
+    private string? speakerId;
 
     public SpeakerViewModel(
         ConferenceDbProvider dbProvider,
         UserPreferencesService preferences,
         IDispatcher dispatcher)
+        : base(dbProvider, preferences, dispatcher)
     {
-        this.dbProvider = dbProvider;
-        this.preferences = preferences;
-        this.dispatcher = dispatcher;
-        WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     public ObservableCollection<Session> Sessions { get; } = [];
@@ -36,29 +30,26 @@ public partial class SpeakerViewModel : ObservableObject,
     [ObservableProperty]
     public partial string Bio { get; set; } = "";
 
-    public void Receive(CityChangedMessage message) =>
-        dispatcher.Dispatch(() => _ = LoadSessionsAsync());
-
     public void Receive(SessionsEnrichedMessage message) =>
-        dispatcher.Dispatch(() => _ = LoadSessionsAsync());
+        Refresh();
 
-    public async void ApplyQueryAttributes(IDictionary<string, object> query)
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        var db = await dbProvider.GetDbAsync();
-        var id = (string)query["id"];
-        Speaker = db.Speakers.FirstOrDefault(s => s.Id == id);
-        if (Speaker is null)
-            return;
-        Bio = Speaker.Bio ?? "";
-        await LoadSessionsAsync();
+        speakerId = (string)query["id"];
+        Refresh();
     }
 
-    public async Task LoadSessionsAsync()
+    protected override async Task OnLoadAsync()
     {
+        if (string.IsNullOrEmpty(speakerId) || SelectedCity is not { } city)
+            return;
+
+        var db = await DbProvider.GetDbAsync();
+        Speaker = db.Speakers.FirstOrDefault(s => s.Id == speakerId);
         if (Speaker is null)
             return;
-        var db = await dbProvider.GetDbAsync();
-        var city = await preferences.GetSelectedCityAsync();
+
+        Bio = Speaker.Bio ?? "";
         Sessions.Clear();
         foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))
             Sessions.Add(session);

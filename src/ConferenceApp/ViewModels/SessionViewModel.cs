@@ -6,18 +6,17 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SessionViewModel : ObservableObject,
+public partial class SessionViewModel : BaseViewModel,
     IQueryAttributable
 {
-    private readonly ConferenceDbProvider dbProvider;
-    private readonly UserPreferencesService preferences;
+    private string? sessionId;
 
     public SessionViewModel(
         ConferenceDbProvider dbProvider,
-        UserPreferencesService preferences)
+        UserPreferencesService preferences,
+        IDispatcher dispatcher)
+        : base(dbProvider, preferences, dispatcher)
     {
-        this.dbProvider = dbProvider;
-        this.preferences = preferences;
     }
 
     public ObservableCollection<Speaker> Speakers { get; } = [];
@@ -31,15 +30,24 @@ public partial class SessionViewModel : ObservableObject,
     [ObservableProperty]
     public partial bool IsFavorite { get; set; }
 
-    public async void ApplyQueryAttributes(IDictionary<string, object> query)
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        var db = await dbProvider.GetDbAsync();
-        var id = (string)query["id"];
-        Session = db.Sessions.FirstOrDefault(s => s.Id == id);
+        sessionId = (string)query["id"];
+        Refresh();
+    }
+
+    protected override async Task OnLoadAsync()
+    {
+        if (string.IsNullOrEmpty(sessionId))
+            return;
+
+        var db = await DbProvider.GetDbAsync();
+        Session = db.Sessions.FirstOrDefault(s => s.Id == sessionId);
         if (Session is null)
             return;
+
         Description = Session.Description ?? "";
-        IsFavorite = preferences.IsFavorite(Session.Id);
+        IsFavorite = Preferences.IsFavorite(Session.Id);
         Speakers.Clear();
         foreach (var speaker in Session.Speakers)
             Speakers.Add(speaker);
@@ -51,7 +59,7 @@ public partial class SessionViewModel : ObservableObject,
         if (Session is null)
             return;
         IsFavorite = !IsFavorite;
-        preferences.SetFavorite(Session.Id, IsFavorite);
+        Preferences.SetFavorite(Session.Id, IsFavorite);
     }
 
     [RelayCommand]

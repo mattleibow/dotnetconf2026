@@ -2,19 +2,11 @@ using ConferenceApp.ViewModels;
 
 namespace ConferenceApp.Views;
 
-public partial class AgendaPage : ContentPage
+public partial class AgendaPage : BasePage
 {
-    private readonly AgendaViewModel viewModel;
-
     public AgendaPage(AgendaViewModel viewModel)
+        : base(viewModel)
     {
         InitializeComponent();
-        BindingContext = this.viewModel = viewModel;
-    }
-
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        viewModel.LoadCommand.Execute(null);
     }
 }

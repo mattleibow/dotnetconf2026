@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.SessionPage"
-             x:DataType="SessionViewModel"
-             Title="Session">
+<BasePage x:Class="ConferenceApp.Views.SessionPage"
+          x:DataType="SessionViewModel"
+          Title="Session">
     <ScrollView>
         <VerticalStackLayout Padding="10" Spacing="10">
             <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
@@ -23,4 +23,4 @@
             <Label Text="{Binding Description}" />
         </VerticalStackLayout>
     </ScrollView>
-</ContentPage>
+</BasePage>

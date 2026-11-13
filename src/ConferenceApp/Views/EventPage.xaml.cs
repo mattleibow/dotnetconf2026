@@ -5,22 +5,16 @@ using Microsoft.Maui.Maps;
 
 namespace ConferenceApp.Views;
 
-public partial class EventPage : ContentPage
+public partial class EventPage : BasePage
 {
     private readonly EventViewModel viewModel;
 
     public EventPage(EventViewModel viewModel)
+        : base(viewModel)
     {
         InitializeComponent();
-        BindingContext = this.viewModel = viewModel;
+        this.viewModel = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
-    }
-
-    protected override async void OnAppearing()
-    {
-        base.OnAppearing();
-        await viewModel.LoadCommand.ExecuteAsync(null);
-        UpdateMap();
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.SpeakersPage"
-             x:DataType="SpeakersViewModel"
-             Title="Speakers">
+<BasePage x:Class="ConferenceApp.Views.SpeakersPage"
+          x:DataType="SpeakersViewModel"
+          Title="Speakers">
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
                      Text="{Binding SelectedCity.Name, FallbackValue='City'}"
@@ -22,4 +22,4 @@
             </DataTemplate>
         </CollectionView.ItemTemplate>
     </CollectionView>
-</ContentPage>
+</BasePage>

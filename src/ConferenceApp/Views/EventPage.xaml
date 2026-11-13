@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.EventPage"
-             x:DataType="EventViewModel"
-             Title="Event">
+<BasePage x:Class="ConferenceApp.Views.EventPage"
+          x:DataType="EventViewModel"
+          Title="Event">
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
                      Text="{Binding SelectedCity.Name, FallbackValue='City'}"
@@ -39,4 +39,4 @@
             <Label Text="{Binding Description}" />
         </VerticalStackLayout>
     </ScrollView>
-</ContentPage>
+</BasePage>

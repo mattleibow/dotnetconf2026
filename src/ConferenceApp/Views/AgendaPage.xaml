@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage x:Class="ConferenceApp.Views.AgendaPage"
-             x:DataType="AgendaViewModel"
-             Title="Agenda">
+<BasePage x:Class="ConferenceApp.Views.AgendaPage"
+          x:DataType="AgendaViewModel"
+          Title="Agenda">
     <ContentPage.ToolbarItems>
         <ToolbarItem AutomationId="city-picker"
                      Text="{Binding SelectedCity.Name, FallbackValue='City'}"
@@ -37,4 +37,4 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
     </Grid>
-</ContentPage>
+</BasePage>
