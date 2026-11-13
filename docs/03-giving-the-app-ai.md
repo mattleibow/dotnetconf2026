@@ -147,36 +147,14 @@ Switch the city to **Durban**, type **`football forecasts`** and **`gradient des
 
 ## 3. Data Ingestion & Background Enrichment (`AI/Data/` — ~3 mins)
 
-Open [`src/ConferenceApp/AI/Data/DataExtensions.cs`](../src/ConferenceApp/AI/Data/DataExtensions.cs) and [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs).
+Open [`src/ConferenceApp/AI/Data/DataExtensions.cs`](../src/ConferenceApp/AI/Data/DataExtensions.cs), [`SessionSummaryEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionSummaryEnrichmentService.cs), and [`SessionTopicEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionTopicEnrichmentService.cs).
 
-Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers `EnricherOptions` (backed by the local `IChatClient`), `SummaryEnricher`, and `KeywordEnricher` (extracting up to 3 topics per talk with `confidenceThreshold: 0.75`):
+Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers shared `EnricherOptions` (backed by the local `IChatClient`) along with two independent background enrichment services that run in parallel via `Task.WhenAll` in `App.xaml.cs`:
 
-```csharp
-builder.Services.AddSingleton(services =>
-    new SummaryEnricher(services.GetRequiredService<EnricherOptions>(), maxWordCount: 24));
+- **[`SessionSummaryEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionSummaryEnrichmentService.cs)** uses `SummaryEnricher(enricherOptions, maxWordCount: 24)` to populate `session.Summary`.
+- **[`SessionTopicEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionTopicEnrichmentService.cs)** uses `KeywordEnricher(enricherOptions, predefinedKeywords: Topics, maxKeywords: 3, confidenceThreshold: 0.7)` across the 11 conference topics (`AI`, `Agents`, `Cloud`, `Data`, `Mobile`, `Web`, `IoT`, `Architecture`, `Security`, `DevOps`, `Gaming`) to populate `session.Topics`.
 
-builder.Services.AddSingleton(services =>
-    new KeywordEnricher(
-        services.GetRequiredService<EnricherOptions>(),
-        predefinedKeywords: Topics,
-        maxKeywords: 3,
-        confidenceThreshold: 0.75));
-```
-
-In the background, [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) enriches the active city's talks first, wraps each talk's `session.EmbeddingText` in an `IngestionChunk<string>`, pipes it through `summaryEnricher` and `keywordEnricher`, and sets `session.Summary` and `session.Topics` (an `IReadOnlyList<string>` of up to 3 topics, rendered as horizontal pills via `BindableLayout.ItemsSource="{Binding Topics}"`). Because `Session` inherits `ObservableObject` and `Summary` and `Topics` are `[ObservableProperty]`s, XAML bindings update each card in place automatically without rebuilding or resetting the `CollectionView`:
-
-```csharp
-await foreach (var enriched in keywordEnricher.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
-{
-    var summary = ReadSummary(enriched);
-    var topics = ReadTopics(enriched);
-
-    if (!string.IsNullOrWhiteSpace(summary))
-        session.Summary = summary;
-    if (topics.Count > 0)
-        session.Topics = topics;
-}
-```
+Because `Session` inherits `ObservableObject` and `Summary` and `Topics` (`IReadOnlyList<string>`) are `[ObservableProperty]`s, XAML bindings (`BindableLayout.ItemsSource="{Binding Topics}"`) update each card in place automatically without rebuilding or resetting the `CollectionView`.
 
 ---
 

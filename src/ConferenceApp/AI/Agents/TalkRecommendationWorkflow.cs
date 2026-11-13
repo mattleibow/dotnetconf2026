@@ -43,7 +43,8 @@ public static class TalkRecommendationWorkflow
                         If you have NOT yet asked the attendee to confirm their topics:
                         - If Saved Favourites is "None yet" and the attendee did not
                           name specific topics, ask what topics they are interested in
-                          (such as AI, Cloud, Data, Mobile, Web, or IoT).
+                          (such as AI, Agents, Cloud, Data, Mobile, Web, IoT,
+                          Architecture, Security, DevOps, or Gaming).
                         - If they have Saved Favourites or named topics, mention only
                           the general topic category (such as Mobile or AI—do NOT quote
                           full session titles) and ask if they want to focus on those

@@ -4,20 +4,18 @@ namespace ConferenceApp;
 
 public partial class App : Application
 {
-    public App(SessionIndexingService indexing, SessionEnrichmentService enrichment)
+    public App(
+        SessionIndexingService indexing,
+        SessionSummaryEnrichmentService summaryEnrichment,
+        SessionTopicEnrichmentService topicEnrichment)
     {
         InitializeComponent();
-        _ = InitializeAIAsync(indexing, enrichment);
+        
+        _ = indexing.StartAsync();
+        _ = summaryEnrichment.StartAsync();
+        _ = topicEnrichment.StartAsync();
     }
 
     protected override Window CreateWindow(IActivationState? activationState) =>
         new(new AppShell());
-
-    private static async Task InitializeAIAsync(
-        SessionIndexingService indexing,
-        SessionEnrichmentService enrichment)
-    {
-        await indexing.StartAsync();
-        await enrichment.StartAsync();
-    }
 }
