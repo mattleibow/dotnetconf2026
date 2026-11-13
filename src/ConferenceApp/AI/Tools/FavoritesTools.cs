@@ -48,11 +48,7 @@ public sealed class FavoritesTools(
     {
         var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
-        var match = db.Sessions.FirstOrDefault(s =>
-            s.CityId == city.Id && (
-                s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
-                s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
-                session.Contains(s.Title, StringComparison.OrdinalIgnoreCase)));
+        var match = db.FindSession(city.Id, session);
 
         if (match is null)
             return $"No session matching '{session}' in {city.Name}.";

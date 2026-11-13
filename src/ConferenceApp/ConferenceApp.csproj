@@ -67,6 +67,10 @@
 		<LinkerArgument Include="-lsqlite3" />
 	</ItemGroup>
 
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
 		<PackageReference Include="CommunityToolkit.VectorData.InMemory" />
@@ -76,7 +80,6 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Condition="'$(Configuration)' == 'Debug'" />
 		<PackageReference Include="Microsoft.Extensions.AI" />
-		<PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
 		<PackageReference Include="Microsoft.Maui.AI.Attributes" />
 		<PackageReference Include="Microsoft.Agents.AI" />
 		<PackageReference Include="Microsoft.Agents.AI.Workflows" />

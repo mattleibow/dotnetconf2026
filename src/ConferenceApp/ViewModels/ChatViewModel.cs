@@ -27,10 +27,8 @@ public partial class ChatViewModel(
     [ObservableProperty]
     public partial string? UnavailableReason { get; set; }
 
-    protected override async Task OnLoadAsync()
-    {
+    protected override async Task OnLoadAsync() =>
         UnavailableReason = await chat.GetUnavailableReasonAsync();
-    }
 
     [RelayCommand]
     private Task AskSuggestionAsync(string suggestion)
@@ -43,9 +41,11 @@ public partial class ChatViewModel(
     private Task PlanMyDayAsync()
     {
         var constraints = Prompt.Trim();
-        Prompt = string.IsNullOrEmpty(constraints) || ChatService.IsDayPlanRequest(constraints)
-            ? (string.IsNullOrEmpty(constraints) ? "Plan my day" : constraints)
-            : $"Plan my day: {constraints}";
+        Prompt = constraints.Length == 0
+            ? "Plan my day"
+            : ChatService.IsDayPlanRequest(constraints)
+                ? constraints
+                : $"Plan my day: {constraints}";
         return SendAsync();
     }
 
@@ -69,21 +69,23 @@ public partial class ChatViewModel(
         if (string.IsNullOrEmpty(text) || IsBusy)
             return;
 
-        UnavailableReason = await chat.GetUnavailableReasonAsync();
-        if (!string.IsNullOrEmpty(UnavailableReason))
-            return;
-
+        IsBusy = true;
         using var turn = new CancellationTokenSource();
         activeTurn = turn;
-        Prompt = "";
-        Messages.Add(new ChatItem(isUser: true, text));
-        var history = Messages.ToList();
-        var reply = new ChatItem(isUser: false);
-        Messages.Add(reply);
+        ChatItem? reply = null;
 
-        IsBusy = true;
         try
         {
+            UnavailableReason = await chat.GetUnavailableReasonAsync(turn.Token);
+            if (!string.IsNullOrEmpty(UnavailableReason))
+                return;
+
+            Prompt = "";
+            Messages.Add(new ChatItem(isUser: true, text));
+            var history = Messages.ToList();
+            reply = new ChatItem(isUser: false);
+            Messages.Add(reply);
+
             await foreach (var chunk in chat.SendAsync(history, reply, turn.Token))
                 reply.Text += chunk;
         }
@@ -92,12 +94,16 @@ public partial class ChatViewModel(
         }
         catch (Exception ex)
         {
-            reply.Progress = "";
-            reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
+            if (reply is not null)
+            {
+                reply.Progress = "";
+                reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
+            }
         }
         finally
         {
-            reply.Progress = "";
+            if (reply is not null)
+                reply.Progress = "";
             if (ReferenceEquals(activeTurn, turn))
             {
                 activeTurn = null;

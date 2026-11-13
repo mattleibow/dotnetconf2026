@@ -46,7 +46,7 @@ public class SearchService(
             logger.LogInformation("[AI Search] Query '{Query}' in {CityId} -> Top match: '{TopTitle}' ({Total} results)",
                 trimmed, cityId, results.FirstOrDefault()?.Title ?? "none", results.Count);
         }
-        catch (Exception exception) when (exception is InvalidOperationException or NotSupportedException or ArgumentException)
+        catch (Exception exception)
         {
             logger.LogError(exception, "[AI Search] On-device session search failed for city {CityId}.", cityId);
         }

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
+using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
 using ConferenceApp.Data;
@@ -76,7 +77,7 @@ public class ChatService(
         var isDebateFollowUp = history.LastOrDefault(m =>
             m.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(m.AuthorName))?.AuthorName == "Concierge";
         string? activeSpeaker = null;
-        var bufferedQuestions = new System.Text.StringBuilder();
+        var bufferedQuestions = new StringBuilder();
         var updates = new List<ChatResponseUpdate>();
 
         // Stream from the keyed "assistant" IChatClient (routes to ConferenceAssistant, SessionDeepDive, or TalkRecommendations).

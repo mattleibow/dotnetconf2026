@@ -7,13 +7,10 @@ namespace ConferenceApp.Views;
 
 public partial class EventPage : BasePage
 {
-    private readonly EventViewModel viewModel;
-
     public EventPage(EventViewModel viewModel)
         : base(viewModel)
     {
         InitializeComponent();
-        this.viewModel = viewModel;
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
@@ -25,7 +22,7 @@ public partial class EventPage : BasePage
 
     private void UpdateMap()
     {
-        if (viewModel.Venue is not { } venue)
+        if (((EventViewModel)ViewModel).Venue is not { } venue)
             return;
 
         var location = new Location(venue.Latitude, venue.Longitude);

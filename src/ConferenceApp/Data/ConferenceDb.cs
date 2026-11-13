@@ -30,6 +30,19 @@ public class ConferenceDb(
         return Cities.FirstOrDefault(c => c.Date >= today) ?? Cities[^1];
     }
 
+    public Session? FindSession(string cityId, string session)
+    {
+        var trimmed = session.Trim();
+        if (string.IsNullOrEmpty(trimmed))
+            return null;
+
+        return Sessions.FirstOrDefault(s =>
+            s.CityId == cityId && (
+                s.Id.Equals(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                s.Title.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                trimmed.Contains(s.Title, StringComparison.OrdinalIgnoreCase)));
+    }
+
     internal static async Task<ConferenceDb> LoadAsync()
     {
         await using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");

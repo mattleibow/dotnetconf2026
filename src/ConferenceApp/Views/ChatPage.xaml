@@ -19,7 +19,9 @@
                     IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                     Command="{Binding PlanMyDayCommand}" />
             <ScrollView Grid.Column="1" Orientation="Horizontal">
-                <HorizontalStackLayout Spacing="8" BindableLayout.ItemsSource="{Binding Suggestions}">
+                <HorizontalStackLayout Spacing="8"
+                                       IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                                       BindableLayout.ItemsSource="{Binding Suggestions}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
                             <Button Text="{Binding .}"
