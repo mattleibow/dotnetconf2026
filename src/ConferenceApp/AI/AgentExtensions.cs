@@ -17,16 +17,16 @@ public static class AgentExtensions
 
     private static IChatClient CreateAssistantRouter(IServiceProvider services)
     {
-        // Route 1 (Default): Generic assistant with the full day schedule in context + all tools.
+        // Default assistant with the full day schedule in context + all tools.
         var assistantClient = ConferenceAssistantAgent.Create(services)
             .AsIChatClient();
 
-        // Route 2 (Sequential + Concurrent Fan-Out): Researcher -> parallel [TakeawaysAgent, QuestionsCoachAgent].
+        // Sequential + concurrent fan-out: Researcher -> parallel [TakeawaysAgent, QuestionsCoachAgent].
         var deepDiveClient = SessionDeepDiveWorkflow.Create(services)
             .AsAIAgent(name: "SessionDeepDive")
             .AsIChatClient(allowNonChatClientAgents: true);
 
-        // Route 3 (Multi-Turn Group Chat): Concierge -> Timekeeper -> Depth/Breadth/Practical -> Moderator.
+        // Multi-turn group chat: Concierge -> Timekeeper -> Depth/Breadth/Practical -> Moderator.
         var recommendationClient = TalkRecommendationWorkflow.Create(services)
             .AsAIAgent(name: "TalkRecommendations")
             .AsIChatClient(allowNonChatClientAgents: true);

@@ -5,7 +5,7 @@ using Microsoft.Agents.AI;
 namespace ConferenceApp.AI;
 
 /// <summary>
-/// Context Provider 2: Injects the full day schedule of times, rooms, topics, and titles for the current city.
+/// Injects the full day schedule of times, rooms, topics, and titles for the current city.
 /// </summary>
 public sealed class ScheduleContextProvider(IServiceProvider services) : AIContextProvider
 {

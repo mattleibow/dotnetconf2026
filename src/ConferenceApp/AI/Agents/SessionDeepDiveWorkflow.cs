@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 namespace ConferenceApp.AI;
 
 /// <summary>
-/// Route 2 (Sequential -> Concurrent Fan-Out):
-/// Step 1 (SessionResearcher) gathers the session abstract and speaker bio via tools;
-/// Step 2 fans out concurrently to TakeawaysAgent (what to expect) and QuestionsCoachAgent (questions to ask).
+/// Sequential -> Concurrent fan-out workflow:
+/// SessionResearcher gathers the session abstract and speaker bio via tools, then
+/// TakeawaysAgent (what to expect) and QuestionsCoachAgent (questions to ask) run in parallel.
 /// </summary>
 public static class SessionDeepDiveWorkflow
 {

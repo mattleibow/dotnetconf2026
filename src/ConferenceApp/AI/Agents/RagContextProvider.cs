@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 namespace ConferenceApp.AI;
 
 /// <summary>
-/// Context Provider 3 (RAG): Finds the top matching sessions by semantic similarity and injects
+/// Finds the top matching sessions by semantic similarity and injects
 /// each session's ID, title, and 1-line summary.
 /// </summary>
 public static class RagContextProvider

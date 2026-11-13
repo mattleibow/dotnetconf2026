@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace ConferenceApp.AI;
 
 /// <summary>
-/// Route 1 (Default): Generic conference assistant for fast everyday actions
+/// Generic conference assistant for fast everyday actions
 /// (times, rooms, speaker bios, and managing favourites).
 /// </summary>
 public static class ConferenceAssistantAgent

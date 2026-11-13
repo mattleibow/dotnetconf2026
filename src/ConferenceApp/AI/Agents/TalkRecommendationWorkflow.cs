@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 namespace ConferenceApp.AI;
 
 /// <summary>
-/// Route 3 (Multi-Turn Group Chat):
-/// Turn 1: Concierge clarifies/confirms topics (using saved favourites as a starting point) & time window.
-/// Turn 2: Concierge -> Timekeeper (filters talks by time window via list_sessions) -> Depth -> Breadth -> Practical -> Moderator.
+/// Multi-turn group chat workflow:
+/// First turn: Concierge clarifies/confirms topics (using saved favourites as a starting point) &amp; time window.
+/// Follow-up turn: Concierge -> Timekeeper (filters talks by time window via list_sessions) -> Depth -> Breadth -> Practical -> Moderator.
 /// </summary>
 public static class TalkRecommendationWorkflow
 {
