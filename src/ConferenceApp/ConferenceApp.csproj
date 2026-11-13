@@ -68,22 +68,22 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-		<PackageReference Include="CommunityToolkit.VectorData.InMemory" Version="1.0.1" />
-		<PackageReference Include="Markdig.Signed" Version="0.43.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Controls.Maps" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
-		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.14.26555.2" Condition="'$(Configuration)' == 'Debug'" />
-		<PackageReference Include="Microsoft.Extensions.AI" Version="11.0.0" />
-		<PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="11.0.0" />
-		<PackageReference Include="Microsoft.Maui.AI.Attributes" Version="0.1.0-preview.14.26555.2" />
-		<PackageReference Include="Microsoft.Agents.AI" Version="1.28.0" />
-		<PackageReference Include="Microsoft.Agents.AI.Workflows" Version="1.28.0" />
-		<PackageReference Include="Microsoft.Extensions.DataIngestion" Version="11.0.0-preview.1.26560.3" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.31.1" />
-		<PackageReference Include="Microsoft.ML.Tokenizers" Version="2.0.1" />
-		<PackageReference Include="Microsoft.Maui.Essentials.AI" Version="11.0.0-preview.8.26555.2" />
+		<PackageReference Include="CommunityToolkit.Mvvm" />
+		<PackageReference Include="CommunityToolkit.VectorData.InMemory" />
+		<PackageReference Include="Markdig.Signed" />
+		<PackageReference Include="Microsoft.Maui.Controls" />
+		<PackageReference Include="Microsoft.Maui.Controls.Maps" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Condition="'$(Configuration)' == 'Debug'" />
+		<PackageReference Include="Microsoft.Extensions.AI" />
+		<PackageReference Include="Microsoft.Extensions.AI.Abstractions" />
+		<PackageReference Include="Microsoft.Maui.AI.Attributes" />
+		<PackageReference Include="Microsoft.Agents.AI" />
+		<PackageReference Include="Microsoft.Agents.AI.Workflows" />
+		<PackageReference Include="Microsoft.Extensions.DataIngestion" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntime" />
+		<PackageReference Include="Microsoft.ML.Tokenizers" />
+		<PackageReference Include="Microsoft.Maui.Essentials.AI" />
 	</ItemGroup>
 
 </Project>
