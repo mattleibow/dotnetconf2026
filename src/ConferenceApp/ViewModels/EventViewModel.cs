@@ -7,7 +7,8 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class EventViewModel : ObservableObject, IRecipient<CityChangedMessage>
+public partial class EventViewModel : ObservableObject,
+    IRecipient<CityChangedMessage>
 {
     private readonly ConferenceDbProvider dbProvider;
     private readonly UserPreferencesService preferences;

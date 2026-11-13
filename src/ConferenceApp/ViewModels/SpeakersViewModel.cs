@@ -7,12 +7,15 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class SpeakersViewModel : ObservableObject, IRecipient<CityChangedMessage>
+public partial class SpeakersViewModel : ObservableObject,
+    IRecipient<CityChangedMessage>
 {
     private readonly ConferenceDbProvider dbProvider;
     private readonly UserPreferencesService preferences;
 
-    public SpeakersViewModel(ConferenceDbProvider dbProvider, UserPreferencesService preferences)
+    public SpeakersViewModel(
+        ConferenceDbProvider dbProvider,
+        UserPreferencesService preferences)
     {
         this.dbProvider = dbProvider;
         this.preferences = preferences;

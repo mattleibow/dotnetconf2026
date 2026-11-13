@@ -135,7 +135,7 @@ public class ChatService(
                 }
 
                 // Label each multi-agent workflow participant as they take the floor.
-                if (update.AuthorName is "TakeawaysAgent" or "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Timekeeper" or "Moderator"
+                if (update.AuthorName is "TakeawaysAgent" or "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
                     && update.AuthorName != activeSpeaker)
                 {
                     var label = update.AuthorName == "TakeawaysAgent" ? "Key Takeaways" : update.AuthorName;

@@ -7,7 +7,8 @@ using ConferenceApp.Services;
 
 namespace ConferenceApp.ViewModels;
 
-public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMessage>
+public partial class ChatViewModel : ObservableObject,
+    IRecipient<CityChangedMessage>
 {
     private readonly ChatService chat;
     private readonly UserPreferencesService preferences;
