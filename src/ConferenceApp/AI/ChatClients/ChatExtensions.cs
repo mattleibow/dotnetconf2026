@@ -10,6 +10,7 @@ public static class ChatExtensions
     public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
     {
         builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
+        builder.Services.AddSingleton<SessionEnrichmentService>();
         builder.Services.AddSingleton<ChatService>();
         return builder;
     }

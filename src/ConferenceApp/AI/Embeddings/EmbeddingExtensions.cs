@@ -19,7 +19,6 @@ public static class EmbeddingExtensions
         builder.Services.AddInMemoryVectorStoreRecordCollection<string, Session>("sessions");
 
         builder.Services.AddSingleton<SessionIndexingService>();
-        builder.Services.AddSingleton<SessionEnrichmentService>();
         builder.Services.AddSingleton<SearchService>();
 
         return builder;

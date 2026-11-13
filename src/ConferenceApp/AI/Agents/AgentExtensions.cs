@@ -8,8 +8,6 @@ public static class AgentExtensions
 {
     public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
-        builder.Services.AddSingleton<ConferenceDataTools>();
-        builder.Services.AddSingleton<FavoritesTools>();
         builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;
