@@ -10,19 +10,17 @@ namespace ConferenceApp.AI;
 /// </summary>
 public sealed class UserContextProvider(IServiceProvider services) : AIContextProvider
 {
-    private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
+    private readonly ConferenceDbProvider dbProvider = services.GetRequiredService<ConferenceDbProvider>();
     private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
 
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var conference = await database.GetConferenceAsync();
-        var venue = conference.Venues.First(v => v.Id == city.VenueId);
-        var allCitySessions = await database.GetSessionsAsync(city.Id);
-        var favoriteTitles = allCitySessions
-            .Where(s => preferences.IsFavorite(s.Id))
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
+        var favoriteTitles = db.Sessions
+            .Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id))
             .Select(s =>
             {
                 var tag = !string.IsNullOrWhiteSpace(s.Topic) ? $" [{s.Topic}]" : "";
@@ -34,10 +32,10 @@ public sealed class UserContextProvider(IServiceProvider services) : AIContextPr
         {
             Instructions = $"""
                 CURRENT USER & EVENT CONTEXT
-                Event: {conference.Name}
+                Event: {db.Name}
                 Selected City: {city.Name} | Event Date: {city.Date:dddd, yyyy-MM-dd}
                 Current Conference Time: 08:30 (Morning before sessions start)
-                Venue: {venue.Name} ({venue.Address})
+                Venue: {city.Venue.Name} ({city.Venue.Address})
                 Saved Favourites: {(favoriteTitles.Length > 0 ? string.Join("; ", favoriteTitles) : "None yet")}
                 """
         };
@@ -49,23 +47,21 @@ public sealed class UserContextProvider(IServiceProvider services) : AIContextPr
 /// </summary>
 public sealed class ScheduleContextProvider(IServiceProvider services) : AIContextProvider
 {
-    private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
+    private readonly ConferenceDbProvider dbProvider = services.GetRequiredService<ConferenceDbProvider>();
     private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
 
     protected override async ValueTask<AIContext> ProvideAIContextAsync(
         InvokingContext context,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var conference = await database.GetConferenceAsync();
-        var sessions = await database.GetSessionsAsync(city.Id);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
+        var sessions = db.Sessions.Where(s => s.CityId == city.Id);
 
         var lines = sessions.Select(session =>
         {
-            var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
-                conference.Speakers.First(s => s.Id == id).Name));
             var tag = !string.IsNullOrWhiteSpace(session.Topic) ? $" [{session.Topic}]" : "";
-            var byline = !string.IsNullOrWhiteSpace(speakers) ? $" ({speakers})" : "";
+            var byline = !string.IsNullOrWhiteSpace(session.SpeakerNames) ? $" ({session.SpeakerNames})" : "";
             return $"- {session.Time} | {session.Track ?? "All attendees"}{tag} | {session.Title}{byline}";
         });
 
@@ -89,7 +85,6 @@ public static class RagContextProvider
 
     public static TextSearchProvider Create(IServiceProvider services)
     {
-        var database = services.GetRequiredService<ConferenceDatabase>();
         var preferences = services.GetRequiredService<UserPreferencesService>();
         var search = services.GetRequiredService<SearchService>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
@@ -102,7 +97,7 @@ public static class RagContextProvider
                 if (string.IsNullOrWhiteSpace(trimmed))
                     return [];
 
-                var city = await preferences.GetSelectedCityAsync(database);
+                var city = await preferences.GetSelectedCityAsync();
                 var matches = (await search.SearchSessionsAsync(city.Id, trimmed))
                     .Where(session => session.IsTalk)
                     .Take(TopRagSessions)

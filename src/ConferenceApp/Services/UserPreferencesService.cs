@@ -6,7 +6,7 @@ namespace ConferenceApp.Services;
 public record CityChangedMessage;
 public record FavoritesChangedMessage;
 
-public class UserPreferencesService
+public class UserPreferencesService(ConferenceDbProvider dbProvider)
 {
     private const string CityKey = "selected_city";
     private const string FavoritesKey = "favorites";
@@ -26,20 +26,21 @@ public class UserPreferencesService
         }
     }
 
-    public async Task<City> GetSelectedCityAsync(ConferenceDatabase database)
+    public async Task<City> GetSelectedCityAsync()
     {
-        var city = await database.GetCityAsync(SelectedCityId);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = db.GetCity(SelectedCityId);
         if (SelectedCityId != city.Id)
             Preferences.Set(CityKey, city.Id);
         return city;
     }
 
-    public async Task<City?> PickCityAsync(ConferenceDatabase database)
+    public async Task<City?> PickCityAsync()
     {
-        var cities = await database.GetCitiesAsync();
-        var names = cities.Select(c => c.Name).ToArray();
+        var db = await dbProvider.GetDatabaseAsync();
+        var names = db.Cities.Select(c => c.Name).ToArray();
         var choice = await Shell.Current.DisplayActionSheetAsync("Select City", "Cancel", null, names);
-        if (cities.FirstOrDefault(c => c.Name == choice) is { } city)
+        if (db.Cities.FirstOrDefault(c => c.Name == choice) is { } city)
         {
             SelectedCityId = city.Id;
             return city;

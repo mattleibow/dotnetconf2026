@@ -19,7 +19,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
-		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001</NoWarn>
+		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001;IL2026;IL3050</NoWarn>
 
 
 

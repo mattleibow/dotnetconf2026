@@ -13,19 +13,16 @@ public partial class AgendaViewModel : ObservableObject,
     IRecipient<FavoritesChangedMessage>,
     IRecipient<SessionsEnrichedMessage>
 {
-    private readonly ConferenceDatabase database;
     private readonly UserPreferencesService preferences;
     private readonly SearchService search;
     private readonly IDispatcher dispatcher;
     private int loadVersion;
 
     public AgendaViewModel(
-        ConferenceDatabase database,
         UserPreferencesService preferences,
         SearchService search,
         IDispatcher dispatcher)
     {
-        this.database = database;
         this.preferences = preferences;
         this.search = search;
         this.dispatcher = dispatcher;
@@ -64,7 +61,7 @@ public partial class AgendaViewModel : ObservableObject,
         var version = Interlocked.Increment(ref loadVersion);
         var query = SearchQuery;
         var favoritesOnly = ShowFavoritesOnly;
-        var city = await preferences.GetSelectedCityAsync(database);
+        var city = await preferences.GetSelectedCityAsync();
         var favoriteIds = preferences.GetFavoriteIds();
         var matching = await search.SearchSessionsAsync(city.Id, query);
         if (version != Volatile.Read(ref loadVersion))
@@ -75,11 +72,7 @@ public partial class AgendaViewModel : ObservableObject,
         {
             if (favoritesOnly && !favoriteIds.Contains(session.Id))
                 continue;
-            var speakers = await database.GetSpeakersForSessionAsync(session);
-            items.Add(new SessionItem(
-                session,
-                string.Join(", ", speakers.Select(s => s.Name)),
-                favoriteIds.Contains(session.Id)));
+            items.Add(new SessionItem(session, favoriteIds.Contains(session.Id)));
         }
         if (version != Volatile.Read(ref loadVersion))
             return;
@@ -96,7 +89,7 @@ public partial class AgendaViewModel : ObservableObject,
 
     [RelayCommand]
     private Task PickCityAsync() =>
-        preferences.PickCityAsync(database);
+        preferences.PickCityAsync();
 
     [RelayCommand]
     private Task OpenSessionAsync(SessionItem item) =>

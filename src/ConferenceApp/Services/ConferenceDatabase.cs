@@ -3,73 +3,86 @@ using ConferenceApp.Models;
 
 namespace ConferenceApp.Services;
 
-public class ConferenceDatabase
+/// <summary>
+/// Provides on-demand initialization of the in-memory ConferenceDatabase,
+/// loading conference.json, caching all Markdown descriptions, and linking navigation properties.
+/// </summary>
+public class ConferenceDbProvider
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
-    private Conference? conference;
+    private readonly Lazy<Task<ConferenceDatabase>> database = new(LoadDatabaseAsync);
 
-    public async Task<Conference> GetConferenceAsync()
+    public Task<ConferenceDatabase> GetDatabaseAsync() => database.Value;
+
+    private static async Task<ConferenceDatabase> LoadDatabaseAsync()
     {
-        if (conference is null)
+        await using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
+        var conference = await JsonSerializer.DeserializeAsync<Conference>(stream, JsonOptions)
+            ?? throw new InvalidOperationException("The conference data is empty.");
+
+        var citiesById = conference.Cities.ToDictionary(c => c.Id);
+        var speakersById = conference.Speakers.ToDictionary(s => s.Id);
+        var venuesById = conference.Venues.ToDictionary(v => v.Id);
+
+        foreach (var city in conference.Cities)
+            city.Venue = venuesById[city.VenueId];
+
+        foreach (var venue in conference.Venues)
+            venue.Description = await ReadMarkdownBodyAsync(venue.Content);
+
+        foreach (var speaker in conference.Speakers)
+            speaker.Bio = await ReadMarkdownBodyAsync(speaker.Content);
+
+        foreach (var session in conference.Sessions)
         {
-            using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
-            conference = await JsonSerializer.DeserializeAsync<Conference>(stream, JsonOptions)
-                ?? throw new InvalidOperationException("The conference data is empty.");
+            session.City = citiesById[session.CityId];
+            session.Speakers = [.. session.SpeakerIds.Select(id => speakersById[id])];
+            session.Description = await ReadMarkdownBodyAsync(session.Content);
         }
-        return conference;
+
+        return new ConferenceDatabase(
+            conference.Name,
+            conference.TimeZone,
+            [.. conference.Cities.OrderBy(c => c.Date)],
+            [.. conference.Sessions.OrderBy(s => s.Start)],
+            [.. conference.Speakers.OrderBy(s => s.Name)],
+            conference.Venues,
+            conference.Sponsors);
     }
 
-    public async Task<IReadOnlyList<City>> GetCitiesAsync() =>
-        (await GetConferenceAsync()).Cities;
-
-    public async Task<City> GetCityAsync(string? cityId = null)
+    // Session, speaker and venue Markdown files start with a "# Title" heading line.
+    private static async Task<string> ReadMarkdownBodyAsync(string path)
     {
-        var cities = await GetCitiesAsync();
-        if (!string.IsNullOrEmpty(cityId) && cities.FirstOrDefault(c => c.Id == cityId) is { } match)
-            return match;
-
-        var today = DateOnly.FromDateTime(DateTime.Now);
-        return cities.OrderBy(c => c.Date).FirstOrDefault(c => c.Date >= today)
-            ?? cities.OrderBy(c => c.Date).Last();
-    }
-
-    public async Task<IReadOnlyList<Session>> GetSessionsAsync(string cityId) =>
-        [.. (await GetConferenceAsync()).Sessions.Where(s => s.CityId == cityId).OrderBy(s => s.Start)];
-
-    public async Task<Session?> GetSessionAsync(string id) =>
-        (await GetConferenceAsync()).Sessions.FirstOrDefault(s => s.Id == id);
-
-    public async Task<IReadOnlyList<Speaker>> GetSpeakersAsync(string cityId) =>
-        [.. (await GetConferenceAsync()).Speakers.Where(s => s.CityIds.Contains(cityId)).OrderBy(s => s.Name)];
-
-    public async Task<Speaker?> GetSpeakerAsync(string id) =>
-        (await GetConferenceAsync()).Speakers.FirstOrDefault(s => s.Id == id);
-
-    public async Task<IReadOnlyList<Speaker>> GetSpeakersForSessionAsync(Session session)
-    {
-        var speakers = (await GetConferenceAsync()).Speakers;
-        return [.. session.SpeakerIds.Select(id => speakers.First(s => s.Id == id))];
-    }
-
-    public async Task<IReadOnlyList<Session>> GetSessionsForSpeakerAsync(string cityId, string speakerId) =>
-        [.. (await GetSessionsAsync(cityId)).Where(s => s.SpeakerIds.Contains(speakerId))];
-
-    public async Task<Venue> GetVenueAsync(string cityId)
-    {
-        var data = await GetConferenceAsync();
-        var city = await GetCityAsync(cityId);
-        return data.Venues.First(v => v.Id == city.VenueId);
-    }
-
-    public async Task<IReadOnlyList<Sponsor>> GetSponsorsAsync(string cityId) =>
-        [.. (await GetConferenceAsync()).Sponsors.Where(s => s.CityIds.Contains(cityId))];
-
-    // Session, speaker and venue descriptions are Markdown files that start with a "# Title" line.
-    public async Task<string> GetTextAsync(string path)
-    {
-        using var stream = await FileSystem.OpenAppPackageFileAsync($"conference/{path}");
+        await using var stream = await FileSystem.OpenAppPackageFileAsync($"conference/{path}");
         using var reader = new StreamReader(stream);
         var lines = (await reader.ReadToEndAsync()).Split('\n');
         return string.Join('\n', lines.SkipWhile(l => l.StartsWith("# ") || l.Trim().Length == 0)).Trim();
+    }
+}
+
+public class ConferenceDatabase(
+    string name,
+    string timeZone,
+    IReadOnlyList<City> cities,
+    IReadOnlyList<Session> sessions,
+    IReadOnlyList<Speaker> speakers,
+    IReadOnlyList<Venue> venues,
+    IReadOnlyList<Sponsor> sponsors)
+{
+    public string Name { get; } = name;
+    public string TimeZone { get; } = timeZone;
+    public IReadOnlyList<City> Cities { get; } = cities;
+    public IReadOnlyList<Session> Sessions { get; } = sessions;
+    public IReadOnlyList<Speaker> Speakers { get; } = speakers;
+    public IReadOnlyList<Venue> Venues { get; } = venues;
+    public IReadOnlyList<Sponsor> Sponsors { get; } = sponsors;
+
+    public City GetCity(string? cityId = null)
+    {
+        if (!string.IsNullOrEmpty(cityId) && Cities.FirstOrDefault(c => c.Id == cityId) is { } match)
+            return match;
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        return Cities.FirstOrDefault(c => c.Date >= today) ?? Cities[^1];
     }
 }

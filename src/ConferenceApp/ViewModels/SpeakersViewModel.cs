@@ -9,12 +9,12 @@ namespace ConferenceApp.ViewModels;
 
 public partial class SpeakersViewModel : ObservableObject, IRecipient<CityChangedMessage>
 {
-    private readonly ConferenceDatabase database;
+    private readonly ConferenceDbProvider dbProvider;
     private readonly UserPreferencesService preferences;
 
-    public SpeakersViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    public SpeakersViewModel(ConferenceDbProvider dbProvider, UserPreferencesService preferences)
     {
-        this.database = database;
+        this.dbProvider = dbProvider;
         this.preferences = preferences;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
@@ -30,16 +30,17 @@ public partial class SpeakersViewModel : ObservableObject, IRecipient<CityChange
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var city = await preferences.GetSelectedCityAsync(database);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         SelectedCity = city;
         Speakers.Clear();
-        foreach (var speaker in await database.GetSpeakersAsync(city.Id))
+        foreach (var speaker in db.Speakers.Where(s => s.CityIds.Contains(city.Id)))
             Speakers.Add(speaker);
     }
 
     [RelayCommand]
     private Task PickCityAsync() =>
-        preferences.PickCityAsync(database);
+        preferences.PickCityAsync();
 
     [RelayCommand]
     private Task OpenSpeakerAsync(Speaker speaker) =>

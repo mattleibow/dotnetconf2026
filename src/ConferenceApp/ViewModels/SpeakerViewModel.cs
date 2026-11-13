@@ -13,16 +13,16 @@ public partial class SpeakerViewModel : ObservableObject,
     IRecipient<CityChangedMessage>,
     IRecipient<SessionsEnrichedMessage>
 {
-    private readonly ConferenceDatabase database;
+    private readonly ConferenceDbProvider dbProvider;
     private readonly UserPreferencesService preferences;
     private readonly IDispatcher dispatcher;
 
     public SpeakerViewModel(
-        ConferenceDatabase database,
+        ConferenceDbProvider dbProvider,
         UserPreferencesService preferences,
         IDispatcher dispatcher)
     {
-        this.database = database;
+        this.dbProvider = dbProvider;
         this.preferences = preferences;
         this.dispatcher = dispatcher;
         WeakReferenceMessenger.Default.RegisterAll(this);
@@ -44,10 +44,12 @@ public partial class SpeakerViewModel : ObservableObject,
 
     public async void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        Speaker = await database.GetSpeakerAsync((string)query["id"]);
+        var db = await dbProvider.GetDatabaseAsync();
+        var id = (string)query["id"];
+        Speaker = db.Speakers.FirstOrDefault(s => s.Id == id);
         if (Speaker is null)
             return;
-        Bio = await database.GetTextAsync(Speaker.Content);
+        Bio = Speaker.Bio ?? "";
         await LoadSessionsAsync();
     }
 
@@ -55,14 +57,14 @@ public partial class SpeakerViewModel : ObservableObject,
     {
         if (Speaker is null)
             return;
-        var city = await preferences.GetSelectedCityAsync(database);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         var favoriteIds = preferences.GetFavoriteIds();
         Sessions.Clear();
-        foreach (var session in await database.GetSessionsForSpeakerAsync(city.Id, Speaker.Id))
+        foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))
         {
             Sessions.Add(new SessionItem(
                 session,
-                Speaker.Name,
                 favoriteIds.Contains(session.Id),
                 city.Name));
         }

@@ -9,12 +9,12 @@ namespace ConferenceApp.ViewModels;
 
 public partial class EventViewModel : ObservableObject, IRecipient<CityChangedMessage>
 {
-    private readonly ConferenceDatabase database;
+    private readonly ConferenceDbProvider dbProvider;
     private readonly UserPreferencesService preferences;
 
-    public EventViewModel(ConferenceDatabase database, UserPreferencesService preferences)
+    public EventViewModel(ConferenceDbProvider dbProvider, UserPreferencesService preferences)
     {
-        this.database = database;
+        this.dbProvider = dbProvider;
         this.preferences = preferences;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
@@ -36,17 +36,18 @@ public partial class EventViewModel : ObservableObject, IRecipient<CityChangedMe
     [RelayCommand]
     private async Task LoadAsync()
     {
-        var city = await preferences.GetSelectedCityAsync(database);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         SelectedCity = city;
-        Venue = await database.GetVenueAsync(city.Id);
-        Description = await database.GetTextAsync(Venue.Content);
+        Venue = city.Venue;
+        Description = city.Venue.Description ?? "";
         Sponsors.Clear();
-        foreach (var sponsor in await database.GetSponsorsAsync(city.Id))
+        foreach (var sponsor in db.Sponsors.Where(s => s.CityIds.Contains(city.Id)))
             Sponsors.Add(sponsor);
     }
 
     [RelayCommand]
-    private Task PickCityAsync() => preferences.PickCityAsync(database);
+    private Task PickCityAsync() => preferences.PickCityAsync();
 
     [RelayCommand]
     private Task OpenMapAsync() =>

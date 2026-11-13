@@ -14,7 +14,7 @@ public partial class ConferenceDataToolContext : AIToolContext;
 /// Read-only tools for searching and reading sessions, schedules, and speaker biographies.
 /// </summary>
 public sealed class ConferenceDataTools(
-    ConferenceDatabase database,
+    ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
     ILogger<ConferenceDataTools> logger)
 {
@@ -25,11 +25,11 @@ public sealed class ConferenceDataTools(
         [FromServices] SearchService search,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
+        var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] search_sessions(query: '{Query}') in {CityId}", query, city.Id);
 
         var sessions = await search.SearchSessionsAsync(city.Id, query);
-        return await FormatSessionsAsync(city, sessions.Take(5));
+        return FormatSessions(city, sessions.Take(5));
     }
 
     [ExportAIFunction("get_session")]
@@ -38,21 +38,21 @@ public sealed class ConferenceDataTools(
         [Description("Session ID or title.")] string session,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var sessions = await database.GetSessionsAsync(city.Id);
-        var match = sessions.FirstOrDefault(s =>
-            s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
-            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
-            session.Contains(s.Title, StringComparison.OrdinalIgnoreCase));
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
+        var match = db.Sessions.FirstOrDefault(s =>
+            s.CityId == city.Id && (
+                s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
+                s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
+                session.Contains(s.Title, StringComparison.OrdinalIgnoreCase)));
 
         if (match is null)
             return $"No session matching '{session}' in {city.Name}.";
 
         logger.LogInformation("[AI Tool] get_session('{SessionId}')", match.Id);
 
-        var summary = await FormatSessionsAsync(city, [match]);
-        var abstractText = await database.GetTextAsync(match.Content);
-        return $"{summary}\nAbstract: {abstractText}";
+        var summary = FormatSessions(city, [match]);
+        return $"{summary}\nAbstract: {match.Description}";
     }
 
     [ExportAIFunction("get_speaker")]
@@ -61,14 +61,15 @@ public sealed class ConferenceDataTools(
         [Description("Speaker ID or name.")] string speaker,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var speakers = await database.GetSpeakersAsync(city.Id);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         var queries = speaker.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        var matches = speakers.Where(s => queries.Any(q =>
-            s.Id.Equals(q, StringComparison.OrdinalIgnoreCase) ||
-            s.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
-            q.Contains(s.Name, StringComparison.OrdinalIgnoreCase)))
+        var matches = db.Speakers
+            .Where(s => s.CityIds.Contains(city.Id) && queries.Any(q =>
+                s.Id.Equals(q, StringComparison.OrdinalIgnoreCase) ||
+                s.Name.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                q.Contains(s.Name, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
 
         if (matches.Length == 0)
@@ -78,8 +79,7 @@ public sealed class ConferenceDataTools(
         foreach (var match in matches)
         {
             logger.LogInformation("[AI Tool] get_speaker('{SpeakerId}')", match.Id);
-            var bio = await database.GetTextAsync(match.Content);
-            results.Add($"Name: {match.Name} | {match.Tagline}\nBiography: {bio}");
+            results.Add($"Name: {match.Name} | {match.Tagline}\nBiography: {match.Bio}");
         }
 
         return string.Join("\n\n", results);
@@ -92,33 +92,31 @@ public sealed class ConferenceDataTools(
         [Description("End time in 24-hour HH:mm format (e.g. 12:00).")] TimeOnly end,
         CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] list_sessions(start: {Start}, end: {End}) in {CityId}", start, end, city.Id);
 
-        var sessions = await database.GetSessionsAsync(city.Id);
-        var matching = sessions.Where(s =>
+        var matching = db.Sessions.Where(s =>
+            s.CityId == city.Id &&
             s.IsTalk &&
             TimeOnly.FromDateTime(s.Start.DateTime) >= start &&
             TimeOnly.FromDateTime(s.Start.DateTime) < end);
 
-        return await FormatSessionsAsync(city, matching);
+        return FormatSessions(city, matching);
     }
 
-    internal async Task<string> FormatSessionsAsync(City city, IEnumerable<Session> sessions)
+    internal static string FormatSessions(City city, IEnumerable<Session> sessions)
     {
         var matches = sessions.ToArray();
         if (matches.Length == 0)
             return $"No matching sessions in {city.Name}.";
 
-        var conference = await database.GetConferenceAsync();
         var lines = matches.Select(session =>
         {
-            var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
-                conference.Speakers.First(s => s.Id == id).Name));
             var topic = !string.IsNullOrWhiteSpace(session.Topic) ? $" [{session.Topic}]" : "";
             var summary = !string.IsNullOrWhiteSpace(session.Summary) ? $" — {session.Summary}" : "";
 
-            return $"{session.Time} | {session.Track ?? "All attendees"}{topic} | {session.Title} | {speakers}{summary}";
+            return $"{session.Time} | {session.Track ?? "All attendees"}{topic} | {session.Title} | {session.SpeakerNames}{summary}";
         });
 
         return string.Join('\n', lines);

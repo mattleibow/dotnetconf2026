@@ -13,21 +13,20 @@ public partial class FavoritesToolContext : AIToolContext;
 /// Tools for reading and updating the user's saved favourite sessions.
 /// </summary>
 public sealed class FavoritesTools(
-    ConferenceDatabase database,
+    ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
     ILogger<FavoritesTools> logger)
 {
     [ExportAIFunction("get_favorites")]
     [Description("List the user's saved favourite sessions in the current city.")]
-    public async Task<string> GetFavoritesAsync(
-        [FromServices] ConferenceDataTools dataTools,
-        CancellationToken cancellationToken = default)
+    public async Task<string> GetFavoritesAsync(CancellationToken cancellationToken = default)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] get_favorites() in {CityId}", city.Id);
 
-        var sessions = await database.GetSessionsAsync(city.Id);
-        return await dataTools.FormatSessionsAsync(city, sessions.Where(s => preferences.IsFavorite(s.Id)));
+        var favorites = db.Sessions.Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id));
+        return ConferenceDataTools.FormatSessions(city, favorites);
     }
 
     [ExportAIFunction("add_favorite")]
@@ -46,12 +45,13 @@ public sealed class FavoritesTools(
 
     private async Task<string> ChangeFavoriteAsync(string session, bool add)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var sessions = await database.GetSessionsAsync(city.Id);
-        var match = sessions.FirstOrDefault(s =>
-            s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
-            s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
-            session.Contains(s.Title, StringComparison.OrdinalIgnoreCase));
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
+        var match = db.Sessions.FirstOrDefault(s =>
+            s.CityId == city.Id && (
+                s.Id.Equals(session, StringComparison.OrdinalIgnoreCase) ||
+                s.Title.Contains(session, StringComparison.OrdinalIgnoreCase) ||
+                session.Contains(s.Title, StringComparison.OrdinalIgnoreCase)));
 
         if (match is null)
             return $"No session matching '{session}' in {city.Name}.";

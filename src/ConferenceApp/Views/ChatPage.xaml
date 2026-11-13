@@ -52,14 +52,13 @@
 
                         <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Sessions}">
                             <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="ChatSessionCard">
+                                <DataTemplate x:DataType="Session">
                                     <VerticalStackLayout Padding="8"
                                                          Background="Transparent"
-                                                         AutomationId="{$'chat-session-card-{Session.Id}'}">
-                                        <Label Text="{Binding Metadata}" />
-                                        <Label Text="{Binding Session.Title}" FontAttributes="Bold" />
-                                        <Label Text="{Binding Speakers}" />
-                                        <Label Text="{Binding Reason}" IsVisible="{!string.IsNullOrWhiteSpace(Reason)}" />
+                                                         AutomationId="{$'chat-session-card-{Id}'}">
+                                        <Label Text="{Binding CityMeta}" />
+                                        <Label Text="{Binding Title}" FontAttributes="Bold" />
+                                        <Label Text="{Binding SpeakerNames}" />
                                         <VerticalStackLayout.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                                                                   CommandParameter="{Binding .}" />

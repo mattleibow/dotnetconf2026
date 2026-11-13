@@ -2,7 +2,6 @@ namespace ConferenceApp.Models;
 
 public record SessionItem(
     Session Session,
-    string Speakers,
     bool IsFavorite,
     string? CityName = null)
 {
@@ -14,6 +13,7 @@ public record SessionItem(
         _ => Session.Time
     };
 
+    public string Speakers => Session.SpeakerNames;
     public string? Summary => Session.Summary;
     public string? Topic => Session.Topic;
 }

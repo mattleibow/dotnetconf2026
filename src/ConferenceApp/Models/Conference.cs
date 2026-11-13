@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.VectorData;
+
 namespace ConferenceApp.Models;
 
 public record Conference(
@@ -13,23 +16,55 @@ public record City(
     string Id,
     string Name,
     DateOnly Date,
-    string VenueId);
-
-public record Session(
-    string Id,
-    string Title,
-    string CityId,
-    DateTimeOffset Start,
-    DateTimeOffset End,
-    string? Track,
-    List<string> SpeakerIds,
-    string Kind,
-    string Content)
+    string VenueId)
 {
-    public bool IsTalk => Kind == "session";
-    public string Time => $"{Start:HH:mm} – {End:HH:mm}";
+    [JsonIgnore]
+    public Venue Venue { get; set; } = null!;
+}
+
+public class Session
+{
+    [VectorStoreKey]
+    public string Id { get; set; } = "";
+
+    [VectorStoreData]
+    public string Title { get; set; } = "";
+
+    [VectorStoreData(IsIndexed = true)]
+    public string CityId { get; set; } = "";
+
+    public DateTimeOffset Start { get; set; }
+    public DateTimeOffset End { get; set; }
+    public string? Track { get; set; }
+    public List<string> SpeakerIds { get; set; } = [];
+    public string Kind { get; set; } = "";
+    public string Content { get; set; } = "";
+
+    public string? Description { get; set; }
     public string? Summary { get; set; }
     public string? Topic { get; set; }
+
+    [JsonIgnore]
+    public City City { get; set; } = null!;
+
+    [JsonIgnore]
+    public IReadOnlyList<Speaker> Speakers { get; set; } = [];
+
+    [JsonIgnore]
+    public bool IsTalk => Kind == "session";
+
+    [JsonIgnore]
+    public string Time => $"{Start:HH:mm} – {End:HH:mm}";
+
+    [JsonIgnore]
+    public string SpeakerNames => string.Join(", ", Speakers.Select(s => s.Name));
+
+    [JsonIgnore]
+    public string CityMeta => $"{City?.Name} · {Time} · {Track ?? "All attendees"}";
+
+    [JsonIgnore]
+    [VectorStoreVector(384, DistanceFunction = DistanceFunction.CosineSimilarity)]
+    public string EmbeddingText => $"{Title}\n\n{Description}";
 }
 
 public record Speaker(
@@ -40,6 +75,9 @@ public record Speaker(
     string Content,
     string? Image)
 {
+    public string? Bio { get; set; }
+
+    [JsonIgnore]
     public string Initials => string.Concat(
         Name.Split(' ', StringSplitOptions.RemoveEmptyEntries)
             .Take(2)
@@ -55,7 +93,10 @@ public record Venue(
     double Longitude,
     string MapUrl,
     string Content,
-    string? Image);
+    string? Image)
+{
+    public string? Description { get; set; }
+}
 
 public record Sponsor(
     string Id,

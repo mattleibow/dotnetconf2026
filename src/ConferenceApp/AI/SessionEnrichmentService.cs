@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.Messaging;
-using CommunityToolkit.VectorData.InMemory;
 using ConferenceApp.Models;
 using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
@@ -15,23 +14,20 @@ namespace ConferenceApp.AI;
 public record SessionsEnrichedMessage;
 
 public sealed class SessionEnrichmentService(
-    ConferenceDatabase database,
+    ConferenceDbProvider dbProvider,
+    VectorStoreCollection<string, Session> sessionVectors,
     ILoggerFactory loggerFactory,
     ILogger<SessionEnrichmentService> logger,
-    IChatClient? client = null,
-    IEmbeddingGenerator<string, Embedding<float>>? embeddingGenerator = null) : IDisposable
+    IChatClient? client = null)
 {
     private static readonly string[] Topics = ["AI", "Mobile", "Web", "Cloud", "Data", "IoT"];
-    private const int VectorDimensions = 384;
 
-    private readonly TaskCompletionSource<VectorStoreCollection<object, Dictionary<string, object?>>?> searchReady =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private VectorStoreWriter<string>? vectorWriter;
+    private readonly TaskCompletionSource searchReady = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Task? processing;
 
     public Task StartAsync() => processing ??= Task.Run(EnrichAsync);
 
-    public Task<VectorStoreCollection<object, Dictionary<string, object?>>?> GetSearchCollectionAsync()
+    public Task WaitForVectorIndexAsync()
     {
         _ = StartAsync();
         return searchReady.Task;
@@ -43,37 +39,18 @@ public sealed class SessionEnrichmentService(
 
         try
         {
-            var sessions = (await database.GetConferenceAsync()).Sessions.Where(s => s.IsTalk).ToList();
-            var chunks = new Dictionary<string, IngestionChunk<string>>();
+            var db = await dbProvider.GetDatabaseAsync();
+            var sessions = db.Sessions.Where(s => s.IsTalk).ToList();
 
-            // 1. Read session Markdown streams with MarkdownReader and index them into InMemoryVectorStore.
-            if (embeddingGenerator is not null)
-            {
-                var store = new InMemoryVectorStore(new() { EmbeddingGenerator = embeddingGenerator });
-                vectorWriter = new(store, VectorDimensions, new()
-                {
-                    CollectionName = "sessions",
-                    DistanceFunction = DistanceFunction.CosineSimilarity
-                });
+            // 1. Index the Session models into the VectorStoreCollection (automatically embeds Session.EmbeddingText).
+            await sessionVectors.EnsureCollectionExistsAsync();
+            foreach (var session in sessions)
+                await sessionVectors.UpsertAsync(session);
 
-                foreach (var session in sessions)
-                {
-                    var chunk = await ReadChunkAsync(session);
-                    chunk.Metadata["cityid"] = session.CityId;
-                    await vectorWriter.WriteAsync(SingleChunk(chunk));
-                    chunks.Add(session.Id, chunk);
-                }
+            logger.LogInformation("[AI] Indexed {Count} session abstracts into VectorStoreCollection<string, Session>.", sessions.Count);
+            searchReady.TrySetResult();
 
-                logger.LogInformation("[AI] Indexed {Count} session abstracts with {Dimensions}-dimensional embeddings via DataIngestion VectorStoreWriter.",
-                    chunks.Count, VectorDimensions);
-                searchReady.TrySetResult(vectorWriter.VectorStoreCollection);
-            }
-            else
-            {
-                searchReady.TrySetResult(null);
-            }
-
-            // 2. Seed and load cached summaries and topics onto the ConferenceDatabase Session models.
+            // 2. Seed and load cached summaries and topics onto the in-memory Session models.
             if (!File.Exists(cachePath))
             {
                 await using var packaged = await FileSystem.OpenAppPackageFileAsync("session-enrichment.json");
@@ -101,8 +78,8 @@ public sealed class SessionEnrichmentService(
                 WeakReferenceMessenger.Default.Send(new SessionsEnrichedMessage());
             }
 
-            // 3. Enrich any new/uncached talks in the background using SummaryEnricher + ClassificationEnricher.
-            var remaining = sessions.Where(s => string.IsNullOrWhiteSpace(s.Summary)).ToList();
+            // 3. Enrich any new/uncached talks in the background using MarkdownReader + SummaryEnricher + ClassificationEnricher.
+            var remaining = sessions.Where(s => !cached.ContainsKey(s.Id)).ToList();
             if (remaining.Count == 0 || client is null)
                 return;
 
@@ -122,7 +99,7 @@ public sealed class SessionEnrichmentService(
             foreach (var session in remaining)
             {
                 logger.LogInformation("[AI] Enriching session {SessionId} with SummaryEnricher + ClassificationEnricher...", session.Id);
-                var chunk = chunks.TryGetValue(session.Id, out var indexed) ? indexed : await ReadChunkAsync(session);
+                var chunk = await ReadChunkAsync(session);
 
                 await foreach (var enriched in classifier.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
                 {
@@ -149,7 +126,7 @@ public sealed class SessionEnrichmentService(
         }
         finally
         {
-            searchReady.TrySetResult(null);
+            searchReady.TrySetResult();
         }
     }
 
@@ -164,12 +141,6 @@ public sealed class SessionEnrichmentService(
         var document = await new MarkdownReader().ReadAsync(stream, session.Id, "text/markdown");
         var text = string.Join("\n\n", document.EnumerateContent().Select(element => element.GetMarkdown()));
         return new(text, document);
-    }
-
-    public void Dispose()
-    {
-        vectorWriter?.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     private static async IAsyncEnumerable<IngestionChunk<string>> SingleChunk(IngestionChunk<string> chunk)

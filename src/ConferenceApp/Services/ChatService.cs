@@ -10,7 +10,7 @@ using Microsoft.Maui.Essentials.AI;
 namespace ConferenceApp.Services;
 
 public class ChatService(
-    ConferenceDatabase database,
+    ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
     [FromKeyedServices("assistant")] IChatClient chatClient,
     ILogger<ChatService> logger)
@@ -161,26 +161,21 @@ public class ChatService(
     // Attaches tappable session cards under the assistant reply for any talk mentioned in the response.
     private async Task AddReferencedSessionsAsync(ChatItem reply)
     {
-        var city = await preferences.GetSelectedCityAsync(database);
-        var conference = await database.GetConferenceAsync();
-        var sessions = await database.GetSessionsAsync(city.Id);
+        var db = await dbProvider.GetDatabaseAsync();
+        var city = await preferences.GetSelectedCityAsync();
 
-        var referenced = sessions
-            .Where(s => s.IsTalk && (
+        var referenced = db.Sessions
+            .Where(s => s.CityId == city.Id && s.IsTalk && (
                 reply.Text.Contains(s.Title, StringComparison.OrdinalIgnoreCase) ||
                 reply.Text.Contains(s.Id, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
 
         foreach (var session in referenced)
         {
-            if (reply.Sessions.Any(card => card.Session.Id == session.Id))
+            if (reply.Sessions.Any(s => s.Id == session.Id))
                 continue;
 
-            var speakers = string.Join(", ", session.SpeakerIds.Select(id =>
-                conference.Speakers.First(s => s.Id == id).Name));
-            var meta = $"{city.Name} · {session.Time} · {session.Track ?? "All attendees"}";
-
-            reply.Sessions.Add(new ChatSessionCard(session, meta, speakers));
+            reply.Sessions.Add(session);
         }
     }
 

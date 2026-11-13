@@ -10,14 +10,12 @@ namespace ConferenceApp.ViewModels;
 public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMessage>
 {
     private readonly ChatService chat;
-    private readonly ConferenceDatabase database;
     private readonly UserPreferencesService preferences;
     private CancellationTokenSource? activeTurn;
 
-    public ChatViewModel(ChatService chat, ConferenceDatabase database, UserPreferencesService preferences)
+    public ChatViewModel(ChatService chat, UserPreferencesService preferences)
     {
         this.chat = chat;
-        this.database = database;
         this.preferences = preferences;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
@@ -43,13 +41,13 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     [RelayCommand]
     private async Task LoadAsync()
     {
-        SelectedCity = await preferences.GetSelectedCityAsync(database);
+        SelectedCity = await preferences.GetSelectedCityAsync();
         UnavailableReason = await chat.GetUnavailableReasonAsync();
     }
 
     [RelayCommand]
     private Task PickCityAsync() =>
-        preferences.PickCityAsync(database);
+        preferences.PickCityAsync();
 
     [RelayCommand]
     private Task AskSuggestionAsync(string suggestion)
@@ -78,8 +76,8 @@ public partial class ChatViewModel : ObservableObject, IRecipient<CityChangedMes
     }
 
     [RelayCommand]
-    private Task OpenSessionAsync(ChatSessionCard? card) =>
-        card is null ? Task.CompletedTask : Shell.Current.GoToAsync($"session?id={card.Session.Id}");
+    private Task OpenSessionAsync(Session? session) =>
+        session is null ? Task.CompletedTask : Shell.Current.GoToAsync($"session?id={session.Id}");
 
     [RelayCommand]
     private async Task SendAsync()

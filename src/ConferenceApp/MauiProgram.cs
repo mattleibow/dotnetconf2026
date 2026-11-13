@@ -23,7 +23,7 @@ public static class MauiProgram
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
 			});
 
-		builder.Services.AddSingleton<ConferenceDatabase>();
+		builder.Services.AddSingleton<ConferenceDbProvider>();
 		builder.Services.AddSingleton<UserPreferencesService>();
 
 		builder.AddChatClients();
