@@ -18,6 +18,8 @@ public sealed class ConferenceDataTools(
     UserPreferencesService preferences,
     ILogger<ConferenceDataTools> logger)
 {
+    public string? LastListedSessions { get; private set; }
+
     [ExportAIFunction("search_sessions")]
     [Description("Search sessions by topic, title, or speaker in the current city. Returns summaries; call get_session for the full abstract.")]
     public async Task<string> SearchSessionsAsync(
@@ -82,23 +84,40 @@ public sealed class ConferenceDataTools(
     }
 
     [ExportAIFunction("list_sessions")]
-    [Description("List sessions in the current city between two 24-hour daytime times (for example 08:00 to 12:00).")]
+    [Description("List candidate talks in the current city between two 24-hour daytime times (for example 08:00 to 17:00), excluding time slots already booked in the user's favourites.")]
     public async Task<string> ListSessionsAsync(
-        [Description("Start time in 24-hour HH:mm format (e.g. 08:00).")] TimeOnly start,
-        [Description("End time in 24-hour HH:mm format (e.g. 12:00).")] TimeOnly end,
+        [Description("Start time in 24-hour HH:mm format (default 08:00).")] TimeOnly start,
+        [Description("End time in 24-hour HH:mm format (default 17:00).")] TimeOnly end,
         CancellationToken cancellationToken = default)
     {
         var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
         logger.LogInformation("[AI Tool] list_sessions(start: {Start}, end: {End}) in {CityId}", start, end, city.Id);
 
-        var matching = db.Sessions.Where(s =>
-            s.CityId == city.Id &&
-            s.IsTalk &&
-            TimeOnly.FromDateTime(s.Start.DateTime) >= start &&
-            TimeOnly.FromDateTime(s.Start.DateTime) < end);
+        var bookedTimes = db.Sessions
+            .Where(s => s.CityId == city.Id && s.IsTalk && preferences.IsFavorite(s.Id))
+            .Select(s => s.Time)
+            .ToHashSet(StringComparer.Ordinal);
 
-        return FormatSessions(city, matching);
+        var matching = db.Sessions
+            .Where(s =>
+                s.CityId == city.Id &&
+                s.IsTalk &&
+                !bookedTimes.Contains(s.Time) &&
+                TimeOnly.FromDateTime(s.Start.DateTime) >= start &&
+                TimeOnly.FromDateTime(s.Start.DateTime) < end)
+            .ToArray();
+
+        if (matching.Length == 0)
+            return $"No open sessions in {city.Name} between {start:HH:mm} and {end:HH:mm}.";
+
+        var lines = matching.Select(s =>
+        {
+            var topic = !string.IsNullOrWhiteSpace(s.Topic) ? $" [{s.Topic}]" : "";
+            return $"{s.Time} | {s.Track ?? "All attendees"}{topic} | {s.Title} ({s.SpeakerNames})";
+        });
+
+        return LastListedSessions = string.Join('\n', lines);
     }
 
     internal static string FormatSessions(City city, IEnumerable<Session> sessions)

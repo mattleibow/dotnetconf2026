@@ -1,8 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using ConferenceApp.AI;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
 
@@ -12,8 +10,7 @@ public partial class SpeakerViewModel(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
     IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
-    IQueryAttributable,
-    IRecipient<SessionsEnrichedMessage>
+    IQueryAttributable
 {
     private string? speakerId;
 
@@ -24,9 +21,6 @@ public partial class SpeakerViewModel(
 
     [ObservableProperty]
     public partial string Bio { get; set; } = "";
-
-    public void Receive(SessionsEnrichedMessage message) =>
-        Refresh();
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {

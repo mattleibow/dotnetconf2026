@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using ConferenceApp.AI;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
 
@@ -13,8 +12,7 @@ public partial class AgendaViewModel(
     UserPreferencesService preferences,
     SearchService search,
     IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
-    IRecipient<FavoritesChangedMessage>,
-    IRecipient<SessionsEnrichedMessage>
+    IRecipient<FavoritesChangedMessage>
 {
     private int loadVersion;
 
@@ -33,9 +31,6 @@ public partial class AgendaViewModel(
         Refresh();
 
     public void Receive(FavoritesChangedMessage message) =>
-        Refresh();
-
-    public void Receive(SessionsEnrichedMessage message) =>
         Refresh();
 
     protected override async Task OnLoadAsync()

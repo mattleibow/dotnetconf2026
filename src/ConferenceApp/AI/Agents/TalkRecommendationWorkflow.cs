@@ -27,6 +27,17 @@ public static class TalkRecommendationWorkflow
         var localClient = services.GetRequiredService<IChatClient>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
         var userContext = services.GetRequiredKeyedService<AIContextProvider>("user");
+        var dataTools = services.GetRequiredService<ConferenceDataTools>();
+
+        // Ensure Timekeeper's message in the group chat history includes the full untruncated
+        // list_sessions tool output so all 3 advocates see every open time slot.
+        var timekeeperClient = localClient
+            .AsBuilder()
+            .Use(
+                getResponseFunc: null,
+                getStreamingResponseFunc: (messages, options, innerClient, cancellationToken) =>
+                    AppendListedSessionsAsync(innerClient.GetStreamingResponseAsync(messages, options, cancellationToken), dataTools))
+            .Build();
 
         var concierge = localClient.AsAIAgent(
             new ChatClientAgentOptions
@@ -44,17 +55,19 @@ public static class TalkRecommendationWorkflow
                           name specific topics, ask what topics they are interested in
                           today (such as AI, Cloud, Data, Mobile, Web, or IoT) and
                           whether they need to arrive late or leave early.
-                        - If they have Saved Favourites or named topics, mention those
-                          topics (and any arrival/departure time they gave) as a
-                          starting point, and ask if they are happy with that or want
-                          to explore other topics too.
+                        - If they have Saved Favourites or named topics, mention only
+                          the general topic category (such as Mobile or AI—do NOT quote
+                          full session titles or time slots) and ask if they want to
+                          explore other topics or have any arrival/departure time limits.
                         Keep this to 1 or 2 short sentences and do NOT pitch talks yet.
 
                         If the attendee is replying to confirm or choose their topics:
-                        - Output ONLY these two short lines in 24-hour time (default
-                          08:00 to 17:00; "before noon" means 08:00 to 12:00; "leaving
-                          at 3" means 08:00 to 15:00):
-                          Confirmed topics: <topics>
+                        - Output ONLY these three short lines in 24-hour time.
+                          IMPORTANT: Always use 08:00 to 17:00 for Time window unless
+                          the attendee explicitly stated an arrival or departure time
+                          in their message:
+                          Confirmed topics: <topics the attendee wants>
+                          Avoid topics: <topics the attendee dislikes, or None>
                           Time window: <HH:mm> to <HH:mm>
                         """,
                     Temperature = 0,
@@ -65,7 +78,7 @@ public static class TalkRecommendationWorkflow
             loggerFactory,
             services);
 
-        var timekeeper = localClient.AsAIAgent(
+        var timekeeper = timekeeperClient.AsAIAgent(
             new ChatClientAgentOptions
             {
                 Name = "Timekeeper",
@@ -75,16 +88,14 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are Timekeeper on the conference panel.
 
-                        Read the Time window line from Concierge (for example 08:00 to
-                        12:00) and call list_sessions with that exact start and end time.
-                        Then output ONLY the matching talks returned by list_sessions
-                        so the panel only debates talks that fit the attendee's schedule.
+                        Read the Time window line from Concierge (default 08:00 to 17:00)
+                        and call list_sessions with that exact start and end time.
+                        Then reply with one short line confirming the time window.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 450,
+                    MaxOutputTokens = 120,
                     Tools = [.. ConferenceDataToolContext.Default.Tools]
-                },
-                AIContextProviders = [userContext]
+                }
             },
             loggerFactory,
             services);
@@ -99,15 +110,14 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are DepthAdvocate on the conference panel.
 
-                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 sessions
-                        that dive deepest into the attendee's Confirmed topics in 2
-                        short sentences. Never mention talks outside Timekeeper's list.
-                        Always use exact session titles and times.
+                        From ONLY the open candidate talks listed by Timekeeper (never
+                        a talk in an Avoid topic), pitch 1 session that dives deepest
+                        into the attendee's Confirmed topics in 2 short sentences.
+                        State its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 180
-                },
-                AIContextProviders = [userContext]
+                    MaxOutputTokens = 160
+                }
             },
             loggerFactory,
             services);
@@ -122,15 +132,14 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are BreadthAdvocate on the conference panel.
 
-                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 sessions
-                        from a DIFFERENT topic than DepthAdvocate's pick to expand the
-                        attendee's horizons in 2 short sentences. Never mention talks
-                        outside Timekeeper's list. Always use exact session titles and times.
+                        From ONLY the open candidate talks listed by Timekeeper, pick
+                        1 session in a DIFFERENT time slot than DepthAdvocate's pick
+                        (and never in an Avoid topic) to broaden the attendee's day in
+                        2 short sentences. State its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 180
-                },
-                AIContextProviders = [userContext]
+                    MaxOutputTokens = 160
+                }
             },
             loggerFactory,
             services);
@@ -145,15 +154,14 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are PracticalAdvocate on the conference panel.
 
-                        From ONLY the talks listed by Timekeeper, pitch 1 or 2 hands-on,
-                        code-first or demo-heavy sessions the attendee can apply right
-                        away in 2 short sentences. Never mention talks outside
-                        Timekeeper's list. Always use exact session titles and times.
+                        From ONLY the open candidate talks listed by Timekeeper, pick
+                        1 hands-on or code-first session in a DIFFERENT time slot than
+                        both DepthAdvocate and BreadthAdvocate (and never in an Avoid
+                        topic) in 2 short sentences. State its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 180
-                },
-                AIContextProviders = [userContext]
+                    MaxOutputTokens = 160
+                }
             },
             loggerFactory,
             services);
@@ -168,15 +176,14 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are Moderator wrapping up the panel debate.
 
-                        From ONLY the talks pitched by DepthAdvocate, BreadthAdvocate,
-                        and PracticalAdvocate within Timekeeper's window, present a
-                        conflict-free recommended lineup (one talk per time slot, with
-                        exact times and titles) in 2 or 3 short sentences.
+                        Present a chronological, conflict-free lineup of the 3 distinct
+                        time-slot picks from DepthAdvocate, BreadthAdvocate, and
+                        PracticalAdvocate. Output ONLY 3 short bullet lines (one line
+                        per talk: "- HH:mm – HH:mm: Exact Title") with no extra paragraphs.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 200
-                },
-                AIContextProviders = [userContext]
+                    MaxOutputTokens = 300
+                }
             },
             loggerFactory,
             services);
@@ -203,5 +210,23 @@ public static class TalkRecommendationWorkflow
             .AddParticipants(concierge, timekeeper, depthAdvocate, breadthAdvocate, practicalAdvocate, moderator)
             .WithName("TalkRecommendationWorkflow")
             .Build();
+    }
+
+    private static async IAsyncEnumerable<ChatResponseUpdate> AppendListedSessionsAsync(
+        IAsyncEnumerable<ChatResponseUpdate> updates,
+        ConferenceDataTools dataTools)
+    {
+        await foreach (var update in updates)
+            yield return update;
+
+        if (!string.IsNullOrWhiteSpace(dataTools.LastListedSessions))
+        {
+            yield return new ChatResponseUpdate(
+                ChatRole.Assistant,
+                $"\nOpen candidate talks in time window:\n{dataTools.LastListedSessions}")
+            {
+                AuthorName = "Timekeeper"
+            };
+        }
     }
 }

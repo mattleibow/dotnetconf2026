@@ -149,38 +149,33 @@ Switch the city to **Durban**, type **`football forecasts`** and **`gradient des
 
 Open [`src/ConferenceApp/AI/Data/DataExtensions.cs`](../src/ConferenceApp/AI/Data/DataExtensions.cs) and [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs).
 
-Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers `EnricherOptions` (backed by the local `IChatClient`), `SummaryEnricher`, and `ClassificationEnricher`:
+Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers `EnricherOptions` (backed by the local `IChatClient`), `SummaryEnricher`, and `KeywordEnricher` (extracting up to 3 topics per talk with `confidenceThreshold: 0.75`):
 
 ```csharp
-builder.Services.AddSingleton(services => new EnricherOptions(services.GetRequiredService<IChatClient>())
-{
-    BatchSize = 1,
-    ChatOptions = new ChatOptions { Temperature = 0, MaxOutputTokens = 160 },
-    LoggerFactory = services.GetRequiredService<ILoggerFactory>()
-});
-
 builder.Services.AddSingleton(services =>
     new SummaryEnricher(services.GetRequiredService<EnricherOptions>(), maxWordCount: 24));
 
 builder.Services.AddSingleton(services =>
-    new ClassificationEnricher(services.GetRequiredService<EnricherOptions>(), Topics, fallbackClass: "None"));
+    new KeywordEnricher(
+        services.GetRequiredService<EnricherOptions>(),
+        predefinedKeywords: Topics,
+        maxKeywords: 3,
+        confidenceThreshold: 0.75));
 ```
 
-In the background, [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) wraps each talk's `session.EmbeddingText` in an `IngestionChunk<string>`, pipes it through `summaryEnricher` and `classifier`, validates `topic` against `DataExtensions.Topics` (`["AI", "Mobile", "Web", "Cloud", "Data", "IoT"]`) so small-model hallucinations are discarded, updates `session.Summary` and `session.Topic` directly on the in-memory `Session` objects, and sends `SessionsEnrichedMessage` via `WeakReferenceMessenger` so Agenda cards populate their topic chips and summaries live:
+In the background, [`SessionEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) enriches the active city's talks first, wraps each talk's `session.EmbeddingText` in an `IngestionChunk<string>`, pipes it through `summaryEnricher` and `keywordEnricher`, and sets `session.Summary` and `session.Topic` (for example `"Data · Cloud · AI"` or `"Cloud · IoT · AI"`). Because `Session` inherits `ObservableObject` and `Summary` and `Topic` are `[ObservableProperty]`s, XAML bindings update each card in place automatically without rebuilding or resetting the `CollectionView`:
 
 ```csharp
-var chunk = new IngestionChunk<string>(
-    session.EmbeddingText,
-    new IngestionDocument(session.Id));
-
-await foreach (var enriched in classifier.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
+await foreach (var enriched in keywordEnricher.ProcessAsync(summaryEnricher.ProcessAsync(SingleChunk(chunk))))
 {
-    session.Summary = ReadMetadata(enriched, SummaryEnricher.MetadataKey);
-    var topic = ReadMetadata(enriched, ClassificationEnricher.MetadataKey);
-    session.Topic = DataExtensions.Topics.Contains(topic, StringComparer.Ordinal) ? topic : null;
-}
+    var summary = ReadSummary(enriched);
+    var topics = ReadTopics(enriched);
 
-WeakReferenceMessenger.Default.Send(new SessionsEnrichedMessage());
+    if (!string.IsNullOrWhiteSpace(summary))
+        session.Summary = summary;
+    if (!string.IsNullOrWhiteSpace(topics))
+        session.Topic = topics;
+}
 ```
 
 ---

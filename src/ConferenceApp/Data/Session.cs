@@ -1,9 +1,10 @@
 using System.Text.Json.Serialization;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Data;
 
-public class Session
+public partial class Session : ObservableObject
 {
     [VectorStoreKey]
     public string Id { get; set; } = "";
@@ -21,8 +22,12 @@ public class Session
     public string Content { get; set; } = "";
 
     public string? Description { get; set; }
-    public string? Summary { get; set; }
-    public string? Topic { get; set; }
+
+    [ObservableProperty]
+    public partial string? Summary { get; set; }
+
+    [ObservableProperty]
+    public partial string? Topic { get; set; }
 
     [JsonIgnore]
     public City City { get; set; } = null!;
