@@ -73,12 +73,13 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are DepthAdvocate on the conference panel.
 
-                        Pick 1 talk from the candidate sessions in context that dives
-                        deepest into the attendee's Confirmed topics (never an Avoid
-                        topic) in 2 short sentences. State its exact time and title.
+                        Suggest 2 or 3 talks from the candidate sessions in context
+                        that dive deepest into the attendee's Confirmed topics (never
+                        an Avoid topic). For each talk, give a 1-sentence reason and
+                        state its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 160
+                    MaxOutputTokens = 260
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -95,13 +96,13 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are BreadthAdvocate on the conference panel.
 
-                        Pick 1 DIFFERENT talk from the candidate sessions in context
-                        than DepthAdvocate's pick (never an Avoid topic) that broadens
-                        the attendee's perspective in 2 short sentences. State its
-                        exact time and title.
+                        Suggest 2 or 3 DIFFERENT talks from the candidate sessions in
+                        context than DepthAdvocate's picks (never an Avoid topic) that
+                        broaden the attendee's perspective. For each talk, give a
+                        1-sentence reason and state its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 160
+                    MaxOutputTokens = 260
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -118,13 +119,13 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are PracticalAdvocate on the conference panel.
 
-                        Pick 1 DIFFERENT hands-on or practical talk from the candidate
-                        sessions in context than both DepthAdvocate and BreadthAdvocate
-                        (never an Avoid topic) in 2 short sentences. State its exact
-                        time and title.
+                        Suggest 2 or 3 hands-on or practical talks from the candidate
+                        sessions in context (avoiding Avoid topics and preferring talks
+                        not already pitched). For each talk, give a 1-sentence reason
+                        and state its exact time and title.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 160
+                    MaxOutputTokens = 260
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -141,13 +142,13 @@ public static class TalkRecommendationWorkflow
                     Instructions = """
                         You are Moderator wrapping up the recommendation panel.
 
-                        Summarize the 3 recommended talks from DepthAdvocate,
-                        BreadthAdvocate, and PracticalAdvocate so the attendee can
-                        decide which ones to attend. Output ONLY 3 short bullet lines
-                        (one line per talk: "- HH:mm – HH:mm: Exact Title — short reason").
+                        Curate the best 4 to 6 distinct talks pitched by DepthAdvocate,
+                        BreadthAdvocate, and PracticalAdvocate in chronological order
+                        so the attendee can decide which ones to attend. Output ONLY
+                        bullet lines ("- HH:mm – HH:mm: Exact Title — short reason").
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 300
+                    MaxOutputTokens = 400
                 },
                 AIContextProviders = [availableSessionsContext]
             },

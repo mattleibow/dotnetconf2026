@@ -266,7 +266,7 @@ Turn 2 (Debate): Concierge ──► DepthAdvocate ──► BreadthAdvocate ─
 
 On **Turn 1**, `Concierge` checks the attendee's `Saved Favourites` (as a starting point) and asks them to confirm or pick their topics; the custom `shouldTerminateFunc` pauses the group chat after `Concierge` (`IterationCount >= 1`) so the user can reply.
 
-On **Turn 2**, `Concierge` locks in the confirmed and avoided topics, `DepthAdvocate`, `BreadthAdvocate`, and `PracticalAdvocate` each pitch a distinct talk from `AvailableSessionsContextProvider` (which automatically excludes already-favourited sessions), and `Moderator` wraps up with a 3-talk recommendation list.
+On **Turn 2**, `Concierge` locks in the confirmed and avoided topics, `DepthAdvocate`, `BreadthAdvocate`, and `PracticalAdvocate` each pitch 2–3 distinct talks from `AvailableSessionsContextProvider` (which automatically excludes already-favourited sessions), and `Moderator` curates a chronological shortlist of 4–6 recommended talks for the attendee to choose from.
 
 ### Two-Layer Routing: `RoutingChatClient.Create` + `SemanticRoutingChatClient` ([`AgentExtensions.cs`](../src/ConferenceApp/AI/Agents/AgentExtensions.cs))
 
