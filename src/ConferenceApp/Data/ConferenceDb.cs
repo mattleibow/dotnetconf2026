@@ -2,23 +2,24 @@ using System.Text.Json;
 
 namespace ConferenceApp.Data;
 
-public class ConferenceDb
+public class ConferenceDb(
+    string name,
+    string timeZone,
+    IReadOnlyList<City> cities,
+    IReadOnlyList<Session> sessions,
+    IReadOnlyList<Speaker> speakers,
+    IReadOnlyList<Venue> venues,
+    IReadOnlyList<Sponsor> sponsors)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    public string Name { get; set; } = "";
-
-    public string TimeZone { get; set; } = "";
-    
-    public List<City> Cities { get; set; } = [];
-    
-    public List<Session> Sessions { get; set; } = [];
-    
-    public List<Speaker> Speakers { get; set; } = [];
-    
-    public List<Venue> Venues { get; set; } = [];
-    
-    public List<Sponsor> Sponsors { get; set; } = [];
+    public string Name { get; } = name;
+    public string TimeZone { get; } = timeZone;
+    public IReadOnlyList<City> Cities { get; } = cities;
+    public IReadOnlyList<Session> Sessions { get; } = sessions;
+    public IReadOnlyList<Speaker> Speakers { get; } = speakers;
+    public IReadOnlyList<Venue> Venues { get; } = venues;
+    public IReadOnlyList<Sponsor> Sponsors { get; } = sponsors;
 
     public City GetCity(string? cityId = null)
     {
@@ -32,34 +33,37 @@ public class ConferenceDb
     internal static async Task<ConferenceDb> LoadAsync()
     {
         await using var stream = await FileSystem.OpenAppPackageFileAsync("conference/conference.json");
-        var db = await JsonSerializer.DeserializeAsync<ConferenceDb>(stream, JsonOptions)
+        var raw = await JsonSerializer.DeserializeAsync<ConferenceDb>(stream, JsonOptions)
             ?? throw new InvalidOperationException("The conference data is empty.");
 
-        var citiesById = db.Cities.ToDictionary(c => c.Id);
-        var speakersById = db.Speakers.ToDictionary(s => s.Id);
-        var venuesById = db.Venues.ToDictionary(v => v.Id);
+        var citiesById = raw.Cities.ToDictionary(c => c.Id);
+        var speakersById = raw.Speakers.ToDictionary(s => s.Id);
+        var venuesById = raw.Venues.ToDictionary(v => v.Id);
 
-        foreach (var city in db.Cities)
+        foreach (var city in raw.Cities)
             city.Venue = venuesById[city.VenueId];
 
-        foreach (var venue in db.Venues)
+        foreach (var venue in raw.Venues)
             venue.Description = await ReadMarkdownBodyAsync(venue.Content);
 
-        foreach (var speaker in db.Speakers)
+        foreach (var speaker in raw.Speakers)
             speaker.Bio = await ReadMarkdownBodyAsync(speaker.Content);
 
-        foreach (var session in db.Sessions)
+        foreach (var session in raw.Sessions)
         {
             session.City = citiesById[session.CityId];
             session.Speakers = [.. session.SpeakerIds.Select(id => speakersById[id])];
             session.Description = await ReadMarkdownBodyAsync(session.Content);
         }
 
-        db.Cities.Sort((a, b) => a.Date.CompareTo(b.Date));
-        db.Sessions.Sort((a, b) => a.Start.CompareTo(b.Start));
-        db.Speakers.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
-
-        return db;
+        return new ConferenceDb(
+            raw.Name,
+            raw.TimeZone,
+            [.. raw.Cities.OrderBy(c => c.Date)],
+            [.. raw.Sessions.OrderBy(s => s.Start)],
+            [.. raw.Speakers.OrderBy(s => s.Name)],
+            raw.Venues,
+            raw.Sponsors);
     }
 
     // Session, speaker and venue Markdown files start with a "# Title" heading line.
