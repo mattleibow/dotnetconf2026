@@ -21,7 +21,7 @@ public class ChatService(
     [
         "When is Matthew's talk?",
         "What's on after lunch?",
-        "Debate: AI vs Cloud talks",
+        "Debate: Help me pick talks",
         "Do my favourites clash?"
     ];
 
@@ -59,6 +59,8 @@ public class ChatService(
         }
 
         var receivedText = false;
+        var isDebateFollowUp = history.LastOrDefault(m =>
+            m.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(m.AuthorName))?.AuthorName == "Concierge";
         string? activeDebateSpeaker = null;
         var updates = new List<ChatResponseUpdate>();
 
@@ -78,7 +80,16 @@ public class ChatService(
                     reply.Progress = "ScheduleAgent: building your conflict-free schedule...");
             }
 
-            if (update.AuthorName is "PracticalBuilder" or "SystemArchitect" or "TrackModerator"
+            // On Turn 2 of the debate (after the user confirmed their topics), Concierge's 1-line
+            // "Confirmed topics: ..." is internal handoff state for the panelists.
+            if (update.AuthorName == "Concierge" && isDebateFollowUp)
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    reply.Progress = "Concierge: locking in your topics for the panel...");
+                continue;
+            }
+
+            if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
                 && !receivedText)
             {
                 await MainThread.InvokeOnMainThreadAsync(() =>
@@ -95,7 +106,7 @@ public class ChatService(
                 }
 
                 // In a multi-agent Group Chat workflow, label each speaker as they take the floor.
-                if (update.AuthorName is "PracticalBuilder" or "SystemArchitect" or "TrackModerator"
+                if (update.AuthorName is "DepthAdvocate" or "BreadthAdvocate" or "PracticalAdvocate" or "Moderator"
                     && update.AuthorName != activeDebateSpeaker)
                 {
                     var prefix = activeDebateSpeaker is null
@@ -109,7 +120,11 @@ public class ChatService(
             }
         }
 
-        reply.ResponseMessages = updates.ToChatResponse().Messages.ToArray();
+        reply.ResponseMessages = updates
+            .ToChatResponse()
+            .Messages
+            .Where(m => !string.IsNullOrWhiteSpace(m.Text))
+            .ToArray();
         await AddReferencedSessionsAsync(reply);
 
         logger.LogInformation("[AI Chat] Completed reply ({Length} chars, {Cards} session cards).",

@@ -20,9 +20,9 @@ public static class AgentExtensions
 
     private static readonly IReadOnlyList<string> DebateUtterances =
     [
-        "Debate: AI vs Cloud talks",
+        "Debate: Help me pick talks",
         "Debate which track or session I should attend",
-        "Help me choose between the AI talks and the cloud architecture talks",
+        "Help me choose between sessions with a panel debate",
         "Give me different perspectives on which sessions to pick"
     ];
 
@@ -38,26 +38,44 @@ public static class AgentExtensions
     private static IChatClient CreateAssistantRouter(IServiceProvider services)
     {
         // Route 1 (Default): Single AIAgent with user context, RAG search, and all tools.
-        var assistantAgent = CreateAssistantAgent(services);
+        var assistantClient = CreateAssistantAgent(services)
+            .AsIChatClient();
 
         // Route 2 (Sequential Workflow): PreferencesAgent -> ScheduleAgent ("Plan my day").
-        var dayPlanWorkflow = CreateDayPlanWorkflow(services);
+        var dayPlanClient = CreateDayPlanWorkflow(services)
+            .AsAIAgent(name: "DayPlanner")
+            .AsIChatClient(allowNonChatClientAgents: true);
 
-        // Route 3 (Group Chat Workflow): Round-robin multi-agent panel debate ("Debate: AI vs Cloud talks").
-        var debateWorkflow = CreateDebateWorkflow(services);
+        // Route 3 (Group Chat Workflow): Concierge clarifies topics -> Depth vs Breadth vs Practical -> Moderator.
+        var debateClient = CreateDebateWorkflow(services)
+            .AsAIAgent(name: "PanelDebate")
+            .AsIChatClient(allowNonChatClientAgents: true);
 
         // Semantic router: uses our ONNX MiniLM embeddings to pick the right agent or workflow per prompt.
-        return new SemanticRoutingChatClient(
+        var semanticRouter = new SemanticRoutingChatClient(
             services.GetRequiredService<IEmbeddingGenerator<string, Embedding<float>>>(),
             new Dictionary<IChatClient, IReadOnlyList<string>>
             {
-                [dayPlanWorkflow.AsAIAgent(name: "DayPlanner").AsIChatClient(allowNonChatClientAgents: true)] = DayPlanUtterances,
-                [debateWorkflow.AsAIAgent(name: "PanelDebate").AsIChatClient(allowNonChatClientAgents: true)] = DebateUtterances
+                [dayPlanClient] = DayPlanUtterances,
+                [debateClient] = DebateUtterances
             },
-            defaultClient: assistantAgent.AsIChatClient(),
+            defaultClient: assistantClient,
             scoreThreshold: 0.60f,
             topK: 1,
             leaveOpen: true);
+
+        // RoutingChatClient inspects the full conversation history in RoutingContext.Messages:
+        // if the previous assistant message was Concierge asking the user to confirm their topics,
+        // keep the follow-up reply on the Debate workflow; otherwise delegate to SemanticRoutingChatClient.
+        return RoutingChatClient.Create((context, _) =>
+        {
+            var lastAssistant = context.Messages.LastOrDefault(m =>
+                m.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(m.AuthorName));
+            if (lastAssistant?.AuthorName == "Concierge")
+                return ValueTask.FromResult(debateClient);
+
+            return ValueTask.FromResult<IChatClient>(semanticRouter);
+        });
     }
 
     // 1. Single Agent: General Q&A, speaker bios, schedule queries, and favourites.
@@ -169,8 +187,9 @@ public static class AgentExtensions
             [preferencesAgent, scheduleAgent]);
     }
 
-    // 3. Group Chat Workflow: Three specialist personas take turns debating which talks to attend.
-    //    Uses AgendaContextProvider so all panelists see the city's full talk catalog without tool calls.
+    // 3. Group Chat Workflow: Concierge first clarifies/confirms the user's interests (using their
+    //    saved favourites as a starting point), then DepthAdvocate, BreadthAdvocate, PracticalAdvocate,
+    //    and Moderator debate which sessions they should attend.
     private static Workflow CreateDebateWorkflow(IServiceProvider services)
     {
         var localClient = services.GetRequiredService<IChatClient>();
@@ -178,42 +197,50 @@ public static class AgentExtensions
         var userContext = new UserContextProvider(services);
         var agendaContext = new AgendaContextProvider(services);
 
-        var practicalBuilder = localClient.AsAIAgent(
+        var concierge = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "PracticalBuilder",
+                Name = "Concierge",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are PracticalBuilder, a hands-on mobile and AI app developer
-                        on a conference panel.
+                        You are Concierge, hosting the conference session debate panel.
 
-                        Pitch 1 or 2 practical, code-heavy or AI/mobile talks from the
-                        current city's agenda in 2 short sentences. Always use exact
-                        session titles and times from the context.
+                        If you have NOT yet asked the attendee to confirm their topics:
+                        - If Saved Favourites is "None yet" and the attendee did not
+                          name specific topics, ask what topics they are interested in
+                          today (such as AI, Cloud, Data, Mobile, Web, or IoT).
+                        - If they have Saved Favourites or named topics, mention those
+                          topics as a starting point and ask if they are happy to debate
+                          around them or want to expand into other topics (such as AI,
+                          Cloud, Data, Mobile, Web, or IoT).
+                        Keep this to 1 or 2 short sentences and do NOT pitch talks yet.
+
+                        If the attendee is replying to confirm or choose their topics:
+                        - Output ONLY one short line:
+                          "Confirmed topics: <topics>."
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 180
+                    MaxOutputTokens = 140
                 },
-                AIContextProviders = [userContext, agendaContext]
+                AIContextProviders = [userContext]
             },
             loggerFactory,
             services);
 
-        var systemArchitect = localClient.AsAIAgent(
+        var depthAdvocate = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "SystemArchitect",
+                Name = "DepthAdvocate",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are SystemArchitect, a cloud, architecture, and DevOps lead
-                        on a conference panel.
+                        You are DepthAdvocate on the conference panel.
 
-                        Counter PracticalBuilder by pitching 1 or 2 architecture, cloud,
-                        or platform talks from the current city's agenda in 2 short
+                        Pitch 1 or 2 sessions from the current city's agenda that dive
+                        deepest into the attendee's Confirmed topics in 2 short
                         sentences. Always use exact session titles and times.
                         """,
                     Temperature = 0,
@@ -224,18 +251,63 @@ public static class AgentExtensions
             loggerFactory,
             services);
 
-        var trackModerator = localClient.AsAIAgent(
+        var breadthAdvocate = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "TrackModerator",
+                Name = "BreadthAdvocate",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are TrackModerator wrapping up the panel debate.
+                        You are BreadthAdvocate on the conference panel.
 
-                        In 2 short sentences, synthesize PracticalBuilder and
-                        SystemArchitect's picks and give the attendee a clear takeaway
+                        Look at what DepthAdvocate pitched and the attendee's Confirmed
+                        topics, then pitch 1 or 2 sessions from a DIFFERENT topic in the
+                        current city's agenda to expand their horizons in 2 short
+                        sentences. Always use exact session titles and times.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 180
+                },
+                AIContextProviders = [userContext, agendaContext]
+            },
+            loggerFactory,
+            services);
+
+        var practicalAdvocate = localClient.AsAIAgent(
+            new ChatClientAgentOptions
+            {
+                Name = "PracticalAdvocate",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are PracticalAdvocate on the conference panel.
+
+                        Pitch 1 or 2 hands-on, code-first or demo-heavy sessions from
+                        the current city's agenda that the attendee can apply right away
+                        in 2 short sentences. Always use exact session titles and times.
+                        """,
+                    Temperature = 0,
+                    MaxOutputTokens = 180
+                },
+                AIContextProviders = [userContext, agendaContext]
+            },
+            loggerFactory,
+            services);
+
+        var moderator = localClient.AsAIAgent(
+            new ChatClientAgentOptions
+            {
+                Name = "Moderator",
+                UseProvidedChatClientAsIs = true,
+                ChatOptions = new ChatOptions
+                {
+                    Instructions = """
+                        You are Moderator wrapping up the panel debate.
+
+                        In 2 short sentences, weigh DepthAdvocate, BreadthAdvocate, and
+                        PracticalAdvocate's picks and give the attendee a clear takeaway
                         on which talk to attend first.
                         """,
                     Temperature = 0,
@@ -247,11 +319,25 @@ public static class AgentExtensions
             services);
 
         return AgentWorkflowBuilder
-            .CreateGroupChatBuilderWith(agents => new RoundRobinGroupChatManager(agents)
-            {
-                MaximumIterationCount = 3
-            })
-            .AddParticipants(practicalBuilder, systemArchitect, trackModerator)
+            .CreateGroupChatBuilderWith(agents => new RoundRobinGroupChatManager(
+                agents,
+                (manager, history, _) =>
+                {
+                    // Before the panel debates, pause after Concierge (Iteration 1) so the user
+                    // can confirm or adjust their topics. Once the user replies to Concierge,
+                    // run all 5 participants (Concierge -> Depth -> Breadth -> Practical -> Moderator).
+                    var messages = history.ToList();
+                    var lastUserIndex = messages.FindLastIndex(m =>
+                        m.Role == ChatRole.User && string.IsNullOrEmpty(m.AuthorName));
+                    var userConfirmedAfterConcierge = lastUserIndex > 0 &&
+                        messages.Take(lastUserIndex).Any(m => m.AuthorName == "Concierge");
+
+                    if (!userConfirmedAfterConcierge)
+                        return ValueTask.FromResult(manager.IterationCount >= 1);
+
+                    return ValueTask.FromResult(manager.IterationCount >= agents.Count);
+                }))
+            .AddParticipants(concierge, depthAdvocate, breadthAdvocate, practicalAdvocate, moderator)
             .WithName("PanelDebateWorkflow")
             .Build();
     }
@@ -261,6 +347,7 @@ public static class AgentExtensions
     {
         private readonly ConferenceDatabase database = services.GetRequiredService<ConferenceDatabase>();
         private readonly UserPreferencesService preferences = services.GetRequiredService<UserPreferencesService>();
+        private readonly SessionEnrichmentService enrichment = services.GetRequiredService<SessionEnrichmentService>();
 
         protected override async ValueTask<AIContext> ProvideAIContextAsync(
             InvokingContext context,
@@ -272,7 +359,12 @@ public static class AgentExtensions
             var allCitySessions = await database.GetSessionsAsync(city.Id);
             var favoriteTitles = allCitySessions
                 .Where(s => preferences.IsFavorite(s.Id))
-                .Select(s => $"{s.Time} {s.Title}")
+                .Select(s =>
+                {
+                    var topic = enrichment.GetSession(s.Id).Topic;
+                    var tag = !string.IsNullOrWhiteSpace(topic) ? $" [{topic}]" : "";
+                    return $"{s.Time}{tag} {s.Title}";
+                })
                 .ToArray();
 
             return new AIContext
