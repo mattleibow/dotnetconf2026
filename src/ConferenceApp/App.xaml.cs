@@ -1,22 +1,15 @@
-using ConferenceApp.AI;
-using ConferenceApp.Data;
+using ConferenceApp.Services;
 
 namespace ConferenceApp;
 
 public partial class App : Application
 {
-    public App(
-        DatabasePreloadService dbPreload,
-        SessionIndexingService indexing,
-        SessionSummaryEnrichmentService summaryEnrichment,
-        SessionTopicEnrichmentService topicEnrichment)
+    public App(IEnumerable<BaseBackgroundService> backgroundServices)
     {
         InitializeComponent();
 
-        _ = dbPreload.StartAsync();
-        _ = indexing.StartAsync();
-        _ = summaryEnrichment.StartAsync();
-        _ = topicEnrichment.StartAsync();
+        foreach (var service in backgroundServices)
+            _ = service.StartAsync();
     }
 
     protected override Window CreateWindow(IActivationState? activationState) =>

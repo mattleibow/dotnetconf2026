@@ -1,4 +1,5 @@
 using ConferenceApp.Data;
+using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,7 +18,7 @@ public static class EmbeddingExtensions
         builder.Services.AddInMemoryVectorStore();
         builder.Services.AddInMemoryVectorStoreRecordCollection<string, Session>("sessions");
 
-        builder.Services.AddSingleton<SessionIndexingService>();
+        builder.Services.AddSingleton<BaseBackgroundService, SessionIndexingService>();
 
         return builder;
     }

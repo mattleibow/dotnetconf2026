@@ -1,3 +1,4 @@
+using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DataIngestion;
 using Microsoft.Extensions.Logging;
@@ -15,8 +16,8 @@ public static class DataExtensions
             LoggerFactory = services.GetRequiredService<ILoggerFactory>()
         });
 
-        builder.Services.AddSingleton<SessionSummaryEnrichmentService>();
-        builder.Services.AddSingleton<SessionTopicEnrichmentService>();
+        builder.Services.AddSingleton<BaseBackgroundService, SessionSummaryEnrichmentService>();
+        builder.Services.AddSingleton<BaseBackgroundService, SessionTopicEnrichmentService>();
 
         return builder;
     }

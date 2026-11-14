@@ -107,7 +107,7 @@ builder.Services
 
 builder.Services.AddInMemoryVectorStore();
 builder.Services.AddInMemoryVectorStoreRecordCollection<string, Session>("sessions");
-builder.Services.AddSingleton<SessionIndexingService>();
+builder.Services.AddSingleton<BaseBackgroundService, SessionIndexingService>();
 ```
 
 At startup, [`SessionIndexingService.cs`](../src/ConferenceApp/AI/Embeddings/SessionIndexingService.cs) loads the 51 talk sessions from `ConferenceDb` (`s.IsTalk && !string.IsNullOrWhiteSpace(s.Description)`) and indexes them in two lines:
@@ -149,7 +149,7 @@ Switch the city to **Durban**, type **`football forecasts`** and **`gradient des
 
 Open [`src/ConferenceApp/AI/Data/DataExtensions.cs`](../src/ConferenceApp/AI/Data/DataExtensions.cs), [`SessionSummaryEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionSummaryEnrichmentService.cs), and [`SessionTopicEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionTopicEnrichmentService.cs).
 
-Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers shared `EnricherOptions` (backed by the local `IChatClient`) along with two independent background enrichment services that run in parallel via `Task.WhenAll` in `App.xaml.cs`:
+Putting all 51 full Markdown abstracts into a compact on-device model's context window overflows or degrades accuracy. Using `Microsoft.Extensions.DataIngestion` (`11.0.0-preview.1.26560.3`), `DataExtensions.cs` registers shared `EnricherOptions` (backed by the local `IChatClient`) along with two `BaseBackgroundService` implementations that `App.xaml.cs` starts automatically via `IEnumerable<BaseBackgroundService>`:
 
 - **[`SessionSummaryEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionSummaryEnrichmentService.cs)** uses `SummaryEnricher(enricherOptions, maxWordCount: 24)` to populate `session.Summary`.
 - **[`SessionTopicEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionTopicEnrichmentService.cs)** uses `KeywordEnricher(enricherOptions, predefinedKeywords: Topics, maxKeywords: 3, confidenceThreshold: 0.7)` across the 11 conference topics (`AI`, `Agents`, `Cloud`, `Data`, `Mobile`, `Web`, `IoT`, `Architecture`, `Security`, `DevOps`, `Gaming`) to populate `session.Topics`.
