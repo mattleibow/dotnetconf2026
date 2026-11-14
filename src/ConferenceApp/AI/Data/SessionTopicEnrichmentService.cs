@@ -14,6 +14,7 @@ public sealed class SessionTopicEnrichmentService(
     UserPreferencesService preferences,
     EnricherOptions enricherOptions,
     ILogger<SessionTopicEnrichmentService> logger)
+    : BaseBackgroundService(dbProvider, preferences, logger)
 {
     public static readonly string[] Topics =
     [
@@ -36,39 +37,20 @@ public sealed class SessionTopicEnrichmentService(
         maxKeywords: 3,
         confidenceThreshold: 0.7);
 
-    private Task? processing;
-
-    public Task StartAsync() => processing ??= Task.Run(EnrichAsync);
-
-    private async Task EnrichAsync()
+    protected override async Task ExecuteAsync()
     {
-        try
+        if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+            return;
+
+        foreach (var session in await GetTalkSessionsAsync())
         {
-            if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
-                return;
+            await TryExtractTopicsAsync(session, session.EmbeddingText);
 
-            var db = await dbProvider.GetDbAsync();
-            var activeCity = await preferences.GetSelectedCityAsync();
+            if (session.Topics.Count == 0)
+                await TryExtractTopicsAsync(session, session.Title);
 
-            var sessions = db.Sessions
-                .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
-                .OrderByDescending(s => s.CityId == activeCity.Id)
-                .ToList();
-
-            foreach (var session in sessions)
-            {
-                await TryExtractTopicsAsync(session, session.EmbeddingText);
-
-                if (session.Topics.Count == 0)
-                    await TryExtractTopicsAsync(session, session.Title);
-
-                logger.LogInformation("[AI] Topics for {SessionId}: [{Topics}]",
-                    session.Id, string.Join(", ", session.Topics));
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "[AI] Background session topic enrichment stopped.");
+            Logger.LogInformation("[AI] Topics for {SessionId}: [{Topics}]",
+                session.Id, string.Join(", ", session.Topics));
         }
     }
 
@@ -94,11 +76,5 @@ public sealed class SessionTopicEnrichmentService(
             if (matched.Length > 0)
                 session.Topics = matched;
         }
-    }
-
-    private static async IAsyncEnumerable<IngestionChunk<string>> SingleChunk(IngestionChunk<string> chunk)
-    {
-        yield return chunk;
-        await Task.CompletedTask;
     }
 }

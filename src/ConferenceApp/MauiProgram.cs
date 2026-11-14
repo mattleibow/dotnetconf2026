@@ -25,6 +25,7 @@ public static class MauiProgram
             });
 
         builder.Services.AddSingleton<ConferenceDbProvider>();
+        builder.Services.AddSingleton<DatabasePreloadService>();
         builder.Services.AddSingleton<UserPreferencesService>();
         builder.Services.AddSingleton<SearchService>();
         builder.Services.AddSingleton<ChatService>();

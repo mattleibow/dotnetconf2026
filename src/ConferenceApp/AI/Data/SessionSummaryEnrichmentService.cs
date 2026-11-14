@@ -14,39 +14,22 @@ public sealed class SessionSummaryEnrichmentService(
     UserPreferencesService preferences,
     EnricherOptions enricherOptions,
     ILogger<SessionSummaryEnrichmentService> logger)
+    : BaseBackgroundService(dbProvider, preferences, logger)
 {
     private readonly SummaryEnricher enricher = new(enricherOptions, maxWordCount: 24);
-    private Task? processing;
 
-    public Task StartAsync() => processing ??= Task.Run(EnrichAsync);
-
-    private async Task EnrichAsync()
+    protected override async Task ExecuteAsync()
     {
-        try
+        if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
+            return;
+
+        foreach (var session in await GetTalkSessionsAsync())
         {
-            if (await ChatExtensions.GetModelAvailabilityAsync() != ChatModelAvailability.Available)
-                return;
+            Logger.LogInformation("[AI] Summarizing session {SessionId}...", session.Id);
+            await TrySummarizeAsync(session, session.EmbeddingText);
 
-            var db = await dbProvider.GetDbAsync();
-            var activeCity = await preferences.GetSelectedCityAsync();
-
-            var sessions = db.Sessions
-                .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
-                .OrderByDescending(s => s.CityId == activeCity.Id)
-                .ToList();
-
-            foreach (var session in sessions)
-            {
-                logger.LogInformation("[AI] Summarizing session {SessionId}...", session.Id);
-                await TrySummarizeAsync(session, session.EmbeddingText);
-
-                if (string.IsNullOrWhiteSpace(session.Summary))
-                    await TrySummarizeAsync(session, session.Title);
-            }
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(exception, "[AI] Background session summary enrichment stopped.");
+            if (string.IsNullOrWhiteSpace(session.Summary))
+                await TrySummarizeAsync(session, session.Title);
         }
     }
 
@@ -63,11 +46,5 @@ public sealed class SessionSummaryEnrichmentService(
                 session.Summary = string.Join(" ", raw.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
             }
         }
-    }
-
-    private static async IAsyncEnumerable<IngestionChunk<string>> SingleChunk(IngestionChunk<string> chunk)
-    {
-        yield return chunk;
-        await Task.CompletedTask;
     }
 }
