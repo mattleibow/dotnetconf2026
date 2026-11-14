@@ -51,21 +51,31 @@ if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVers
 #elif ANDROID
 if (OperatingSystem.IsAndroidVersionAtLeast(26))
 {
-    return new GeminiNanoChatClient()
+    return new OrderedFailoverChatClient(
+        [
+            .. AndroidCandidateModels.Select(modelId =>
+                new GeminiNanoChatClient()
+                    .AsBuilder()
+                    .ConfigureOptions(options => options.ModelId = modelId)
+                    .Build())
+        ])
         .AsBuilder()
+        .Use(UseAndroidCompatibilityAsync, UseAndroidStreamingCompatibilityAsync)
         .UseFunctionInvocation(loggerFactory)
         .UseLogging(loggerFactory)
-        .Build();
+        .Build(services);
 }
 #endif
 return new UnavailableChatClient();
 ```
 
-Point out two important details here:
+Point out three important details here:
 
-First, notice how `AppleIntelligenceChatClient` takes `functionInvocationServices: services` directly in its constructor (without `.UseFunctionInvocation()`), because Apple's native Foundation Models runtime executes tools inside its native bridge and uses `functionInvocationServices` to resolve `[FromServices]` parameters. On Android and Windows, `.UseFunctionInvocation(loggerFactory)` adds the managed `Microsoft.Extensions.AI` tool-calling loop.
+First, notice how `AppleIntelligenceChatClient` takes `functionInvocationServices: services` directly in its constructor (without `.UseFunctionInvocation()`), because Apple's native Foundation Models runtime executes tools inside its native bridge and uses `functionInvocationServices` to resolve `[FromServices]` parameters. On Android and Windows, `.UseFunctionInvocation(loggerFactory)` + `.Build(services)` adds the managed `Microsoft.Extensions.AI` tool-calling loop.
 
-Second, if the current OS or device doesn't support local AI (for example an Android emulator where Google AICore isn't installed), `CreateLocalChatClient` falls back to [`UnavailableChatClient`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs) and `GetModelAvailabilityAsync()` catches platform status exceptions to return `ChatModelAvailability.NotSupported`. That means `IChatClient`, enrichers, and agents **always resolve cleanly from DI**, while `ChatPage` displays the `chat-unavailable` banner (`"On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."`) and disables chat inputs.
+Second, on Android, **`OrderedFailoverChatClient`** (`Microsoft.Extensions.AI` 11.0.0) chains the Gemini Nano profiles (`gemini-nano-preview-fast`, `gemini-nano-preview-full`, `gemini-nano-full`, `gemini-nano-fast`) in order. If a profile isn't downloaded or doesn't support a capability (such as tool calling), `OrderedFailoverChatClient` automatically advances to the next profile.
+
+Third, if the current OS or device doesn't support local AI (for example an Android emulator where Google AICore isn't installed), `CreateLocalChatClient` falls back to [`UnavailableChatClient`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs) and `GetModelAvailabilityAsync()` catches platform status exceptions to return `ChatModelAvailability.NotSupported`. That means `IChatClient`, enrichers, and agents **always resolve cleanly from DI**, while `ChatPage` displays the `chat-unavailable` banner (`"On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."`) and disables chat inputs.
 
 ---
 
