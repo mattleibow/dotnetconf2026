@@ -8,22 +8,63 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid Padding="16">
+    <Grid Padding="16" MaximumWidthRequest="1100">
         <CollectionView AutomationId="speaker-list" ItemsSource="{Binding Speakers}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="Speaker">
-                    <Border StrokeShape="RoundRectangle 8"
-                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                            Background="Transparent"
-                            Padding="12"
-                            Margin="0,4"
+                    <Border Style="{StaticResource CardBorder}"
+                            Margin="0,6"
                             AutomationId="{Binding Id, StringFormat='speaker-{0}'}">
-                        <VerticalStackLayout Spacing="4" Background="Transparent">
-                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
-                            <Label Text="{Binding Tagline}"
-                                   FontSize="13"
-                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                        </VerticalStackLayout>
+                        <Grid ColumnDefinitions="56,*"
+                              ColumnSpacing="14"
+                              Background="Transparent">
+                            <Border StrokeShape="RoundRectangle 28"
+                                    StrokeThickness="0"
+                                    HeightRequest="56"
+                                    WidthRequest="56"
+                                    Padding="0"
+                                    Background="{StaticResource SecondaryBrandBrush}"
+                                    VerticalOptions="Center">
+                                <Grid>
+                                    <Label Text="{Binding Initials}"
+                                           Style="{StaticResource Subtitle}"
+                                           TextColor="{StaticResource White}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                    <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="56"
+                                           WidthRequest="56" />
+                                </Grid>
+                            </Border>
+
+                            <VerticalStackLayout Grid.Column="1"
+                                                 Spacing="6"
+                                                 VerticalOptions="Center"
+                                                 Background="Transparent">
+                                <Label Text="{Binding Name}"
+                                       Style="{StaticResource Subtitle}" />
+                                <Label Text="{Binding Tagline}"
+                                       Style="{StaticResource Caption}"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation"
+                                       IsVisible="{!string.IsNullOrWhiteSpace(Tagline)}" />
+                                <HorizontalStackLayout Spacing="6"
+                                                       BindableLayout.ItemsSource="{Binding CityIds}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <Border Style="{StaticResource TopicPillBorder}"
+                                                    Padding="10,3">
+                                                <Label Text="{Binding .}"
+                                                       Style="{StaticResource TopicPillLabel}"
+                                                       FontSize="11"
+                                                       TextTransform="Uppercase" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Grid>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SpeakersViewModel}}, x:DataType=SpeakersViewModel}"
                                                   CommandParameter="{Binding .}" />

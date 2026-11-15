@@ -9,31 +9,69 @@
     </ContentPage.ToolbarItems>
 
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
-            <VerticalStackLayout Spacing="4">
-                <Label Text=".NET Conf 2026 South Africa" FontSize="24" FontAttributes="Bold" />
-                <Label Text="{Binding SelectedCity.Date, StringFormat='{0:D}'}"
-                       FontSize="14"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-            </VerticalStackLayout>
+        <VerticalStackLayout Padding="16" Spacing="24" MaximumWidthRequest="1100">
+            <!-- 135-degree Primary-to-Accent Hero Banner -->
+            <Border StrokeShape="RoundRectangle 20"
+                    StrokeThickness="0"
+                    Padding="0">
+                <Grid>
+                    <BoxView Fill="{StaticResource HeroGradientBrush}" />
+                    <VerticalStackLayout Padding="24" Spacing="8">
+                        <Border StrokeShape="RoundRectangle 999"
+                                StrokeThickness="0"
+                                Background="#28FFFFFF"
+                                Padding="12,4"
+                                HorizontalOptions="Start">
+                            <Label Text="{Binding SelectedCity.Name}"
+                                   Style="{StaticResource Label}"
+                                   TextColor="{StaticResource White}" />
+                        </Border>
+                        <Label Text=".NET Conf 2026 South Africa"
+                               Style="{StaticResource Display}" />
+                        <Label Text="{Binding SelectedCity.Date, StringFormat='{0:dddd, d MMMM yyyy}'}"
+                               Style="{StaticResource Subtitle}"
+                               TextColor="{StaticResource Secondary}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="Sponsors" FontSize="18" FontAttributes="Bold" />
-                <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
+            <!-- Sponsors Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="SPONSORS" Style="{StaticResource SectionHeader}" />
+                <VerticalStackLayout AutomationId="sponsor-list"
+                                     BindableLayout.ItemsSource="{Binding Sponsors}"
+                                     Spacing="12">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="Sponsor">
-                            <Border StrokeShape="RoundRectangle 8"
-                                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                                    Background="Transparent"
-                                    Padding="12"
-                                    Margin="0,4"
+                            <Border Style="{StaticResource CardBorder}"
                                     AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
-                                <VerticalStackLayout Spacing="4" Background="Transparent">
-                                    <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
-                                    <Label Text="{Binding Tier}"
-                                           FontSize="13"
-                                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                                </VerticalStackLayout>
+                                <Grid ColumnDefinitions="104,*"
+                                      ColumnSpacing="16"
+                                      Background="Transparent">
+                                    <Border Style="{StaticResource SponsorTileBorder}"
+                                            HeightRequest="68"
+                                            WidthRequest="104"
+                                            VerticalOptions="Center">
+                                        <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                               Aspect="AspectFit"
+                                               HeightRequest="44"
+                                               WidthRequest="80"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="6"
+                                                         VerticalOptions="Center"
+                                                         Background="Transparent">
+                                        <Border Style="{StaticResource AccentPillBorder}"
+                                                HorizontalOptions="Start">
+                                            <Label Text="{Binding Tier}"
+                                                   Style="{StaticResource AccentPillLabel}" />
+                                        </Border>
+                                        <Label Text="{Binding Name}"
+                                               Style="{StaticResource Subtitle}" />
+                                    </VerticalStackLayout>
+                                </Grid>
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type EventViewModel}}, x:DataType=EventViewModel}"
                                                           CommandParameter="{Binding .}" />
@@ -44,17 +82,46 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
 
-            <VerticalStackLayout Spacing="8">
-                <Label Text="{Binding Venue.Name}" FontSize="18" FontAttributes="Bold" />
-                <Label Text="{Binding Venue.Address}"
-                       FontSize="14"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                    <Map x:Name="VenueMap"
-                         AutomationId="venue-map"
-                         HeightRequest="240"
-                         IsShowingUser="False" />
-                <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
-                <Label Text="{Binding Description}" FontSize="14" />
+            <!-- Venue Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="VENUE" Style="{StaticResource SectionHeader}" />
+                <Border Style="{StaticResource CardBorder}">
+                    <VerticalStackLayout Spacing="16">
+                        <Border StrokeShape="RoundRectangle 12"
+                                StrokeThickness="0"
+                                HeightRequest="180">
+                            <Image Source="{Binding Venue.Image, Converter={StaticResource PackagedImage}}"
+                                   Aspect="AspectFill"
+                                   HeightRequest="180" />
+                        </Border>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Venue.Name}"
+                                   Style="{StaticResource Title}" />
+                            <Label Text="{Binding Venue.Address}"
+                                   Style="{StaticResource Caption}" />
+                        </VerticalStackLayout>
+
+                        <Label FormattedText="{Binding Description, Converter={StaticResource MarkdownConverter}}"
+                               Style="{StaticResource Body}"
+                               IsVisible="{!string.IsNullOrWhiteSpace(Description)}" />
+
+                        <Border StrokeShape="RoundRectangle 12"
+                                Stroke="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}"
+                                StrokeThickness="1"
+                                Padding="0">
+                            <Map x:Name="VenueMap"
+                                 AutomationId="venue-map"
+                                 HeightRequest="220"
+                                 IsShowingUser="False" />
+                        </Border>
+
+                        <Button AutomationId="open-map"
+                                Text="Open in Maps"
+                                Style="{StaticResource AccentButton}"
+                                Command="{Binding OpenMapCommand}" />
+                    </VerticalStackLayout>
+                </Border>
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>

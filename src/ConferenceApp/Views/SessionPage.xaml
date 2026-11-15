@@ -3,50 +3,80 @@
           x:DataType="SessionViewModel"
           Title="Session">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
-            <Label Text="{Binding Session.Title}" FontSize="22" FontAttributes="Bold" />
-            <Label Text="{Binding Session.Time}"
-                   FontSize="14"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-            <Label Text="{Binding Session.Track}"
-                   FontSize="13"
-                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-            <VerticalStackLayout BindingContext="{Binding Session, x:DataType=SessionViewModel}">
-                <HorizontalStackLayout Spacing="6"
-                                       x:DataType="Session"
-                                       IsVisible="{Topics.Count > 0}"
-                                       BindableLayout.ItemsSource="{Binding Topics}">
-                    <BindableLayout.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border StrokeShape="RoundRectangle 6"
-                                    Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
-                                    Padding="6,2">
-                                <Label Text="{Binding .}" FontSize="11" />
-                            </Border>
-                        </DataTemplate>
-                    </BindableLayout.ItemTemplate>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-            <Button AutomationId="favorite-button"
-                    Text="{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}"
-                    Command="{Binding ToggleFavoriteCommand}" />
+        <VerticalStackLayout Padding="16" Spacing="16" MaximumWidthRequest="1100">
+            <!-- Session Header Card -->
+            <Border Style="{StaticResource CardBorder}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{Binding Session.CityMeta}"
+                           Style="{StaticResource Label}" />
+                    <Label Text="{Binding Session.Title}"
+                           Style="{StaticResource Title}" />
+                    <VerticalStackLayout BindingContext="{Binding Session, x:DataType=SessionViewModel}">
+                        <HorizontalStackLayout Spacing="6"
+                                               x:DataType="Session"
+                                               IsVisible="{Topics.Count > 0}"
+                                               BindableLayout.ItemsSource="{Binding Topics}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Style="{StaticResource TopicPillBorder}">
+                                        <Label Text="{Binding .}"
+                                               Style="{StaticResource TopicPillLabel}" />
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                    <Button AutomationId="favorite-button"
+                            Style="{StaticResource AccentButton}"
+                            Text="{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}"
+                            Command="{Binding ToggleFavoriteCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Speakers Section -->
             <VerticalStackLayout AutomationId="session-speakers"
-                                 Spacing="8"
+                                 Spacing="10"
                                  BindableLayout.ItemsSource="{Binding Speakers}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="Speaker">
-                        <Border StrokeShape="RoundRectangle 8"
-                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                                Background="Transparent"
-                                Padding="12"
-                                Margin="0,2"
+                        <Border Style="{StaticResource CompactCardBorder}"
                                 AutomationId="{Binding Id, StringFormat='session-speaker-{0}'}">
-                            <VerticalStackLayout Spacing="2" Background="Transparent">
-                                <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" />
-                                <Label Text="{Binding Tagline}"
-                                       FontSize="12"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                            </VerticalStackLayout>
+                            <Grid ColumnDefinitions="44,*"
+                                  ColumnSpacing="12"
+                                  Background="Transparent">
+                                <Border StrokeShape="RoundRectangle 22"
+                                        StrokeThickness="0"
+                                        HeightRequest="44"
+                                        WidthRequest="44"
+                                        Padding="0"
+                                        Background="{StaticResource SecondaryBrandBrush}"
+                                        VerticalOptions="Center">
+                                    <Grid>
+                                        <Label Text="{Binding Initials}"
+                                               Style="{StaticResource Caption}"
+                                               TextColor="{StaticResource White}"
+                                               FontFamily="OpenSansSemibold"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                        <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                               Aspect="AspectFill"
+                                               HeightRequest="44"
+                                               WidthRequest="44" />
+                                    </Grid>
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Spacing="2"
+                                                     VerticalOptions="Center"
+                                                     Background="Transparent">
+                                    <Label Text="{Binding Name}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="15" />
+                                    <Label Text="{Binding Tagline}"
+                                           Style="{StaticResource Caption}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                            </Grid>
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SessionViewModel}}, x:DataType=SessionViewModel}"
                                                       CommandParameter="{Binding .}" />
@@ -55,7 +85,16 @@
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
-            <Label Text="{Binding Description}" FontSize="14" />
+
+            <!-- Abstract Card -->
+            <Border Style="{StaticResource CardBorder}"
+                    IsVisible="{!string.IsNullOrWhiteSpace(Description)}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="ABSTRACT" Style="{StaticResource SectionHeader}" />
+                    <Label FormattedText="{Binding Description, Converter={StaticResource MarkdownConverter}}"
+                           Style="{StaticResource Body}" />
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
     </ScrollView>
 </BasePage>
