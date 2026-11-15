@@ -57,9 +57,8 @@
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 
-		<!-- Conference data and ONNX embedding model, shipped with the app so it works offline -->
+		<!-- Conference data shipped with the app so it works offline -->
 		<MauiAsset Include="..\..\data\conference\**" LogicalName="conference/%(RecursiveDir)%(Filename)%(Extension)" />
-		<MauiAsset Include="..\..\models\all-MiniLM-L6-v2\*" LogicalName="models/all-MiniLM-L6-v2/%(Filename)%(Extension)" />
 	</ItemGroup>
 
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
@@ -73,20 +72,11 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" />
-		<PackageReference Include="CommunityToolkit.VectorData.InMemory" />
 		<PackageReference Include="Markdig.Signed" />
 		<PackageReference Include="Microsoft.Maui.Controls" />
 		<PackageReference Include="Microsoft.Maui.Controls.Maps" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Condition="'$(Configuration)' == 'Debug'" />
-		<PackageReference Include="Microsoft.Extensions.AI" />
-		<PackageReference Include="Microsoft.Maui.AI.Attributes" />
-		<PackageReference Include="Microsoft.Agents.AI" />
-		<PackageReference Include="Microsoft.Agents.AI.Workflows" />
-		<PackageReference Include="Microsoft.Extensions.DataIngestion" />
-		<PackageReference Include="Microsoft.ML.OnnxRuntime" />
-		<PackageReference Include="Microsoft.ML.Tokenizers" />
-		<PackageReference Include="Microsoft.Maui.Essentials.AI" />
 	</ItemGroup>
 
 </Project>

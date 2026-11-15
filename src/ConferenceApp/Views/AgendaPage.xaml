@@ -8,7 +8,7 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*" Padding="10" RowSpacing="10">
+    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <Entry AutomationId="agenda-search"
                    Placeholder="Search sessions or speakers..."
@@ -22,25 +22,45 @@
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="Session">
-                    <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{$'session-{Id}'}">
-                        <Label Text="{Binding Meta}" />
-                        <HorizontalStackLayout Spacing="6"
-                                               IsVisible="{Topics.Count > 0}"
-                                               BindableLayout.ItemsSource="{Binding Topics}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="x:String">
-                                    <Label Text="{Binding .}" />
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </HorizontalStackLayout>
-                        <Label Text="{Binding Title}" FontAttributes="Bold" />
-                        <Label Text="{Binding Summary}" IsVisible="{!string.IsNullOrWhiteSpace(Summary)}" MaxLines="2" LineBreakMode="TailTruncation" />
-                        <Label Text="{Binding SpeakerNames}" />
-                        <VerticalStackLayout.GestureRecognizers>
+                    <Border StrokeShape="RoundRectangle 8"
+                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                            Background="Transparent"
+                            Padding="12"
+                            Margin="0,4"
+                            AutomationId="{$'session-{Id}'}">
+                        <VerticalStackLayout Spacing="6" Background="Transparent">
+                            <Label Text="{Binding Meta}"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                            <HorizontalStackLayout Spacing="6"
+                                                   IsVisible="{Topics.Count > 0}"
+                                                   BindableLayout.ItemsSource="{Binding Topics}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="x:String">
+                                        <Border StrokeShape="RoundRectangle 6"
+                                                Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                                                Padding="6,2">
+                                            <Label Text="{Binding .}" FontSize="11" />
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </HorizontalStackLayout>
+                            <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="{Binding Summary}"
+                                   IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                   FontSize="13"
+                                   MaxLines="2"
+                                   LineBreakMode="TailTruncation" />
+                            <Label Text="{Binding SpeakerNames}"
+                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
                                                   CommandParameter="{Binding .}" />
-                        </VerticalStackLayout.GestureRecognizers>
-                    </VerticalStackLayout>
+                        </Border.GestureRecognizers>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

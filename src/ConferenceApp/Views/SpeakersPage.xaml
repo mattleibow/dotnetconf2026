@@ -8,18 +8,29 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <CollectionView AutomationId="speaker-list" Margin="10" ItemsSource="{Binding Speakers}">
-        <CollectionView.ItemTemplate>
-            <DataTemplate x:DataType="Speaker">
-                <VerticalStackLayout Padding="0,8" Background="Transparent" AutomationId="{Binding Id, StringFormat='speaker-{0}'}">
-                    <Label Text="{Binding Name}" FontAttributes="Bold" />
-                    <Label Text="{Binding Tagline}" />
-                    <VerticalStackLayout.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SpeakersViewModel}}, x:DataType=SpeakersViewModel}"
-                                              CommandParameter="{Binding .}" />
-                    </VerticalStackLayout.GestureRecognizers>
-                </VerticalStackLayout>
-            </DataTemplate>
-        </CollectionView.ItemTemplate>
-    </CollectionView>
+    <Grid Padding="16">
+        <CollectionView AutomationId="speaker-list" ItemsSource="{Binding Speakers}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="Speaker">
+                    <Border StrokeShape="RoundRectangle 8"
+                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                            Background="Transparent"
+                            Padding="12"
+                            Margin="0,4"
+                            AutomationId="{Binding Id, StringFormat='speaker-{0}'}">
+                        <VerticalStackLayout Spacing="4" Background="Transparent">
+                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="{Binding Tagline}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SpeakersViewModel}}, x:DataType=SpeakersViewModel}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
 </BasePage>

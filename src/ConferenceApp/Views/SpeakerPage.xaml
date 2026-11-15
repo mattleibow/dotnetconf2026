@@ -3,32 +3,55 @@
           x:DataType="SpeakerViewModel"
           Title="Speaker">
     <ScrollView>
-        <VerticalStackLayout Padding="10" Spacing="10">
-            <Label Text="{Binding Speaker.Name}" FontAttributes="Bold" />
-            <Label Text="{Binding Speaker.Tagline}" />
-            <Label Text="{Binding Bio}" />
-            <Label Text="Sessions" FontAttributes="Bold" />
-            <VerticalStackLayout AutomationId="speaker-sessions" BindableLayout.ItemsSource="{Binding Sessions}">
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <VerticalStackLayout Spacing="4">
+                <Label Text="{Binding Speaker.Name}" FontSize="22" FontAttributes="Bold" />
+                <Label Text="{Binding Speaker.Tagline}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+            </VerticalStackLayout>
+            <Label Text="{Binding Bio}" FontSize="14" />
+            <Label Text="Sessions" FontSize="18" FontAttributes="Bold" Margin="0,4,0,0" />
+            <VerticalStackLayout AutomationId="speaker-sessions"
+                                 Spacing="8"
+                                 BindableLayout.ItemsSource="{Binding Sessions}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="Session">
-                        <VerticalStackLayout Padding="0,4" Background="Transparent" AutomationId="{$'speaker-session-{Id}'}">
-                            <Label Text="{Binding CityMeta}" />
-                            <HorizontalStackLayout Spacing="6"
-                                                   IsVisible="{Topics.Count > 0}"
-                                                   BindableLayout.ItemsSource="{Binding Topics}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="x:String">
-                                        <Label Text="{Binding .}" />
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </HorizontalStackLayout>
-                            <Label Text="{Binding Title}" FontAttributes="Bold" />
-                            <Label Text="{Binding Summary}" IsVisible="{!string.IsNullOrWhiteSpace(Summary)}" MaxLines="2" LineBreakMode="TailTruncation" />
-                            <VerticalStackLayout.GestureRecognizers>
+                        <Border StrokeShape="RoundRectangle 8"
+                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                Background="Transparent"
+                                Padding="12"
+                                Margin="0,4"
+                                AutomationId="{$'speaker-session-{Id}'}">
+                            <VerticalStackLayout Spacing="6" Background="Transparent">
+                                <Label Text="{Binding CityMeta}"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                                <HorizontalStackLayout Spacing="6"
+                                                       IsVisible="{Topics.Count > 0}"
+                                                       BindableLayout.ItemsSource="{Binding Topics}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="x:String">
+                                            <Border StrokeShape="RoundRectangle 6"
+                                                    Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                                                    Padding="6,2">
+                                                <Label Text="{Binding .}" FontSize="11" />
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </HorizontalStackLayout>
+                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" />
+                                <Label Text="{Binding Summary}"
+                                       IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                       FontSize="13"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation" />
+                            </VerticalStackLayout>
+                            <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                       CommandParameter="{Binding .}" />
-                            </VerticalStackLayout.GestureRecognizers>
-                        </VerticalStackLayout>
+                            </Border.GestureRecognizers>
+                        </Border>
                     </DataTemplate>
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
