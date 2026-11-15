@@ -60,7 +60,6 @@ if (OperatingSystem.IsAndroidVersionAtLeast(26))
                     .Build())
         ])
         .AsBuilder()
-        .Use(UseAndroidCompatibilityAsync, UseAndroidStreamingCompatibilityAsync)
         .UseFunctionInvocation(loggerFactory)
         .UseLogging(loggerFactory)
         .Build(services);
