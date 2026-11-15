@@ -161,19 +161,19 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 - **Global City Switcher:** Every tab (Event, Agenda, Speakers, Assistant) exposes the city switcher in the top-right toolbar showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet—do not put a second city picker inside the page body.
 
 ### Agenda & Session Cards
-- **Search & Filter Bar:** Top bar on Agenda with a rounded search input (`AutomationId="agenda-search"`) and the **All Sessions** / **Favourites** filter toggle (`AutomationId="favorites-filter"`).
-- **Talk Cards:** 16pt rounded `Surface` card with time, track chip, and AI topic chip (`Topic` when `HasTopic`) along the top, session title in `Subtitle` (max 2 lines), AI summary (`Summary` when `HasSummary`, max 2 lines), speaker avatars + names in `Caption`, and a 44×44pt heart toggle aligned top-right (filled `Accent` heart when favourited, outline `TextSecondary` heart otherwise). Entire card is tappable with `Background="Transparent"` on hit targets.
-- **General Items** (registration, breaks, lunch): Compact single row with time and title—no card chrome and no favourite heart.
+- **Search & Filter Bar:** Top bar on Agenda with a rounded search input (`AutomationId="agenda-search"`) and the **Showing: All Sessions** / **Showing: Favourites** filter toggle (`AutomationId="favorites-filter"`).
+- **Talk Cards:** 16pt rounded `Surface` card with time and track metadata (`Meta`), horizontal AI topic pills (`BindableLayout.ItemsSource="{Binding Topics}"`, `IsVisible="{Topics.Count > 0}"`) along the top, session title in `Subtitle` (max 2 lines), AI summary (`Summary`, `IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"`, max 2 lines), and speaker names (`SpeakerNames`) in `Caption`. Entire card is tappable with `Background="Transparent"` on hit targets.
+- **General Items** (registration, breaks, lunch): Compact row with time and title.
 
 ### Detail Pages (Session & Speaker)
-- **Session Page:** Gradient header with title, time and room chips, tappable speaker rows with 40pt photos, full abstract in `Body`, and a full-width `Accent` favourite button.
-- **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards with time, track/topic chips, title, and AI summary.
+- **Session Page:** Header with title, time/track metadata (`CityMeta`), horizontal topic pills (`Topics` when `Topics.Count > 0`), tappable speaker rows (`AutomationId="{$'speaker-{Id}'}"`) with circular 40pt photos, full abstract in `Body` (`MarkdownToFormattedStringConverter`), and a full-width `Accent` favourite button (`AutomationId="favorite-button"`).
+- **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards (`AutomationId="{$'speaker-session-{Id}'}"`) with `CityMeta`, horizontal topic pills (`Topics` when `Topics.Count > 0`), title, and AI summary (`Summary`).
 
 ### Assistant
-- **Top Action & Suggestion Bar:** Pinned **Plan my day** pill button (`AutomationId="plan-my-day"`), horizontal scrollable suggestion chips (`Surface` background, `PrimaryText` label, 1pt `Divider` stroke), and a **New chat** button (`AutomationId="chat-new"`).
-- **Message Bubbles & Live Progress:** User messages right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and an inline italic progress status label (`Progress` when `HasProgress`, `AutomationId="chat-progress"`).
-- **Referenced Session Cards:** Tappable session cards (`Sessions`, `AutomationId="chat-session-card-<id>"`) rendered cleanly below the assistant reply bubble.
-- **Input Bar:** Pinned bottom bar with a rounded `Surface` `Entry` and a `Primary` Send button.
+- **Empty State Suggestions (`CollectionView.EmptyView`):** Centered vertical stack of tappable starter suggestion buttons (`BindableLayout.ItemsSource="{Binding Suggestions}"`, `Surface` background, `PrimaryText` label, 1pt `Divider` stroke) shown when `Messages` is empty.
+- **Message Bubbles & Live Progress:** User messages (`IsUser`) right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and an inline italic progress status label (`Progress`, `IsVisible="{!string.IsNullOrWhiteSpace(Progress)}"`, `AutomationId="chat-progress"`).
+- **Referenced Session Cards:** Tappable session cards (`BindableLayout.ItemsSource="{Binding Sessions}"`, `AutomationId="{$'chat-session-card-{Id}'}"`) rendered cleanly below the assistant reply bubble.
+- **Bottom Input Bar:** Pinned bottom bar with the **New chat** button (`AutomationId="chat-new"`), rounded `Surface` `Entry` (`AutomationId="chat-input"`), and `Primary` **Send** button (`AutomationId="chat-send"`).
 
 ## Do's and Don'ts
 
