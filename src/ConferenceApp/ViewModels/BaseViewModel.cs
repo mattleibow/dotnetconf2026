@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
@@ -12,17 +13,20 @@ public abstract partial class BaseViewModel : ObservableObject,
     protected BaseViewModel(
         ConferenceDbProvider dbProvider,
         UserPreferencesService preferences,
-        IDispatcher dispatcher)
+        IDispatcher dispatcher,
+        ILogger logger)
     {
         DbProvider = dbProvider;
         Preferences = preferences;
         Dispatcher = dispatcher;
+        Logger = logger;
         WeakReferenceMessenger.Default.RegisterAll(this);
     }
 
     protected ConferenceDbProvider DbProvider { get; }
     protected UserPreferencesService Preferences { get; }
     protected IDispatcher Dispatcher { get; }
+    protected ILogger Logger { get; }
 
     [ObservableProperty]
     public partial City? SelectedCity { get; set; }
@@ -36,8 +40,15 @@ public abstract partial class BaseViewModel : ObservableObject,
     [RelayCommand]
     private async Task LoadAsync()
     {
-        SelectedCity = await Preferences.GetSelectedCityAsync();
-        await OnLoadAsync();
+        try
+        {
+            SelectedCity = await Preferences.GetSelectedCityAsync();
+            await OnLoadAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load {ViewModel}.", GetType().Name);
+        }
     }
 
     protected abstract Task OnLoadAsync();

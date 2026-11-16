@@ -4,13 +4,15 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
 public partial class SessionViewModel(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
+    IDispatcher dispatcher,
+    ILogger<SessionViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger),
     IQueryAttributable,
     IRecipient<FavoritesChangedMessage>
 {
