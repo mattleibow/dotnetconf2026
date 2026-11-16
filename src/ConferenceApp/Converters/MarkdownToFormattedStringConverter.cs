@@ -31,13 +31,13 @@ public class MarkdownToFormattedStringConverter : IValueConverter
                     break;
                 case LeafBlock { Inline: { } inline }:
                     if (formatted.Spans.Count > 0)
-                        formatted.Spans.Add(new Span { Text = "\n" });
+                        formatted.Spans.Add(new Span { Text = "\n\n" });
                     if (listPrefix is not null)
                     {
-                        formatted.Spans.Add(new Span { Text = listPrefix });
+                        formatted.Spans.Add(new Span { Text = listPrefix, FontAttributes = FontAttributes.Bold });
                         listPrefix = null;
                     }
-                    WriteInlines(inline, formatted, FontAttributes.None);
+                    WriteInlines(inline, formatted, block is HeadingBlock ? FontAttributes.Bold : FontAttributes.None);
                     break;
                 case ContainerBlock nested:
                     WriteBlocks(nested, formatted, listPrefix);
