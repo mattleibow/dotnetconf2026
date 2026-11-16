@@ -1,14 +1,17 @@
 using System.Text.Json.Serialization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.Data;
 
 public partial class Session : ObservableObject
 {
+    [VectorStoreKey]
     public string Id { get; set; } = "";
 
     public string Title { get; set; } = "";
 
+    [VectorStoreData(IsIndexed = true)]
     public string CityId { get; set; } = "";
 
     public DateTimeOffset Start { get; set; }
@@ -48,5 +51,6 @@ public partial class Session : ObservableObject
     public string CityMeta => $"{City?.Name} · {Time} · {Track ?? "All attendees"}";
 
     [JsonIgnore]
+    [VectorStoreVector(384, DistanceFunction = DistanceFunction.CosineSimilarity)]
     public string EmbeddingText => $"{Title}\n\n{Description}";
 }
