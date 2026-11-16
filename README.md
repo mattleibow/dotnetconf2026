@@ -65,11 +65,11 @@ maui devflow logs --follow --no-json
 | Path | Feature |
 |---|---|
 | [`AI/ConferenceAIExtensions.cs`](src/ConferenceApp/AI/ConferenceAIExtensions.cs) | `builder.AddConferenceAI()` calling `AddChatClients()`, `AddEmbeddings()`, `AddDataEnrichment()`, `AddAITools()`, and `AddAgents()` |
-| [`AI/ChatClients/`](src/ConferenceApp/AI/ChatClients/) | `ChatExtensions.cs` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient`, `WindowsAIChatClient` with `.UseLogging()`) |
-| [`AI/Data/`](src/ConferenceApp/AI/Data/) | `DataExtensions.cs` (`EnricherOptions`, `SummaryEnricher`, `ClassificationEnricher`) and `SessionEnrichmentService.cs` |
+| [`AI/ChatClients/`](src/ConferenceApp/AI/ChatClients/) | `ChatExtensions.cs` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient` with `OrderedFailoverChatClient`, `WindowsAIChatClient` with `.UseLogging()`) |
+| [`AI/Data/`](src/ConferenceApp/AI/Data/) | `DataExtensions.cs` (`EnricherOptions`), `SessionSummaryEnrichmentService.cs` (`SummaryEnricher`), and `SessionTopicEnrichmentService.cs` (`KeywordEnricher`) |
 | [`AI/Embeddings/`](src/ConferenceApp/AI/Embeddings/) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `EmbeddingExtensions.cs` (`AddEmbeddingGenerator`, `AddInMemoryVectorStore`, `AddInMemoryVectorStoreRecordCollection<string, Session>("sessions")`), `MiniLmEmbeddingGenerator.cs`, and `SessionIndexingService.cs` |
 | [`AI/Tools/`](src/ConferenceApp/AI/Tools/) | `ToolExtensions.cs`, `ConferenceDataTools.cs` (`ConferenceDataToolContext`), and `FavoritesTools.cs` (`FavoritesToolContext`) using `[FromServices]` |
-| [`AI/Agents/`](src/ConferenceApp/AI/Agents/) | `AgentExtensions.cs` (`RoutingChatClient.Create` + `SemanticRoutingChatClient`), `ConferenceAssistantAgent.cs`, `SessionDeepDiveWorkflow.cs`, `TalkRecommendationWorkflow.cs`, and `UserContextProvider.cs`, `ScheduleContextProvider.cs`, `RagContextProvider.cs` |
+| [`AI/Agents/`](src/ConferenceApp/AI/Agents/) | `AgentExtensions.cs` (`RoutingChatClient.Create` + `SemanticRoutingChatClient`), `ConferenceAssistantAgent.cs`, `SessionDeepDiveWorkflow.cs`, `TalkRecommendationWorkflow.cs`, and `UserContextProvider.cs`, `ScheduleContextProvider.cs`, `AvailableSessionsContextProvider.cs`, `RagContextProvider.cs` |
 
 ## Refreshing the data and model
 

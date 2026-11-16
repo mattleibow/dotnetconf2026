@@ -1,14 +1,13 @@
 ---
-description: Make the wireframe app look like a polished conference app and add inline favourite hearts on Agenda cards
+description: Make the wireframe app look like a polished conference app following DESIGN.md and PRODUCT.md
 ---
 
 Load the `impeccable` skill and make the wireframe app in `src/ConferenceApp/` look like a polished, shipping conference app following `DESIGN.md` and `PRODUCT.md`.
 
 - Start with the theme in `Resources/Styles/Colors.xaml` and `Resources/Styles/Styles.xaml` (never set `LineHeight` on `Label` styles so multi-line text never clips on Mac Catalyst/iOS).
-- Style all four tabs (**Event** with its hero header, sponsors first, then venue + embedded map; **Agenda** with its search bar, All/Favourites filter, AI topic chips, and AI summaries; **Speakers**; and **Assistant** with its `CollectionView.EmptyView` suggestion cards, message bubbles, live progress status, and session cards) plus the **Session** and **Speaker** detail pages so they look great on both a phone in portrait and a wide desktop window.
-- **Add an inline favourite toggle on Agenda talk cards:** Add a `ToggleFavoriteCommand` on `AgendaViewModel` and a 44×44pt heart button (`AutomationId="{$'session-favorite-{Id}'}"`) on each talk card (`IsTalk == true`) that toggles the favourite in `UserPreferencesService` and animates with `ScaleToAsync` without opening the detail page.
+- Style all four tabs (**Event** with its hero header, sponsors first, then venue + embedded map; **Agenda** with its search bar, All/Favourites filter, inline favourite heart toggle `session-favorite-<id>`, horizontal topic pills bound to `Topics`, and AI summaries; **Speakers**; and **Assistant** with its `CollectionView.EmptyView` suggestion cards, message bubbles, live progress status, and session cards) plus the **Session** and **Speaker** detail pages so they look great on both a phone in portrait and a wide desktop window.
 - Keep the city switcher in the top-right toolbar on every tab so the user can always see and switch the active city (`Durban`, `Cape Town`, `Bloemfontein`) without duplicating a second picker inside the page body.
-- Use .NET 11 / MAUI 11 features where they fit naturally: `GlobalXmlns.cs` (no `xmlns:` prefixes in XAML), C# Expressions in XAML (`{IsTalk}`, `{!string.IsNullOrWhiteSpace(Topic)}`, `{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}` instead of adding `HasXyz` or converter boilerplate), AOT-safe `RelativeSource` ViewModel bindings, `BoxView.Fill` with a `LinearGradientBrush` for the hero banner, and `ScaleToAsync` on the favourite heart.
+- Use .NET 11 / MAUI 11 features where they fit naturally: `GlobalXmlns.cs` (no `xmlns:` prefixes in XAML), C# Expressions in XAML (`{IsTalk}`, `{Topics.Count > 0}`, `{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}` instead of adding `HasXyz` or converter boilerplate), AOT-safe `RelativeSource` ViewModel bindings, and `BoxView.Fill` with a `LinearGradientBrush` for the hero banner.
 - Use the real speaker photos, sponsor logos, and venue photo from the packaged `conference/` assets.
 - Keep layouts simple and native and preserve all existing `AutomationId`s.
 
