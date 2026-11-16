@@ -3,83 +3,130 @@
           x:DataType="SpeakerViewModel"
           Title="Speaker">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16" MaximumWidthRequest="1100">
-            <!-- Speaker Profile Card -->
-            <Border Style="{StaticResource CardBorder}">
-                <VerticalStackLayout Spacing="12">
-                    <Border StrokeShape="RoundRectangle 48"
+        <VerticalStackLayout Padding="16,12,16,28" Spacing="20" MaximumWidthRequest="1100">
+            <!-- Speaker Hero Badge Card -->
+            <Border Style="{StaticResource HeroPassBorder}">
+                <Grid>
+                    <Border StrokeShape="RoundRectangle 120"
                             StrokeThickness="0"
-                            HeightRequest="96"
-                            WidthRequest="96"
-                            Padding="0"
-                            Background="{StaticResource SecondaryBrandBrush}"
-                            HorizontalOptions="Center">
-                        <Grid>
-                            <Label Text="{Binding Speaker.Initials}"
-                                   Style="{StaticResource Title}"
-                                   TextColor="{StaticResource White}"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center" />
-                            <Image Source="{Binding Speaker.Image, Converter={StaticResource PackagedImage}}"
-                                   Aspect="AspectFill"
-                                   HeightRequest="96"
-                                   WidthRequest="96" />
-                        </Grid>
-                    </Border>
+                            WidthRequest="220"
+                            HeightRequest="220"
+                            Background="{StaticResource HeroGlowPinkBrush}"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Margin="0,-70,-50,0"
+                            InputTransparent="True" />
 
-                    <VerticalStackLayout Spacing="4">
-                        <Label Text="{Binding Speaker.Name}"
-                               Style="{StaticResource Title}"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="{Binding Speaker.Tagline}"
-                               Style="{StaticResource Caption}"
-                               HorizontalTextAlignment="Center" />
+                    <VerticalStackLayout Padding="24" Spacing="12" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 56"
+                                Stroke="{StaticResource FrostedBorder}"
+                                StrokeThickness="3"
+                                HeightRequest="112"
+                                WidthRequest="112"
+                                Padding="3"
+                                Background="{StaticResource AccentGradientBrush}"
+                                HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 50"
+                                    StrokeThickness="0"
+                                    HeightRequest="100"
+                                    WidthRequest="100"
+                                    Padding="0"
+                                    Background="{StaticResource SecondaryBrandBrush}">
+                                <Grid>
+                                    <Label Text="{Binding Speaker.Initials}"
+                                           Style="{StaticResource Display}"
+                                           FontSize="30"
+                                           TextColor="{StaticResource White}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                    <Image Source="{Binding Speaker.Image, Converter={StaticResource PackagedImage}}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="100"
+                                           WidthRequest="100" />
+                                </Grid>
+                            </Border>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Speaker.Name}"
+                                   Style="{StaticResource Display}"
+                                   FontSize="26"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Speaker.Tagline}"
+                                   Style="{StaticResource Body}"
+                                   TextColor="{StaticResource Secondary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
                     </VerticalStackLayout>
+                </Grid>
+            </Border>
 
-                    <BoxView HeightRequest="1"
-                             Margin="0,4"
-                             IsVisible="{!string.IsNullOrWhiteSpace(Bio)}" />
-
+            <!-- Biography Card -->
+            <Border Style="{StaticResource CardBorder}"
+                    Padding="20"
+                    IsVisible="{!string.IsNullOrWhiteSpace(Bio)}">
+                <VerticalStackLayout Spacing="10">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <BoxView WidthRequest="4"
+                                 HeightRequest="16"
+                                 CornerRadius="2"
+                                 Fill="{StaticResource AccentGradientBrush}" />
+                        <Label Text="ABOUT THE SPEAKER" Style="{StaticResource SectionHeader}" />
+                    </HorizontalStackLayout>
                     <Label FormattedText="{Binding Bio, Converter={StaticResource MarkdownConverter}}"
-                           Style="{StaticResource Body}"
-                           IsVisible="{!string.IsNullOrWhiteSpace(Bio)}" />
+                           Style="{StaticResource Body}" />
                 </VerticalStackLayout>
             </Border>
 
             <!-- Speaker Sessions -->
-            <VerticalStackLayout Spacing="10">
-                <Label Text="SESSIONS" Style="{StaticResource SectionHeader}" />
+            <VerticalStackLayout Spacing="12">
+                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                    <BoxView WidthRequest="4"
+                             HeightRequest="16"
+                             CornerRadius="2"
+                             Fill="{StaticResource AccentGradientBrush}" />
+                    <Label Text="SESSIONS" Style="{StaticResource SectionHeader}" />
+                </HorizontalStackLayout>
+
                 <VerticalStackLayout AutomationId="speaker-sessions"
-                                     Spacing="10"
+                                     Spacing="12"
                                      BindableLayout.ItemsSource="{Binding Sessions}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="Session">
-                            <Border Style="{StaticResource CardBorder}"
+                            <Border Style="{StaticResource TicketCardBorder}"
                                     AutomationId="{$'speaker-session-{Id}'}">
-                                <VerticalStackLayout Spacing="8" Background="Transparent">
-                                    <Label Text="{Binding CityMeta}"
-                                           Style="{StaticResource Label}" />
-                                    <HorizontalStackLayout Spacing="6"
-                                                           IsVisible="{Topics.Count > 0}"
-                                                           BindableLayout.ItemsSource="{Binding Topics}">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="x:String">
-                                                <Border Style="{StaticResource TopicPillBorder}">
-                                                    <Label Text="{Binding .}"
-                                                           Style="{StaticResource TopicPillLabel}" />
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </HorizontalStackLayout>
-                                    <Label Text="{Binding Title}"
-                                           Style="{StaticResource Subtitle}" />
-                                    <Label Text="{Binding Summary}"
-                                           IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
-                                           Style="{StaticResource Body}"
-                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
-                                           MaxLines="2"
-                                           LineBreakMode="TailTruncation" />
-                                </VerticalStackLayout>
+                                <Grid ColumnDefinitions="6,*" Background="Transparent">
+                                    <BoxView Grid.Column="0"
+                                             Fill="{StaticResource RailGradientBrush}" />
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Padding="16"
+                                                         Spacing="8"
+                                                         Background="Transparent">
+                                        <Label Text="{Binding CityMeta}"
+                                               Style="{StaticResource Label}" />
+                                        <HorizontalStackLayout Spacing="6"
+                                                               IsVisible="{Topics.Count > 0}"
+                                                               BindableLayout.ItemsSource="{Binding Topics}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <Border Style="{StaticResource TopicPillBorder}">
+                                                        <Label Text="{Binding .}"
+                                                               Style="{StaticResource TopicPillLabel}" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding Title}"
+                                               Style="{StaticResource Subtitle}"
+                                               FontSize="18" />
+                                        <Label Text="{Binding Summary}"
+                                               IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                               Style="{StaticResource Body}"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                                               MaxLines="2"
+                                               LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+                                </Grid>
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                           CommandParameter="{Binding .}" />

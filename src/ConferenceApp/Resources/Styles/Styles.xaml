@@ -19,28 +19,76 @@
     </Style>
 
     <!-- Reusable Card, Tile, Pill, and Input Container Styles -->
+    <Shadow x:Key="CardElevationShadow"
+            Brush="{StaticResource PrimaryBrush}"
+            Offset="0,6"
+            Radius="16"
+            Opacity="0.12" />
+
+    <Shadow x:Key="HeroElevationShadow"
+            Brush="{StaticResource PrimaryBrush}"
+            Offset="0,10"
+            Radius="22"
+            Opacity="0.24" />
+
+    <Style TargetType="Border" x:Key="HeroPassBorder">
+        <Setter Property="Background" Value="{StaticResource HeroGradientBrush}" />
+        <Setter Property="Stroke" Value="{StaticResource FrostedBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Shadow" Value="{StaticResource HeroElevationShadow}" />
+    </Style>
+
     <Style TargetType="Border" x:Key="CardBorder">
         <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}" />
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
         <Setter Property="Padding" Value="16" />
+        <Setter Property="Shadow" Value="{StaticResource CardElevationShadow}" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="TicketCardBorder">
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Shadow" Value="{StaticResource CardElevationShadow}" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="MilestoneRowBorder">
+        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource MilestoneBackgroundLightBrush}, Dark={StaticResource MilestoneBackgroundDarkBrush}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="14,10" />
     </Style>
 
     <Style TargetType="Border" x:Key="CompactCardBorder">
         <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}" />
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
         <Setter Property="Padding" Value="14,12" />
+        <Setter Property="Shadow" Value="{StaticResource CardElevationShadow}" />
     </Style>
 
     <Style TargetType="Border" x:Key="SponsorTileBorder">
         <Setter Property="Background" Value="{StaticResource WhiteBrush}" />
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        <Setter Property="Padding" Value="12" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="14,10" />
+    </Style>
+
+    <Style TargetType="Border" x:Key="FrostedPillBorder">
+        <Setter Property="Background" Value="{StaticResource FrostedSurfaceBrush}" />
+        <Setter Property="Stroke" Value="{StaticResource FrostedBorder}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 999" />
+        <Setter Property="Padding" Value="12,5" />
     </Style>
 
     <Style TargetType="Border" x:Key="TopicPillBorder">
@@ -61,8 +109,9 @@
         <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}" />
         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
-        <Setter Property="Padding" Value="12,2" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="14,2" />
+        <Setter Property="Shadow" Value="{StaticResource CardElevationShadow}" />
     </Style>
 
     <Style TargetType="Border" x:Key="WarningBannerBorder">
@@ -144,6 +193,7 @@
         <Setter Property="BorderWidth" Value="1" />
         <Setter Property="FontFamily" Value="OpenSansSemibold" />
         <Setter Property="FontSize" Value="14" />
+        <Setter Property="LineBreakMode" Value="WordWrap" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="Padding" Value="16,14" />
         <Setter Property="MinimumHeightRequest" Value="48" />

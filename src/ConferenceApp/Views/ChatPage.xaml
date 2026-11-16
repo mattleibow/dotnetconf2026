@@ -8,7 +8,7 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12" MaximumWidthRequest="1100">
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16,12,16,16" RowSpacing="12">
         <!-- Unavailable Banner -->
         <Border Style="{StaticResource WarningBannerBorder}"
                 IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}">
@@ -22,19 +22,31 @@
         <!-- Messages & Starter Suggestions -->
         <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.EmptyView>
-                <VerticalStackLayout Spacing="16"
-                                     Padding="16"
+                <VerticalStackLayout Spacing="20"
+                                     Padding="12"
                                      VerticalOptions="Center"
                                      HorizontalOptions="Center"
-                                     MaximumWidthRequest="520">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Conference Assistant"
-                               Style="{StaticResource Title}"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="Ask about sessions, speakers, or your schedule across Durban, Cape Town, and Bloemfontein."
-                               Style="{StaticResource Caption}"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
+                                     MaximumWidthRequest="580">
+                    <!-- AI Concierge Hero Banner -->
+                    <Border Style="{StaticResource HeroPassBorder}"
+                            Padding="24,22">
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Border Style="{StaticResource FrostedPillBorder}"
+                                    HorizontalOptions="Center">
+                                <Label Text="ON-DEVICE AI CONCIERGE"
+                                       Style="{StaticResource Label}"
+                                       TextColor="{StaticResource White}" />
+                            </Border>
+                            <Label Text="Ask anything about .NET Conf"
+                                   Style="{StaticResource Display}"
+                                   FontSize="24"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="Explore sessions, speakers, takeaways, and schedule clashes across Durban, Cape Town, and Bloemfontein."
+                                   Style="{StaticResource Body}"
+                                   TextColor="{StaticResource Secondary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </Border>
 
                     <VerticalStackLayout Spacing="10"
                                          IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
@@ -54,25 +66,29 @@
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="ChatItem">
                     <VerticalStackLayout Padding="0,6" Spacing="8">
-                        <Border StrokeShape="RoundRectangle 16"
+                        <Border StrokeShape="RoundRectangle 18"
                                 Stroke="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}"
                                 StrokeThickness="1"
                                 Background="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}"
                                 Padding="16,12"
+                                Shadow="{StaticResource CardElevationShadow}"
                                 MaximumWidthRequest="680"
                                 HorizontalOptions="{IsUser ? LayoutOptions.End : LayoutOptions.Start}">
                             <Border.Triggers>
                                 <DataTrigger TargetType="Border" Binding="{Binding IsUser}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}" />
+                                    <Setter Property="Background" Value="{StaticResource HeroGradientBrush}" />
                                     <Setter Property="StrokeThickness" Value="0" />
                                 </DataTrigger>
                             </Border.Triggers>
                             <VerticalStackLayout Spacing="6">
-                                <Label AutomationId="chat-progress"
-                                       Text="{Binding Progress}"
-                                       Style="{StaticResource Caption}"
-                                       FontAttributes="Italic"
-                                       IsVisible="{!string.IsNullOrWhiteSpace(Progress)}" />
+                                <Border Style="{StaticResource TopicPillBorder}"
+                                        HorizontalOptions="Start"
+                                        IsVisible="{!string.IsNullOrWhiteSpace(Progress)}">
+                                    <Label AutomationId="chat-progress"
+                                           Text="{Binding Progress}"
+                                           Style="{StaticResource TopicPillLabel}"
+                                           FontAttributes="Italic" />
+                                </Border>
                                 <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}"
                                        Style="{StaticResource Body}">
                                     <Label.Triggers>
@@ -91,18 +107,25 @@
                                              BindableLayout.ItemsSource="{Binding Sessions}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="Session">
-                                    <Border Style="{StaticResource CompactCardBorder}"
+                                    <Border Style="{StaticResource TicketCardBorder}"
                                             AutomationId="{$'chat-session-card-{Id}'}">
-                                        <VerticalStackLayout Spacing="4" Background="Transparent">
-                                            <Label Text="{Binding CityMeta}"
-                                                   Style="{StaticResource Label}" />
-                                            <Label Text="{Binding Title}"
-                                                   Style="{StaticResource Subtitle}"
-                                                   FontSize="15" />
-                                            <Label Text="{Binding SpeakerNames}"
-                                                   Style="{StaticResource Caption}"
-                                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
-                                        </VerticalStackLayout>
+                                        <Grid ColumnDefinitions="6,*" Background="Transparent">
+                                            <BoxView Grid.Column="0"
+                                                     Fill="{StaticResource RailGradientBrush}" />
+                                            <VerticalStackLayout Grid.Column="1"
+                                                                 Padding="14,12"
+                                                                 Spacing="4"
+                                                                 Background="Transparent">
+                                                <Label Text="{Binding CityMeta}"
+                                                       Style="{StaticResource Label}" />
+                                                <Label Text="{Binding Title}"
+                                                       Style="{StaticResource Subtitle}"
+                                                       FontSize="15" />
+                                                <Label Text="{Binding SpeakerNames}"
+                                                       Style="{StaticResource Caption}"
+                                                       IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
+                                            </VerticalStackLayout>
+                                        </Grid>
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                                                                   CommandParameter="{Binding .}" />
@@ -132,9 +155,9 @@
             <Button Grid.Column="2"
                     AutomationId="chat-send"
                     Text="Send"
-                    Style="{StaticResource PrimaryButton}"
+                    Style="{StaticResource AccentButton}"
                     Padding="18,10"
-                    CornerRadius="12"
+                    CornerRadius="14"
                     MinimumHeightRequest="44"
                     IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                     Command="{Binding SendCommand}" />

@@ -21,29 +21,38 @@
     <Color x:Key="AccentTextDark">#FF8FC0</Color>
 
     <!-- Surfaces & Neutrals (Light / Dark) -->
-    <Color x:Key="PageBackground">#F8F9FA</Color>
-    <Color x:Key="PageBackgroundLight">#F8F9FA</Color>
-    <Color x:Key="PageBackgroundDark">#1A1A2E</Color>
+    <Color x:Key="PageBackground">#F3F1FA</Color>
+    <Color x:Key="PageBackgroundLight">#F3F1FA</Color>
+    <Color x:Key="PageBackgroundDark">#131124</Color>
 
     <Color x:Key="Surface">#FFFFFF</Color>
     <Color x:Key="SurfaceLight">#FFFFFF</Color>
-    <Color x:Key="SurfaceDark">#24243E</Color>
+    <Color x:Key="SurfaceDark">#1E1B36</Color>
 
     <Color x:Key="SurfaceElevated">#FFFFFF</Color>
     <Color x:Key="SurfaceElevatedLight">#FFFFFF</Color>
-    <Color x:Key="SurfaceElevatedDark">#2D2D4C</Color>
+    <Color x:Key="SurfaceElevatedDark">#282446</Color>
 
-    <Color x:Key="TextPrimary">#1A1A2E</Color>
-    <Color x:Key="TextPrimaryLight">#1A1A2E</Color>
-    <Color x:Key="TextPrimaryDark">#F8F9FA</Color>
+    <Color x:Key="MilestoneBackgroundLight">#EAE4FA</Color>
+    <Color x:Key="MilestoneBackgroundDark">#252042</Color>
 
-    <Color x:Key="TextSecondary">#5C5C70</Color>
-    <Color x:Key="TextSecondaryLight">#5C5C70</Color>
-    <Color x:Key="TextSecondaryDark">#B4B4C8</Color>
+    <Color x:Key="TextPrimary">#17142B</Color>
+    <Color x:Key="TextPrimaryLight">#17142B</Color>
+    <Color x:Key="TextPrimaryDark">#F8F7FC</Color>
 
-    <Color x:Key="Divider">#E6E6EE</Color>
-    <Color x:Key="DividerLight">#E6E6EE</Color>
-    <Color x:Key="DividerDark">#34344F</Color>
+    <Color x:Key="TextSecondary">#5A5575</Color>
+    <Color x:Key="TextSecondaryLight">#5A5575</Color>
+    <Color x:Key="TextSecondaryDark">#B4AFD0</Color>
+
+    <Color x:Key="Divider">#E2DDF2</Color>
+    <Color x:Key="DividerLight">#E2DDF2</Color>
+    <Color x:Key="DividerDark">#342F56</Color>
+
+    <!-- Frosted Glass Tokens -->
+    <Color x:Key="FrostedSurface">#26FFFFFF</Color>
+    <Color x:Key="FrostedBorder">#4DFFFFFF</Color>
+    <Color x:Key="HeroGlowPink">#44FF5CA8</Color>
+    <Color x:Key="HeroGlowViolet">#449B72FF</Color>
 
     <!-- Semantic & Tinted Chip Tokens (12% opacity) -->
     <Color x:Key="ChipBackground">#1F512BD4</Color>
@@ -109,11 +118,36 @@
     <SolidColorBrush x:Key="WarningBackgroundDarkBrush" Color="{StaticResource WarningBackgroundDark}"/>
     <SolidColorBrush x:Key="CardShadowBrush" Color="{StaticResource CardShadowColor}"/>
 
-    <!-- 135-degree Signature Hero Gradient (Primary -> SecondaryBrand -> Accent) -->
+    <SolidColorBrush x:Key="MilestoneBackgroundLightBrush" Color="{StaticResource MilestoneBackgroundLight}"/>
+    <SolidColorBrush x:Key="MilestoneBackgroundDarkBrush" Color="{StaticResource MilestoneBackgroundDark}"/>
+    <SolidColorBrush x:Key="FrostedSurfaceBrush" Color="{StaticResource FrostedSurface}"/>
+    <SolidColorBrush x:Key="HeroGlowPinkBrush" Color="{StaticResource HeroGlowPink}"/>
+    <SolidColorBrush x:Key="HeroGlowVioletBrush" Color="{StaticResource HeroGlowViolet}"/>
+
+    <!-- 135-degree Signature Hero Gradient (Deep Indigo -> .NET Purple -> Conference Pink) -->
     <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
-        <GradientStop Color="{StaticResource SecondaryBrand}" Offset="0.5" />
+        <GradientStop Color="#2B0B98" Offset="0.0" />
+        <GradientStop Color="{StaticResource Primary}" Offset="0.48" />
         <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Vibrant Accent Gradient (Electric Indigo -> Conference Pink) -->
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource SecondaryBrand}" Offset="0.0" />
+        <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Vertical Ticket Rail Gradient -->
+    <LinearGradientBrush x:Key="RailGradientBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+        <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Photo Bottom Scrim Overlay -->
+    <LinearGradientBrush x:Key="PhotoScrimBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00131124" Offset="0.0" />
+        <GradientStop Color="#88131124" Offset="0.5" />
+        <GradientStop Color="#EC131124" Offset="1.0" />
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>

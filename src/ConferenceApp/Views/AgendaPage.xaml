@@ -8,7 +8,8 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12" MaximumWidthRequest="1100">
+    <Grid RowDefinitions="Auto,*" Padding="16,12,16,0" RowSpacing="12">
+        <!-- Search & Filter Control Bar -->
         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
             <Border Style="{StaticResource SearchContainerBorder}">
                 <Entry AutomationId="agenda-search"
@@ -20,49 +21,174 @@
                     AutomationId="favorites-filter"
                     Style="{StaticResource SecondaryButton}"
                     Text="{ShowFavoritesOnly ? 'Showing: Favourites' : 'Showing: All Sessions'}"
-                    Command="{Binding ToggleFavoritesFilterCommand}" />
+                    Command="{Binding ToggleFavoritesFilterCommand}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding ShowFavoritesOnly}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
+                        <Setter Property="TextColor" Value="{StaticResource White}" />
+                        <Setter Property="BorderWidth" Value="0" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
         </Grid>
 
+        <!-- Timeline Session Feed -->
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="Session">
-                    <Border Style="{StaticResource CardBorder}"
+                    <Border Style="{StaticResource TicketCardBorder}"
                             Margin="0,6"
                             AutomationId="{$'session-{Id}'}">
-                        <VerticalStackLayout Spacing="8" Background="Transparent">
-                            <Label Text="{Binding Meta}"
-                                   Style="{StaticResource Label}" />
-                            <HorizontalStackLayout Spacing="6"
-                                                   IsVisible="{Topics.Count > 0}"
-                                                   BindableLayout.ItemsSource="{Binding Topics}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="x:String">
-                                        <Border Style="{StaticResource TopicPillBorder}">
-                                            <Label Text="{Binding .}"
-                                                   Style="{StaticResource TopicPillLabel}" />
-                                        </Border>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </HorizontalStackLayout>
-                            <Label Text="{Binding Title}"
-                                   Style="{StaticResource Subtitle}"
-                                   MaxLines="2"
-                                   LineBreakMode="TailTruncation" />
-                            <Label Text="{Binding Summary}"
-                                   IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
-                                   Style="{StaticResource Body}"
-                                   TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
-                                   MaxLines="2"
-                                   LineBreakMode="TailTruncation" />
-                            <Label Text="{Binding SpeakerNames}"
-                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}"
-                                   Style="{StaticResource Caption}"
-                                   FontFamily="OpenSansSemibold" />
-                        </VerticalStackLayout>
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border" Binding="{Binding IsTalk}" Value="False">
+                                <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource MilestoneBackgroundLightBrush}, Dark={StaticResource MilestoneBackgroundDarkBrush}}" />
+                                <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+                            </DataTrigger>
+                        </Border.Triggers>
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
                                                   CommandParameter="{Binding .}" />
                         </Border.GestureRecognizers>
+
+                        <Grid Background="Transparent">
+                            <!-- General Milestone Row (Registration, Welcome, Lunch, Q&A) -->
+                            <Grid ColumnDefinitions="Auto,*,Auto"
+                                  ColumnSpacing="12"
+                                  Padding="14,10"
+                                  IsVisible="{!IsTalk}"
+                                  Background="Transparent">
+                                <Border Style="{StaticResource TopicPillBorder}"
+                                        Padding="10,4"
+                                        VerticalOptions="Center">
+                                    <Label Text="{Binding Time}"
+                                           Style="{StaticResource TopicPillLabel}" />
+                                </Border>
+                                <Label Grid.Column="1"
+                                       Text="{Binding Title}"
+                                       Style="{StaticResource Subtitle}"
+                                       FontSize="15"
+                                       VerticalOptions="Center" />
+                                <Label Grid.Column="2"
+                                       Text="{Binding Track}"
+                                       Style="{StaticResource Caption}"
+                                       IsVisible="{!string.IsNullOrWhiteSpace(Track)}"
+                                       VerticalOptions="Center" />
+                            </Grid>
+
+                            <!-- Festival Ticket Talk Card -->
+                            <Grid ColumnDefinitions="6,76,1,*"
+                                  IsVisible="{IsTalk}"
+                                  Background="Transparent">
+                                <!-- Left Gradient Accent Rail -->
+                                <BoxView Grid.Column="0"
+                                         Fill="{StaticResource RailGradientBrush}" />
+
+                                <!-- Dedicated Time Slot Column -->
+                                <VerticalStackLayout Grid.Column="1"
+                                                     Padding="10,16"
+                                                     Spacing="2"
+                                                     VerticalOptions="Start"
+                                                     Background="Transparent">
+                                    <Label Text="{Binding Start, StringFormat='{0:HH:mm}'}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="16"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}"
+                                           HorizontalTextAlignment="Center" />
+                                    <Label Text="{Binding End, StringFormat='{0:HH:mm}'}"
+                                           Style="{StaticResource Caption}"
+                                           FontSize="12"
+                                           HorizontalTextAlignment="Center" />
+                                </VerticalStackLayout>
+
+                                <!-- Ticket Perforation Hairline -->
+                                <BoxView Grid.Column="2"
+                                         WidthRequest="1"
+                                         Margin="0,12" />
+
+                                <!-- Session Details Column -->
+                                <VerticalStackLayout Grid.Column="3"
+                                                     Padding="14,14,16,14"
+                                                     Spacing="8"
+                                                     Background="Transparent">
+                                    <!-- Track + AI Topics Strip -->
+                                    <HorizontalStackLayout Spacing="6">
+                                        <Border Style="{StaticResource AccentPillBorder}"
+                                                IsVisible="{!string.IsNullOrWhiteSpace(Track)}">
+                                            <Label Text="{Binding Track}"
+                                                   Style="{StaticResource AccentPillLabel}" />
+                                        </Border>
+                                        <HorizontalStackLayout Spacing="6"
+                                                               IsVisible="{Topics.Count > 0}"
+                                                               BindableLayout.ItemsSource="{Binding Topics}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="x:String">
+                                                    <Border Style="{StaticResource TopicPillBorder}">
+                                                        <Label Text="{Binding .}"
+                                                               Style="{StaticResource TopicPillLabel}" />
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+                                    </HorizontalStackLayout>
+
+                                    <Label Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="17"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <Label Text="{Binding Summary}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                           Style="{StaticResource Body}"
+                                           FontSize="14"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <!-- Speaker Avatars + Names Strip -->
+                                    <HorizontalStackLayout Spacing="8"
+                                                           Margin="0,2,0,0"
+                                                           IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}">
+                                        <HorizontalStackLayout Spacing="-6"
+                                                               BindableLayout.ItemsSource="{Binding Speakers}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="Speaker">
+                                                    <Border StrokeShape="RoundRectangle 14"
+                                                            Stroke="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                                                            StrokeThickness="2"
+                                                            HeightRequest="28"
+                                                            WidthRequest="28"
+                                                            Padding="0"
+                                                            Background="{StaticResource SecondaryBrandBrush}"
+                                                            VerticalOptions="Center">
+                                                        <Grid>
+                                                            <Label Text="{Binding Initials}"
+                                                                   FontSize="10"
+                                                                   FontFamily="OpenSansSemibold"
+                                                                   TextColor="{StaticResource White}"
+                                                                   HorizontalOptions="Center"
+                                                                   VerticalOptions="Center" />
+                                                            <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                                                   Aspect="AspectFill"
+                                                                   HeightRequest="28"
+                                                                   WidthRequest="28" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+
+                                        <Label Text="{Binding SpeakerNames}"
+                                               Style="{StaticResource Caption}"
+                                               FontFamily="OpenSansSemibold"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"
+                                               VerticalOptions="Center"
+                                               MaxLines="1"
+                                               LineBreakMode="TailTruncation" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Grid>
                     </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
