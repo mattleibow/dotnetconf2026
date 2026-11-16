@@ -141,27 +141,15 @@
                                                          Padding="14,14,16,14"
                                                          Spacing="8"
                                                          Background="Transparent">
-                                        <!-- Track + Favourite Toggle Pill + AI Topics Strip -->
+                                        <!-- Track + Favourite Toggle Pill -->
                                         <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Background="Transparent">
-                                            <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
-                                                <Border Style="{StaticResource AccentPillBorder}"
-                                                        IsVisible="{!string.IsNullOrWhiteSpace(Track)}">
-                                                    <Label Text="{Binding Track}"
-                                                           Style="{StaticResource AccentPillLabel}" />
-                                                </Border>
-                                                <HorizontalStackLayout Spacing="6"
-                                                                       IsVisible="{Topics.Count > 0}"
-                                                                       BindableLayout.ItemsSource="{Binding Topics}">
-                                                    <BindableLayout.ItemTemplate>
-                                                        <DataTemplate x:DataType="x:String">
-                                                            <Border Style="{StaticResource TopicPillBorder}">
-                                                                <Label Text="{Binding .}"
-                                                                       Style="{StaticResource TopicPillLabel}" />
-                                                            </Border>
-                                                        </DataTemplate>
-                                                    </BindableLayout.ItemTemplate>
-                                                </HorizontalStackLayout>
-                                            </HorizontalStackLayout>
+                                            <Border Style="{StaticResource AccentPillBorder}"
+                                                    HorizontalOptions="Start"
+                                                    VerticalOptions="Center"
+                                                    IsVisible="{!string.IsNullOrWhiteSpace(Track)}">
+                                                <Label Text="{Binding Track}"
+                                                       Style="{StaticResource AccentPillLabel}" />
+                                            </Border>
 
                                             <Border Grid.Column="1"
                                                     AutomationId="{$'session-favorite-{Id}'}"
@@ -207,6 +195,20 @@
                                            TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation" />
+
+                                    <!-- AI Topics Strip -->
+                                    <HorizontalStackLayout Spacing="6"
+                                                           IsVisible="{Topics.Count > 0}"
+                                                           BindableLayout.ItemsSource="{Binding Topics}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Border Style="{StaticResource TopicPillBorder}">
+                                                    <Label Text="{Binding .}"
+                                                           Style="{StaticResource TopicPillLabel}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
 
                                     <!-- Speaker Avatars + Names Strip -->
                                     <Grid ColumnDefinitions="Auto,*"
