@@ -29,7 +29,7 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 |---|---|---|---|
 | [#30 — Add visual design and styles](https://github.com/mattleibow/dotnetconf2026/pull/30) | `mattleibow-layer-2-visual-design-and-styles` | 9 `.xaml` files (`Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, `Views/*.xaml`) | Styles all four tabs and detail pages following `DESIGN.md` and `PRODUCT.md` |
 | [#31 — Add on-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | `.cs`, `.csproj`, `Directory.Packages.props`, `models/`, `packages/`, `NuGet.config` | Adds `src/ConferenceApp/AI/` and upgrades `SearchService`, `ChatService`, and `Session` |
-| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | `UserPreferencesService.cs`, `SessionViewModel.cs`, `SearchService.cs`, `EventPage.xaml` | Optional branch introducing the 3 silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
+| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | `UserPreferencesService.cs`, `SessionViewModel.cs`, `SpeakerViewModel.cs`, `EventPage.xaml` | Optional branch introducing the 3 silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
 
 ## Before you start
 
@@ -53,7 +53,7 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 | # | Prompt | What happens |
 |---|---|---|
 | 01 | [Explore app](.github/prompts/01-explore-app.prompt.md) | Launches the app with DevFlow, finds the .NET MAUI session on the Agenda, adds it to Favourites (verifying `Preferences` in DevFlow Storage), and opens the speaker's profile |
-| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (swallowed `NullReferenceException` in `SearchService`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics** (`venue-map` with `Height=0`) to diagnose and fix three silent bugs |
+| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (logged `InvalidOperationException` in `SpeakerViewModel`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics** (`venue-map` with `Height=0`) to diagnose and fix three silent bugs |
 | 03 | [Make it beautiful](.github/prompts/03-make-it-beautiful.prompt.md) | Uses `impeccable` and `DESIGN.md` to restyle all 4 tabs and detail pages into a dynamic Festival Pass design and verifies light/dark themes and `ui diagnostics` |
 
 ### Part 2: Giving the App That Same AI (`src/ConferenceApp/AI/`)

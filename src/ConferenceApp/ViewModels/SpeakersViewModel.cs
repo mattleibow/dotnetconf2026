@@ -4,13 +4,15 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
 public partial class SpeakersViewModel(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher)
+    IDispatcher dispatcher,
+    ILogger<SpeakersViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger)
 {
     public ObservableCollection<Speaker> Speakers { get; } = [];
 

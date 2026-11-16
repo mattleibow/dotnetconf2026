@@ -3,13 +3,15 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
 public partial class SpeakerViewModel(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher),
+    IDispatcher dispatcher,
+    ILogger<SpeakerViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger),
     IQueryAttributable
 {
     private string? speakerId;

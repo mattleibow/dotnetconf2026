@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.ViewModels;
 
@@ -11,7 +12,8 @@ public partial class ChatViewModel(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
     ChatService chat,
-    IDispatcher dispatcher) : BaseViewModel(dbProvider, preferences, dispatcher)
+    IDispatcher dispatcher,
+    ILogger<ChatViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger)
 {
     private CancellationTokenSource? activeTurn;
 
