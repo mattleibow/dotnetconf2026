@@ -107,25 +107,18 @@
                                              BindableLayout.ItemsSource="{Binding Sessions}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="Session">
-                                    <Border Style="{StaticResource TicketCardBorder}"
+                                    <Border Style="{StaticResource CompactCardBorder}"
                                             AutomationId="{$'chat-session-card-{Id}'}">
-                                        <Grid ColumnDefinitions="6,*" Background="Transparent">
-                                            <BoxView Grid.Column="0"
-                                                     Fill="{StaticResource RailGradientBrush}" />
-                                            <VerticalStackLayout Grid.Column="1"
-                                                                 Padding="14,12"
-                                                                 Spacing="4"
-                                                                 Background="Transparent">
-                                                <Label Text="{Binding CityMeta}"
-                                                       Style="{StaticResource Label}" />
-                                                <Label Text="{Binding Title}"
-                                                       Style="{StaticResource Subtitle}"
-                                                       FontSize="15" />
-                                                <Label Text="{Binding SpeakerNames}"
-                                                       Style="{StaticResource Caption}"
-                                                       IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
-                                            </VerticalStackLayout>
-                                        </Grid>
+                                        <VerticalStackLayout Spacing="4" Background="Transparent">
+                                            <Label Text="{Binding CityMeta}"
+                                                   Style="{StaticResource Label}" />
+                                            <Label Text="{Binding Title}"
+                                                   Style="{StaticResource Subtitle}"
+                                                   FontSize="15" />
+                                            <Label Text="{Binding SpeakerNames}"
+                                                   Style="{StaticResource Caption}"
+                                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
+                                        </VerticalStackLayout>
                                         <Border.GestureRecognizers>
                                             <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
                                                                   CommandParameter="{Binding .}" />

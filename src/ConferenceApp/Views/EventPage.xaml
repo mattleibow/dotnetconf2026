@@ -96,63 +96,54 @@
 
             <!-- Sponsors Section -->
             <VerticalStackLayout Spacing="12">
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <BoxView WidthRequest="4"
-                             HeightRequest="16"
-                             CornerRadius="2"
-                             Fill="{StaticResource AccentGradientBrush}" />
-                    <Label Text="PARTNERS &amp; SPONSORS" Style="{StaticResource SectionHeader}" />
-                </HorizontalStackLayout>
+                <Label Text="PARTNERS &amp; SPONSORS" Style="{StaticResource SectionHeader}" />
 
-                <FlexLayout AutomationId="sponsor-list"
-                            BindableLayout.ItemsSource="{Binding Sponsors}"
-                            Wrap="Wrap"
-                            Direction="Row"
-                            JustifyContent="Start"
-                            AlignItems="Stretch">
+                <VerticalStackLayout AutomationId="sponsor-list"
+                                     BindableLayout.ItemsSource="{Binding Sponsors}"
+                                     Spacing="12">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="Sponsor">
-                            <Border Style="{StaticResource TicketCardBorder}"
-                                    WidthRequest="320"
-                                    Margin="0,0,12,12"
+                            <Border Style="{StaticResource CardBorder}"
+                                    Padding="14"
                                     AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
-                                <VerticalStackLayout Spacing="0" Background="Transparent">
-                                    <BoxView HeightRequest="4"
-                                             Fill="{StaticResource HeroGradientBrush}" />
-                                    <Grid ColumnDefinitions="108,*"
-                                          ColumnSpacing="14"
-                                          Padding="14"
-                                          Background="Transparent">
-                                        <Border Style="{StaticResource SponsorTileBorder}"
-                                                HeightRequest="72"
-                                                WidthRequest="108"
-                                                VerticalOptions="Center">
-                                            <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
-                                                   Aspect="AspectFit"
-                                                   HeightRequest="48"
-                                                   WidthRequest="84"
-                                                   HorizontalOptions="Center"
-                                                   VerticalOptions="Center" />
-                                        </Border>
-                                        <VerticalStackLayout Grid.Column="1"
-                                                             Spacing="6"
-                                                             VerticalOptions="Center"
-                                                             Background="Transparent">
-                                            <Border Style="{StaticResource AccentPillBorder}"
-                                                    HorizontalOptions="Start">
-                                                <Label Text="{Binding Tier}"
-                                                       Style="{StaticResource AccentPillLabel}"
-                                                       MaxLines="1"
-                                                       LineBreakMode="TailTruncation" />
-                                            </Border>
-                                            <Label Text="{Binding Name}"
-                                                   Style="{StaticResource Subtitle}"
-                                                   FontSize="16"
-                                                   MaxLines="2"
+                                <Grid ColumnDefinitions="108,*,Auto"
+                                      ColumnSpacing="16"
+                                      Background="Transparent">
+                                    <Border Style="{StaticResource SponsorTileBorder}"
+                                            HeightRequest="72"
+                                            WidthRequest="108"
+                                            VerticalOptions="Center">
+                                        <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                               Aspect="AspectFit"
+                                               HeightRequest="48"
+                                               WidthRequest="84"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                    </Border>
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="6"
+                                                         VerticalOptions="Center"
+                                                         Background="Transparent">
+                                        <Border Style="{StaticResource AccentPillBorder}"
+                                                HorizontalOptions="Start">
+                                            <Label Text="{Binding Tier}"
+                                                   Style="{StaticResource AccentPillLabel}"
+                                                   MaxLines="1"
                                                    LineBreakMode="TailTruncation" />
-                                        </VerticalStackLayout>
-                                    </Grid>
-                                </VerticalStackLayout>
+                                        </Border>
+                                        <Label Text="{Binding Name}"
+                                               Style="{StaticResource Subtitle}"
+                                               FontSize="17"
+                                               MaxLines="2"
+                                               LineBreakMode="TailTruncation" />
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2"
+                                           Text="›"
+                                           FontSize="22"
+                                           FontFamily="OpenSansSemibold"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}"
+                                           VerticalOptions="Center" />
+                                </Grid>
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type EventViewModel}}, x:DataType=EventViewModel}"
                                                           CommandParameter="{Binding .}" />
@@ -160,18 +151,12 @@
                             </Border>
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
-                </FlexLayout>
+                </VerticalStackLayout>
             </VerticalStackLayout>
 
             <!-- Venue Section -->
             <VerticalStackLayout Spacing="12">
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <BoxView WidthRequest="4"
-                             HeightRequest="16"
-                             CornerRadius="2"
-                             Fill="{StaticResource AccentGradientBrush}" />
-                    <Label Text="VENUE &amp; DIRECTIONS" Style="{StaticResource SectionHeader}" />
-                </HorizontalStackLayout>
+                <Label Text="VENUE &amp; DIRECTIONS" Style="{StaticResource SectionHeader}" />
 
                 <Border Style="{StaticResource TicketCardBorder}">
                     <VerticalStackLayout Spacing="0">

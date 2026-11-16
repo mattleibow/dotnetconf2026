@@ -80,53 +80,40 @@
 
             <!-- Speaker Sessions -->
             <VerticalStackLayout Spacing="12">
-                <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
-                    <BoxView WidthRequest="4"
-                             HeightRequest="16"
-                             CornerRadius="2"
-                             Fill="{StaticResource AccentGradientBrush}" />
-                    <Label Text="SESSIONS" Style="{StaticResource SectionHeader}" />
-                </HorizontalStackLayout>
+                <Label Text="SESSIONS" Style="{StaticResource SectionHeader}" />
 
                 <VerticalStackLayout AutomationId="speaker-sessions"
                                      Spacing="12"
                                      BindableLayout.ItemsSource="{Binding Sessions}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="Session">
-                            <Border Style="{StaticResource TicketCardBorder}"
+                            <Border Style="{StaticResource CardBorder}"
                                     AutomationId="{$'speaker-session-{Id}'}">
-                                <Grid ColumnDefinitions="6,*" Background="Transparent">
-                                    <BoxView Grid.Column="0"
-                                             Fill="{StaticResource RailGradientBrush}" />
-                                    <VerticalStackLayout Grid.Column="1"
-                                                         Padding="16"
-                                                         Spacing="8"
-                                                         Background="Transparent">
-                                        <Label Text="{Binding CityMeta}"
-                                               Style="{StaticResource Label}" />
-                                        <HorizontalStackLayout Spacing="6"
-                                                               IsVisible="{Topics.Count > 0}"
-                                                               BindableLayout.ItemsSource="{Binding Topics}">
-                                            <BindableLayout.ItemTemplate>
-                                                <DataTemplate x:DataType="x:String">
-                                                    <Border Style="{StaticResource TopicPillBorder}">
-                                                        <Label Text="{Binding .}"
-                                                               Style="{StaticResource TopicPillLabel}" />
-                                                    </Border>
-                                                </DataTemplate>
-                                            </BindableLayout.ItemTemplate>
-                                        </HorizontalStackLayout>
-                                        <Label Text="{Binding Title}"
-                                               Style="{StaticResource Subtitle}"
-                                               FontSize="18" />
-                                        <Label Text="{Binding Summary}"
-                                               IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
-                                               Style="{StaticResource Body}"
-                                               TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
-                                               MaxLines="2"
-                                               LineBreakMode="TailTruncation" />
-                                    </VerticalStackLayout>
-                                </Grid>
+                                <VerticalStackLayout Spacing="8" Background="Transparent">
+                                    <Label Text="{Binding CityMeta}"
+                                           Style="{StaticResource Label}" />
+                                    <HorizontalStackLayout Spacing="6"
+                                                           IsVisible="{Topics.Count > 0}"
+                                                           BindableLayout.ItemsSource="{Binding Topics}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Border Style="{StaticResource TopicPillBorder}">
+                                                    <Label Text="{Binding .}"
+                                                           Style="{StaticResource TopicPillLabel}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="18" />
+                                    <Label Text="{Binding Summary}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                           Style="{StaticResource Body}"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
                                 <Border.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
                                                           CommandParameter="{Binding .}" />
