@@ -108,7 +108,7 @@ The .NET Conf 2026 brand palette pairs deep .NET purple with vibrant magenta aga
 - **Crimson Rose** (`AccentText` — Light `#C2185B`, Dark `#FF8FC0`): High-contrast pink text on 12% tinted chips.
 
 ### Neutral
-- **Cool Paper / Midnight Slate** (`PageBackground` — Light `#F8F9FA`, Dark `#1A1A2E`): Root page background.
+- **Cool Paper / Midnight Slate** (`PageBackground` — Light `#F3F1FA`, Dark `#131124`): Root page background tinted so elevated cards pop with clear surface contrast.
 - **Pure White / Indigo Surface** (`Surface` — Light `#FFFFFF`, Dark `#24243E`): Cards, sheets, and assistant chat bubbles.
 - **Deep Ink / Crisp White** (`TextPrimary` — Light `#1A1A2E`, Dark `#F8F9FA`): Session titles and body copy.
 - **Muted Slate / Soft Lavender** (`TextSecondary` — Light `#5C5C70`, Dark `#B4B4C8`): Times, rooms, and speaker taglines.
@@ -157,21 +157,22 @@ Cards sit above `PageBackground` using a hybrid light/dark depth model:
 ## Components
 
 ### Event Page, Hero Header & City Switcher
-- **Event Page (Tab 1):** Starts with the 135° `Primary`-to-`Accent` hero banner displaying `.NET Conf 2026 South Africa` in `Display` and the selected city and date in `Label`, followed by the **Sponsors** section (logos centred on white tiles grouped by tier) and then the **Venue** section (venue photo, name, address, description, embedded native `Map` with pin, and "Open in Maps" button).
-- **Global City Switcher:** Every tab (Event, Agenda, Speakers, Assistant) exposes the city switcher in the top-right toolbar showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`) that opens the native city action sheet—do not put a second city picker inside the page body.
+- **Event Page (Tab 1):** Starts with the 135° `Primary`-to-`Accent` `HeroPassBorder` (`RoundRectangle 24`) featuring ambient glow orbs, frosted glass `SOUTH AFRICA · 2026` and active city pills, `.NET Conf 2026 South Africa` in `Display`, and a frosted bottom metadata strip showing **Host Venue** and **Event Date**. Below the hero sit the **Sponsors** section (elevated cards with a `#FFFFFF` logo stage, tier pill, name, and `›` chevron) and the **Venue** showcase card (edge-to-edge venue photo with bottom `PhotoScrimBrush` overlay displaying the city pill, venue name, and address in white, followed by the Markdown description, embedded native `Map`, and "Open in Maps" button).
+- **Global City Switcher & Tab Icons:** Every tab (**Agenda**, **Event**, **Speakers**, **Assistant**) uses a custom 24×24 vector SVG icon (`Resources/Images/tab_*.svg`) and exposes the city switcher in the top-right toolbar showing the active city (`Durban`, `Cape Town`, or `Bloemfontein`).
 
 ### Agenda & Session Cards
 - **Search & Filter Bar:** Top bar on Agenda with a rounded search input (`AutomationId="agenda-search"`) and the **Showing: All Sessions** / **Showing: Favourites** filter toggle (`AutomationId="favorites-filter"`).
-- **Talk Cards:** 16pt rounded `Surface` card with time and track metadata (`Meta`), horizontal AI topic pills (`BindableLayout.ItemsSource="{Binding Topics}"`, `IsVisible="{Topics.Count > 0}"`) along the top, session title in `Subtitle` (max 2 lines), AI summary (`Summary`, `IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"`, max 2 lines), and speaker names (`SpeakerNames`) in `Caption`. Entire card is tappable with `Background="Transparent"` on hit targets.
-- **General Items** (registration, breaks, lunch): Compact row with time and title.
+- **Talk Cards (`IsTalk`):** Wrapped in an enabled `<SwipeView>` (`LeftItems` and `RightItems` with `SwipeItem` using MAUI 11 `TextColor`/`IconColor` bound to `ToggleFavoriteCommand`). Each 16pt rounded `Surface` ticket card has a 6pt left indicator rail (`BoxView` that lights up in `Accent` pink `#E63888` with a matching pink card border when `IsFavorite` is true), a dedicated left time column (`Start` stacked above `End` in `HH:mm`) separated by a 1pt vertical divider, track and horizontal AI topic pills (`BindableLayout.ItemsSource="{Binding Topics}"`, `IsVisible="{Topics.Count > 0}"`), an inline tappable `☆ Save` / `★ Saved` pill (`AutomationId="{$'session-favorite-{Id}'}"`), session title in `Subtitle` (max 2 lines), AI summary (`Summary`, `IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"`, max 2 lines), and a `<Grid ColumnDefinitions="Auto,*">` speaker strip showing circular 28pt speaker avatars (`BindableLayout.ItemsSource="{Binding Speakers}"`) beside `SpeakerNames`.
+- **General / Milestone Items (`!IsTalk` — registration, breaks, lunch):** Compact tinted row with a time pill (`Time`) and title.
 
-### Detail Pages (Session & Speaker)
-- **Session Page:** Header with title, time/track metadata (`CityMeta`), horizontal topic pills (`Topics` when `Topics.Count > 0`), tappable speaker rows (`AutomationId="{$'speaker-{Id}'}"`) with circular 40pt photos, full abstract in `Body` (`MarkdownToFormattedStringConverter`), and a full-width `Accent` favourite button (`AutomationId="favorite-button"`).
-- **Speaker Page:** Centered 96pt circular photo, name in `Title`, tagline in `Caption`, bio in `Body`, and their sessions rendered as tappable cards (`AutomationId="{$'speaker-session-{Id}'}"`) with `CityMeta`, horizontal topic pills (`Topics` when `Topics.Count > 0`), title, and AI summary (`Summary`).
+### Speakers & Detail Pages (Session & Speaker)
+- **Speakers Page:** Responsive `GridItemsLayout` (`Span="{OnIdiom Phone=1, Default=2}"`) with 68pt circular speaker photos framed inside a `HeroGradientBrush` ring, initials fallback, speaker name, tagline, uppercase city pills, and `›` chevron.
+- **Session Page:** `HeroPassBorder` gradient header with frosted glass metadata (`CityMeta`) and topic pills (`Topics` when `Topics.Count > 0`), title, and full-width `Accent` favourite button (`AutomationId="favorite-button"`), followed by tappable gradient-ringed speaker cards (`AutomationId="{$'session-speaker-{Id}'}"`) and the full abstract card (`MarkdownToFormattedStringConverter`).
+- **Speaker Page:** `HeroPassBorder` gradient header with a centered 112pt gradient-ringed circular photo, name in `Title`, tagline in `Caption`, bio card in `Body`, and their sessions rendered as tappable ticket cards (`AutomationId="{$'speaker-session-{Id}'}"`).
 
 ### Assistant
-- **Empty State Suggestions (`CollectionView.EmptyView`):** Centered vertical stack of tappable starter suggestion buttons (`BindableLayout.ItemsSource="{Binding Suggestions}"`, `Surface` background, `PrimaryText` label, 1pt `Divider` stroke) shown when `Messages` is empty.
-- **Message Bubbles & Live Progress:** User messages (`IsUser`) right-aligned in `Primary` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and an inline italic progress status label (`Progress`, `IsVisible="{!string.IsNullOrWhiteSpace(Progress)}"`, `AutomationId="chat-progress"`).
+- **Empty State Suggestions (`CollectionView.EmptyView`):** Centered `ON-DEVICE AI CONCIERGE` hero banner and vertical stack of word-wrapping (`LineBreakMode="WordWrap"`) starter suggestion buttons (`BindableLayout.ItemsSource="{Binding Suggestions}"`) shown when `Messages` is empty.
+- **Message Bubbles & Live Progress:** User messages (`IsUser`) right-aligned in `HeroGradientBrush` with white text; assistant replies left-aligned on `Surface` cards with `TextPrimary` text bound via `MarkdownToFormattedStringConverter` and a tinted progress pill (`Progress`, `IsVisible="{!string.IsNullOrWhiteSpace(Progress)}"`, `AutomationId="chat-progress"`).
 - **Referenced Session Cards:** Tappable session cards (`BindableLayout.ItemsSource="{Binding Sessions}"`, `AutomationId="{$'chat-session-card-{Id}'}"`) rendered cleanly below the assistant reply bubble.
 - **Bottom Input Bar:** Pinned bottom bar with the **New chat** button (`AutomationId="chat-new"`), rounded `Surface` `Entry` (`AutomationId="chat-input"`), and `Primary` **Send** button (`AutomationId="chat-send"`).
 
