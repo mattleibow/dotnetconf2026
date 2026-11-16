@@ -24,16 +24,6 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("Borderless", (handler, _) =>
-        {
-#if ANDROID
-            handler.PlatformView.Background = null;
-            handler.PlatformView.SetPadding(0, 0, 0, 0);
-#elif IOS || MACCATALYST
-            handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
-#endif
-        });
-
         builder.Services.AddSingleton<ConferenceDbProvider>();
         builder.Services.AddSingleton<BaseBackgroundService, DatabasePreloadService>();
         builder.Services.AddSingleton<UserPreferencesService>();
