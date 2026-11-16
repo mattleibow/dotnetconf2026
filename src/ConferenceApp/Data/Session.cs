@@ -29,6 +29,10 @@ public partial class Session : ObservableObject
     [ObservableProperty]
     public partial IReadOnlyList<string> Topics { get; set; } = [];
 
+    [ObservableProperty]
+    [property: JsonIgnore]
+    public partial bool IsFavorite { get; set; }
+
     [JsonIgnore]
     public City City { get; set; } = null!;
 
