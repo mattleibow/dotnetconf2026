@@ -39,7 +39,6 @@ public static class ConferenceAssistantAgent
                         add_favorite, and remove_favorite to manage saved talks.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 700,
                     Tools =
                     [
                         .. ConferenceDataToolContext.Default.Tools,

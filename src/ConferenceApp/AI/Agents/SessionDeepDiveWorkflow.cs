@@ -43,7 +43,6 @@ public static class SessionDeepDiveWorkflow
                         abstract points in a concise factual brief for the analysts.
                         """,
                     Temperature = 0,
-                    MaxOutputTokens = 350,
                     Tools = [.. ConferenceDataToolContext.Default.Tools]
                 },
                 AIContextProviders = [userContext, scheduleContext]
@@ -60,12 +59,12 @@ public static class SessionDeepDiveWorkflow
                 {
                     Instructions = """
                         Using SessionResearcher's brief, write 3 concise bullet points
-                        explaining what to expect in this session and the key technical
-                        takeaways for a developer. Include the exact session title and
-                        time in the first bullet.
+                        ("- ") explaining what to expect in this session and the key
+                        technical takeaways for a developer. Include the exact session
+                        title and time in the first bullet. Keep each bullet to 1 or 2
+                        short sentences. Do not include an introductory sentence.
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 240
+                    Temperature = 0
                 },
                 AIContextProviders = [userContext]
             },
@@ -82,10 +81,11 @@ public static class SessionDeepDiveWorkflow
                     Instructions = """
                         Using SessionResearcher's brief, suggest 2 thoughtful things to
                         think about during the talk and 2 smart questions the attendee
-                        can ask the speaker during Q&A.
+                        can ask the speaker during Q&A. Use bullet points ("- ") and
+                        keep each point to 1 or 2 short sentences. Do not include an
+                        introductory sentence.
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 240
+                    Temperature = 0
                 },
                 AIContextProviders = [userContext]
             },

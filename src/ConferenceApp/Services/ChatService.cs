@@ -135,8 +135,8 @@ public class ChatService(
                 {
                     var label = update.AuthorName == "TakeawaysAgent" ? "Key Takeaways" : update.AuthorName;
                     var prefix = activeSpeaker is null
-                        ? $"**{label}:** "
-                        : $"\n\n**{label}:** ";
+                        ? $"**{label}**\n\n"
+                        : $"\n\n**{label}**\n\n";
                     activeSpeaker = update.AuthorName;
                     yield return prefix;
                 }
@@ -151,8 +151,8 @@ public class ChatService(
                 reply.Progress = "";
 
             var prefix = activeSpeaker is null
-                ? "**Things to Think About & Ask:** "
-                : "\n\n**Things to Think About & Ask:** ";
+                ? "**Things to Think About & Ask**\n\n"
+                : "\n\n**Things to Think About & Ask**\n\n";
             yield return prefix + bufferedQuestions;
         }
 

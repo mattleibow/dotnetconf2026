@@ -56,8 +56,7 @@ public static class TalkRecommendationWorkflow
                           Confirmed topics: <topics the attendee wants>
                           Avoid topics: <topics the attendee dislikes, or None>
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 140
+                    Temperature = 0
                 },
                 AIContextProviders = [userContext]
             },
@@ -79,8 +78,7 @@ public static class TalkRecommendationWorkflow
                         an Avoid topic). For each talk, give a 1-sentence reason and
                         state its exact time and title.
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 260
+                    Temperature = 0
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -102,8 +100,7 @@ public static class TalkRecommendationWorkflow
                         broaden the attendee's perspective. For each talk, give a
                         1-sentence reason and state its exact time and title.
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 260
+                    Temperature = 0
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -125,8 +122,7 @@ public static class TalkRecommendationWorkflow
                         not already pitched). For each talk, give a 1-sentence reason
                         and state its exact time and title.
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 260
+                    Temperature = 0
                 },
                 AIContextProviders = [availableSessionsContext]
             },
@@ -148,8 +144,7 @@ public static class TalkRecommendationWorkflow
                         so the attendee can decide which ones to attend. Output ONLY
                         bullet lines ("- HH:mm – HH:mm: Exact Title — short reason").
                         """,
-                    Temperature = 0,
-                    MaxOutputTokens = 400
+                    Temperature = 0
                 },
                 AIContextProviders = [availableSessionsContext]
             },
