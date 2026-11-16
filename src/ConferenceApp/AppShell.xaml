@@ -1,11 +1,12 @@
 <Shell x:Class="ConferenceApp.AppShell"
-       Title=".NET Conf South Africa">
+       Title=".NET Conf 2026 South Africa"
+       FlyoutBehavior="Disabled">
 
     <TabBar>
-        <ShellContent Title="Agenda" Route="agenda" ContentTemplate="{DataTemplate AgendaPage}" />
-        <ShellContent Title="Event" Route="event" ContentTemplate="{DataTemplate EventPage}" />
-        <ShellContent Title="Speakers" Route="speakers" ContentTemplate="{DataTemplate SpeakersPage}" />
-        <ShellContent Title="Assistant" Route="assistant" ContentTemplate="{DataTemplate ChatPage}" />
+        <ShellContent Title="Agenda" Icon="tab_agenda.png" Route="agenda" ContentTemplate="{DataTemplate AgendaPage}" />
+        <ShellContent Title="Event" Icon="tab_event.png" Route="event" ContentTemplate="{DataTemplate EventPage}" />
+        <ShellContent Title="Speakers" Icon="tab_speakers.png" Route="speakers" ContentTemplate="{DataTemplate SpeakersPage}" />
+        <ShellContent Title="Assistant" Icon="tab_assistant.png" Route="assistant" ContentTemplate="{DataTemplate ChatPage}" />
     </TabBar>
 
 </Shell>

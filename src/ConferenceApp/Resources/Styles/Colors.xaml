@@ -2,12 +2,80 @@
 
     <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
 
+    <!-- Brand Palette (.NET Conf 2026 South Africa) -->
     <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
+    <Color x:Key="PrimaryDark">#3B1F9E</Color>
+    <Color x:Key="PrimaryDarkTheme">#8454E4</Color>
+    <Color x:Key="PrimaryText">#512BD4</Color>
+    <Color x:Key="PrimaryTextLight">#512BD4</Color>
+    <Color x:Key="PrimaryTextDark">#B79BFF</Color>
+
     <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
+    <Color x:Key="SecondaryBrand">#6C3DD8</Color>
     <Color x:Key="Tertiary">#2B0B98</Color>
+
+    <Color x:Key="Accent">#E63888</Color>
+    <Color x:Key="AccentDark">#F05A9E</Color>
+    <Color x:Key="AccentText">#C2185B</Color>
+    <Color x:Key="AccentTextLight">#C2185B</Color>
+    <Color x:Key="AccentTextDark">#FF8FC0</Color>
+
+    <!-- Surfaces & Neutrals (Light / Dark) -->
+    <Color x:Key="PageBackground">#F3F1FA</Color>
+    <Color x:Key="PageBackgroundLight">#F3F1FA</Color>
+    <Color x:Key="PageBackgroundDark">#131124</Color>
+
+    <Color x:Key="Surface">#FFFFFF</Color>
+    <Color x:Key="SurfaceLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceDark">#1E1B36</Color>
+
+    <Color x:Key="SurfaceElevated">#FFFFFF</Color>
+    <Color x:Key="SurfaceElevatedLight">#FFFFFF</Color>
+    <Color x:Key="SurfaceElevatedDark">#282446</Color>
+
+    <Color x:Key="MilestoneBackgroundLight">#EAE4FA</Color>
+    <Color x:Key="MilestoneBackgroundDark">#252042</Color>
+
+    <Color x:Key="TextPrimary">#17142B</Color>
+    <Color x:Key="TextPrimaryLight">#17142B</Color>
+    <Color x:Key="TextPrimaryDark">#F8F7FC</Color>
+
+    <Color x:Key="TextSecondary">#5A5575</Color>
+    <Color x:Key="TextSecondaryLight">#5A5575</Color>
+    <Color x:Key="TextSecondaryDark">#B4AFD0</Color>
+
+    <Color x:Key="Divider">#E2DDF2</Color>
+    <Color x:Key="DividerLight">#E2DDF2</Color>
+    <Color x:Key="DividerDark">#342F56</Color>
+
+    <!-- Frosted Glass Tokens -->
+    <Color x:Key="FrostedSurface">#26FFFFFF</Color>
+    <Color x:Key="FrostedBorder">#4DFFFFFF</Color>
+    <Color x:Key="HeroGlowPink">#44FF5CA8</Color>
+    <Color x:Key="HeroGlowViolet">#449B72FF</Color>
+
+    <!-- Semantic & Tinted Chip Tokens (12% opacity) -->
+    <Color x:Key="ChipBackground">#1F512BD4</Color>
+    <Color x:Key="ChipBackgroundLight">#1F512BD4</Color>
+    <Color x:Key="ChipBackgroundDark">#298454E4</Color>
+
+    <Color x:Key="AccentChipBackground">#1FE63888</Color>
+    <Color x:Key="AccentChipBackgroundLight">#1FE63888</Color>
+    <Color x:Key="AccentChipBackgroundDark">#29F05A9E</Color>
+
+    <Color x:Key="WarningBackgroundLight">#FFF4E5</Color>
+    <Color x:Key="WarningBackgroundDark">#3A2B1D</Color>
+    <Color x:Key="WarningBorderLight">#F5C77E</Color>
+    <Color x:Key="WarningBorderDark">#6E522B</Color>
+    <Color x:Key="WarningTextLight">#7A4B00</Color>
+    <Color x:Key="WarningTextDark">#FFD591</Color>
+
+    <Color x:Key="CardShadowColor">#26512BD4</Color>
+    <Color x:Key="SponsorTileBackground">#FFFFFF</Color>
+
+    <!-- Legacy / Platform Keys -->
+    <Color x:Key="PrimaryDarkText">#242424</Color>
+    <Color x:Key="SecondaryDarkText">#9880e5</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>
@@ -24,11 +92,63 @@
     <Color x:Key="Gray900">#212121</Color>
     <Color x:Key="Gray950">#141414</Color>
 
+    <!-- Brushes -->
     <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
+    <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource PrimaryDark}"/>
+    <SolidColorBrush x:Key="PrimaryDarkThemeBrush" Color="{StaticResource PrimaryDarkTheme}"/>
     <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
+    <SolidColorBrush x:Key="SecondaryBrandBrush" Color="{StaticResource SecondaryBrand}"/>
     <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}"/>
+    <SolidColorBrush x:Key="AccentDarkBrush" Color="{StaticResource AccentDark}"/>
     <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
     <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
+
+    <SolidColorBrush x:Key="PageBackgroundLightBrush" Color="{StaticResource PageBackgroundLight}"/>
+    <SolidColorBrush x:Key="PageBackgroundDarkBrush" Color="{StaticResource PageBackgroundDark}"/>
+    <SolidColorBrush x:Key="SurfaceLightBrush" Color="{StaticResource SurfaceLight}"/>
+    <SolidColorBrush x:Key="SurfaceDarkBrush" Color="{StaticResource SurfaceDark}"/>
+    <SolidColorBrush x:Key="SurfaceElevatedLightBrush" Color="{StaticResource SurfaceElevatedLight}"/>
+    <SolidColorBrush x:Key="SurfaceElevatedDarkBrush" Color="{StaticResource SurfaceElevatedDark}"/>
+    <SolidColorBrush x:Key="ChipBackgroundLightBrush" Color="{StaticResource ChipBackgroundLight}"/>
+    <SolidColorBrush x:Key="ChipBackgroundDarkBrush" Color="{StaticResource ChipBackgroundDark}"/>
+    <SolidColorBrush x:Key="AccentChipBackgroundLightBrush" Color="{StaticResource AccentChipBackgroundLight}"/>
+    <SolidColorBrush x:Key="AccentChipBackgroundDarkBrush" Color="{StaticResource AccentChipBackgroundDark}"/>
+    <SolidColorBrush x:Key="WarningBackgroundLightBrush" Color="{StaticResource WarningBackgroundLight}"/>
+    <SolidColorBrush x:Key="WarningBackgroundDarkBrush" Color="{StaticResource WarningBackgroundDark}"/>
+    <SolidColorBrush x:Key="CardShadowBrush" Color="{StaticResource CardShadowColor}"/>
+
+    <SolidColorBrush x:Key="MilestoneBackgroundLightBrush" Color="{StaticResource MilestoneBackgroundLight}"/>
+    <SolidColorBrush x:Key="MilestoneBackgroundDarkBrush" Color="{StaticResource MilestoneBackgroundDark}"/>
+    <SolidColorBrush x:Key="FrostedSurfaceBrush" Color="{StaticResource FrostedSurface}"/>
+    <SolidColorBrush x:Key="HeroGlowPinkBrush" Color="{StaticResource HeroGlowPink}"/>
+    <SolidColorBrush x:Key="HeroGlowVioletBrush" Color="{StaticResource HeroGlowViolet}"/>
+
+    <!-- 135-degree Signature Hero Gradient (Deep Indigo -> .NET Purple -> Conference Pink) -->
+    <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2B0B98" Offset="0.0" />
+        <GradientStop Color="{StaticResource Primary}" Offset="0.48" />
+        <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Vibrant Accent Gradient (Electric Indigo -> Conference Pink) -->
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="{StaticResource SecondaryBrand}" Offset="0.0" />
+        <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Vertical Ticket Rail Gradient -->
+    <LinearGradientBrush x:Key="RailGradientBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="{StaticResource Primary}" Offset="0.0" />
+        <GradientStop Color="{StaticResource Accent}" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <!-- Photo Bottom Scrim Overlay -->
+    <LinearGradientBrush x:Key="PhotoScrimBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00131124" Offset="0.0" />
+        <GradientStop Color="#88131124" Offset="0.5" />
+        <GradientStop Color="#EC131124" Offset="1.0" />
+    </LinearGradientBrush>
 
     <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
     <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200}"/>
