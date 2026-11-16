@@ -4,24 +4,31 @@
 
 This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
 
-`src/ConferenceApp/` starts as a complete, working .NET MAUI 11 conference app—with unstyled wireframe XAML and the full on-device AI stack already wired up in [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) through `builder.AddConferenceAI()` (`AddChatClients()`, `AddEmbeddings()`, `AddAITools()`, and `AddAgents()`).
+`main` starts as a complete, working .NET MAUI 11 wireframe conference app (`ConferenceApp.slnx`, [`src/ConferenceApp/`](src/ConferenceApp/))—with the Event (sponsors + map), Agenda (literal `Contains` search + All/Favourites filter), Speakers, and Assistant pages, plus the design system ([`DESIGN.md`](DESIGN.md), [`PRODUCT.md`](PRODUCT.md), [`.impeccable/`](.impeccable/)) and [`Microsoft.Maui.DevFlow.Agent`](src/ConferenceApp/MauiProgram.cs) already wired up.
 
-- **Part 1 — Agents Building Apps:** Use a coding agent (such as GitHub Copilot), the Mobile Device canvas, the MAUI DevFlow Web Inspector, and the `impeccable` design skill to inspect the wireframe, add an inline favourite toggle on Agenda cards, style the entire app against [`DESIGN.md`](DESIGN.md), and verify layout diagnostics and `Preferences` live.
-- **Part 2 — Giving the App That Same AI:** Walk through [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) and demo on-device chat (`IChatClient`), data ingestion and enrichment (`Microsoft.Extensions.DataIngestion`), ONNX MiniLM semantic search (`IEmbeddingGenerator` + `VectorStoreCollection<string, Session>`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`) while streaming live `[AI]` logs in DevFlow.
+From `main`, two independent pull requests add visual styling and on-device AI with **zero overlapping files**, so they can be explored or merged in either order:
+
+- **Visual Design & Styles ([#30](https://github.com/mattleibow/dotnetconf2026/pull/30)):** Uses the `impeccable` skill, [`DESIGN.md`](DESIGN.md), and [`PRODUCT.md`](PRODUCT.md) to style `Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, and `Views/*.xaml` for phone and desktop in light and dark themes (9 `.xaml` files only).
+- **On-Device AI ([#31](https://github.com/mattleibow/dotnetconf2026/pull/31)):** Adds `src/ConferenceApp/AI/` (`builder.AddConferenceAI()`) with local on-device chat (`AppleIntelligenceChatClient` / `GeminiNanoChatClient` with `OrderedFailoverChatClient`), ONNX MiniLM semantic search (`VectorStoreCollection<string, Session>`), background data enrichment (`SummaryEnricher` + `KeywordEnricher`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`) (`.cs` and project files only).
 
 ## What's here
 
 | Path | Contents |
 |---|---|
-| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with semantic search and favourites filter), Speakers, Assistant, and DevFlow |
-| [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
-| [`src/ConferenceApp/AI/`](src/ConferenceApp/AI/) | Clean, isolated on-device AI layer registered via `builder.AddConferenceAI()` across `ChatClients/`, `Embeddings/`, `Tools/`, and `Agents/` |
+| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 wireframe conference app: Event (with sponsors and map), Agenda (with literal `Contains` search and favourites filter), Speakers, Assistant, and DevFlow |
+| [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `DatabasePreloadService`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
 | [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-inspect-and-drive` and `02-make-it-beautiful`) |
 | [`docs/`](docs/README.md) | Speaker runbook split into [`01-whats-new-net11-maui11.md`](docs/01-whats-new-net11-maui11.md), [`02-agents-building-apps.md`](docs/02-agents-building-apps.md), and [`03-giving-the-app-ai.md`](docs/03-giving-the-app-ai.md) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions, and images |
-| [`models/`](models/README.md) | Bundled ONNX embedding model (`all-MiniLM-L6-v2`) for cross-platform semantic search |
+
+## Feature Pull Requests (mergeable in either order)
+
+| Pull Request | Branch | Files touched | Summary |
+|---|---|---|---|
+| [#30 — Visual design and styles](https://github.com/mattleibow/dotnetconf2026/pull/30) | `mattleibow-layer-2-visual-design-and-styles` | 9 `.xaml` files (`Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, `Views/*.xaml`) | Styles all four tabs and detail pages following `DESIGN.md` and `PRODUCT.md` |
+| [#31 — On-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | `.cs`, `.csproj`, `Directory.Packages.props`, `models/`, `packages/`, `NuGet.config` | Adds `src/ConferenceApp/AI/` and upgrades `SearchService`, `ChatService`, and `Session` |
 
 ## Before you start
 
