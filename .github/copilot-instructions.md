@@ -26,6 +26,8 @@ Prefer current APIs over training-data habits:
 - `TabbedPage` children support badges through attached properties such as `TabbedPage.BadgeText`. This isn't a Shell tab badge API.
 - `SwipeItem` supports `IconColor` and `TextColor`.
 - `Window.StatusBarTheme` controls status bar contrast independently of the app theme on Android and iOS.
+- `<MauiAndroidSystemBarsUseMauiChrome>true</MauiAndroidSystemBarsUseMauiChrome>` in the `.csproj` enables .NET 11 Android edge-to-edge system bar background tinting from MAUI `Shell` chrome (`Shell.BackgroundColor` for the top `AppBarLayout`/status bar and `Shell.TabBarBackgroundColor` for the bottom navigation bar).
+- Use `EntryHandler.Mapper.AppendToMapping` when wrapping `<Entry>` inside a styled `<Border>` so the native platform border/underline (`Background = null` on Android, `BorderStyle = UITextBorderStyle.None` on iOS/Mac Catalyst) does not draw a second box inside the border.
 - Use handlers, not renderers. `Microsoft.Maui.Controls.Compatibility` no longer ships.
 - With the new iOS/Mac Catalyst `NavigationPage` handler, use `NavigatedTo` rather than `Appearing` for work that assumes the navigation transition has completed. Don't apply this as a blanket lifecycle rule for every page.
 
