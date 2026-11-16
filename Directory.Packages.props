@@ -1,0 +1,16 @@
+<Project>
+
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageVersion Include="Markdig.Signed" Version="0.43.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0" />
+        <PackageVersion Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageVersion Include="Microsoft.Maui.Controls.Maps" Version="$(MauiVersion)" />
+        <PackageVersion Include="Microsoft.Maui.DevFlow.Agent" Version="0.1.0-preview.14.26555.2" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<BasePage x:Class="ConferenceApp.Views.EventPage"
+          x:DataType="EventViewModel"
+          Title="Event">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <VerticalStackLayout Spacing="4">
+                <Label Text=".NET Conf 2026 South Africa" FontSize="24" FontAttributes="Bold" />
+                <Label Text="{Binding SelectedCity.Date, StringFormat='{0:D}'}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Sponsors" FontSize="18" FontAttributes="Bold" />
+                <VerticalStackLayout AutomationId="sponsor-list" BindableLayout.ItemsSource="{Binding Sponsors}" Spacing="8">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="Sponsor">
+                            <Border StrokeShape="RoundRectangle 8"
+                                    Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                    Background="Transparent"
+                                    Padding="12"
+                                    Margin="0,4"
+                                    AutomationId="{Binding Id, StringFormat='sponsor-{0}'}">
+                                <VerticalStackLayout Spacing="4" Background="Transparent">
+                                    <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                                    <Label Text="{Binding Tier}"
+                                           FontSize="13"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenSponsorCommand, Source={RelativeSource AncestorType={x:Type EventViewModel}}, x:DataType=EventViewModel}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="{Binding Venue.Name}" FontSize="18" FontAttributes="Bold" />
+                <Label Text="{Binding Venue.Address}"
+                       FontSize="14"
+                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                    <Map x:Name="VenueMap"
+                         AutomationId="venue-map"
+                         HeightRequest="240"
+                         IsShowingUser="False" />
+                <Button AutomationId="open-map" Text="Open in Maps" Command="{Binding OpenMapCommand}" />
+                <Label Text="{Binding Description}" FontSize="14" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+</BasePage>

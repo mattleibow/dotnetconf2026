@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<BasePage x:Class="ConferenceApp.Views.ChatPage"
+          x:DataType="ChatViewModel"
+          Title="Assistant">
+    <ContentPage.Resources>
+        <MarkdownToFormattedStringConverter x:Key="MarkdownConverter" />
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16" RowSpacing="12">
+        <Label AutomationId="chat-unavailable"
+               Text="{Binding UnavailableReason}"
+               IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}"
+               TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+
+        <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Spacing="8"
+                                     VerticalOptions="Center"
+                                     IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                                     BindableLayout.ItemsSource="{Binding Suggestions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Button Text="{Binding .}"
+                                    Command="{Binding AskSuggestionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
+                                    CommandParameter="{Binding .}" />
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="ChatItem">
+                    <VerticalStackLayout Padding="0,4" Spacing="6">
+                        <Border StrokeShape="RoundRectangle 12"
+                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                Background="{AppThemeBinding Light={StaticResource Gray100Brush}, Dark={StaticResource Gray900Brush}}"
+                                Padding="12"
+                                HorizontalOptions="{IsUser ? LayoutOptions.End : LayoutOptions.Start}">
+                            <VerticalStackLayout Spacing="6">
+                                <Label AutomationId="chat-progress"
+                                       Text="{Binding Progress}"
+                                       FontSize="12"
+                                       FontAttributes="Italic"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}"
+                                       IsVisible="{!string.IsNullOrWhiteSpace(Progress)}" />
+                                <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <VerticalStackLayout Spacing="6" BindableLayout.ItemsSource="{Binding Sessions}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="Session">
+                                    <Border StrokeShape="RoundRectangle 8"
+                                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                            Background="Transparent"
+                                            Padding="12"
+                                            Margin="0,2"
+                                            AutomationId="{$'chat-session-card-{Id}'}">
+                                        <VerticalStackLayout Spacing="4" Background="Transparent">
+                                            <Label Text="{Binding CityMeta}"
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                                            <Label Text="{Binding Title}" FontSize="15" FontAttributes="Bold" />
+                                            <Label Text="{Binding SpeakerNames}"
+                                                   FontSize="13"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                                        </VerticalStackLayout>
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+            <Button AutomationId="chat-new"
+                    Text="New chat"
+                    Command="{Binding ClearChatCommand}" />
+            <Entry Grid.Column="1"
+                   AutomationId="chat-input"
+                   Placeholder="Ask about sessions, speakers, or your schedule..."
+                   Text="{Binding Prompt}"
+                   IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                   ReturnCommand="{Binding SendCommand}" />
+            <Button Grid.Column="2"
+                    AutomationId="chat-send"
+                    Text="Send"
+                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                    Command="{Binding SendCommand}" />
+        </Grid>
+    </Grid>
+</BasePage>

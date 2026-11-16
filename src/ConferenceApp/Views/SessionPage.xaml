@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<BasePage x:Class="ConferenceApp.Views.SessionPage"
+          x:DataType="SessionViewModel"
+          Title="Session">
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="12">
+            <Label Text="{Binding Session.Title}" FontSize="22" FontAttributes="Bold" />
+            <Label Text="{Binding Session.Time}"
+                   FontSize="14"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+            <Label Text="{Binding Session.Track}"
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+            <VerticalStackLayout BindingContext="{Binding Session, x:DataType=SessionViewModel}">
+                <HorizontalStackLayout Spacing="6"
+                                       x:DataType="Session"
+                                       IsVisible="{Topics.Count > 0}"
+                                       BindableLayout.ItemsSource="{Binding Topics}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <Border StrokeShape="RoundRectangle 6"
+                                    Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                                    Padding="6,2">
+                                <Label Text="{Binding .}" FontSize="11" />
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+            <Button AutomationId="favorite-button"
+                    Text="{IsFavorite ? 'Remove from favourites' : 'Add to favourites'}"
+                    Command="{Binding ToggleFavoriteCommand}" />
+            <VerticalStackLayout AutomationId="session-speakers"
+                                 Spacing="8"
+                                 BindableLayout.ItemsSource="{Binding Speakers}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="Speaker">
+                        <Border StrokeShape="RoundRectangle 8"
+                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                                Background="Transparent"
+                                Padding="12"
+                                Margin="0,2"
+                                AutomationId="{Binding Id, StringFormat='session-speaker-{0}'}">
+                            <VerticalStackLayout Spacing="2" Background="Transparent">
+                                <Label Text="{Binding Name}" FontSize="15" FontAttributes="Bold" />
+                                <Label Text="{Binding Tagline}"
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                            </VerticalStackLayout>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SessionViewModel}}, x:DataType=SessionViewModel}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            <Label Text="{Binding Description}" FontSize="14" />
+        </VerticalStackLayout>
+    </ScrollView>
+</BasePage>

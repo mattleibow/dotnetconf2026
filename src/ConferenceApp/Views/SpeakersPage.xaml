@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<BasePage x:Class="ConferenceApp.Views.SpeakersPage"
+          x:DataType="SpeakersViewModel"
+          Title="Speakers">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem AutomationId="city-picker"
+                     Text="{Binding SelectedCity.Name, FallbackValue='City'}"
+                     Command="{Binding PickCityCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid Padding="16">
+        <CollectionView AutomationId="speaker-list" ItemsSource="{Binding Speakers}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="Speaker">
+                    <Border StrokeShape="RoundRectangle 8"
+                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
+                            Background="Transparent"
+                            Padding="12"
+                            Margin="0,4"
+                            AutomationId="{Binding Id, StringFormat='speaker-{0}'}">
+                        <VerticalStackLayout Spacing="4" Background="Transparent">
+                            <Label Text="{Binding Name}" FontSize="16" FontAttributes="Bold" />
+                            <Label Text="{Binding Tagline}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenSpeakerCommand, Source={RelativeSource AncestorType={x:Type SpeakersViewModel}}, x:DataType=SpeakersViewModel}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</BasePage>
