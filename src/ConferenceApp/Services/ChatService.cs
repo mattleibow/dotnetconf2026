@@ -167,16 +167,17 @@ public class ChatService(
             reply.Text.Length, reply.Sessions.Count);
     }
 
-    // Attaches tappable session cards under the assistant reply for any talk mentioned in the response.
+    // Attaches tappable session cards under the assistant reply for any talk mentioned in the final agent's response.
     private async Task AddReferencedSessionsAsync(ChatItem reply)
     {
         var db = await dbProvider.GetDbAsync();
         var city = await preferences.GetSelectedCityAsync();
+        var sourceText = reply.ResponseMessages.LastOrDefault()?.Text ?? reply.Text;
 
         var referenced = db.Sessions
             .Where(s => s.CityId == city.Id && s.IsTalk && (
-                reply.Text.Contains(s.Title, StringComparison.OrdinalIgnoreCase) ||
-                reply.Text.Contains(s.Id, StringComparison.OrdinalIgnoreCase)))
+                sourceText.Contains(s.Title, StringComparison.OrdinalIgnoreCase) ||
+                sourceText.Contains(s.Id, StringComparison.OrdinalIgnoreCase)))
             .ToArray();
 
         foreach (var session in referenced)

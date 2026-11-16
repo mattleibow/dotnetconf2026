@@ -52,7 +52,7 @@ public static class RagContextProvider
                 SearchInputMessageFilter = messages => messages
                     .Where(m => m.Role == ChatRole.User && string.IsNullOrEmpty(m.AuthorName))
                     .TakeLast(1),
-                CitationsPrompt = "Use the matching sessions above to identify the target session, then call get_session and get_speaker for full details."
+                CitationsPrompt = "If the user is asking about a specific session from the matching sessions above, use its title or ID and call get_session or get_speaker only when you need its full abstract or speaker biography. Ignore these matching sessions if the user is asking about their saved favourites or general schedule."
             },
             loggerFactory);
     }

@@ -46,6 +46,9 @@ public sealed class SessionTopicEnrichmentService(
         {
             await TryExtractTopicsAsync(session, session.EmbeddingText);
 
+            if (session.Topics.Count == 0 && !string.IsNullOrWhiteSpace(session.Summary))
+                await TryExtractTopicsAsync(session, $"{session.Title} — {session.Summary}");
+
             if (session.Topics.Count == 0)
                 await TryExtractTopicsAsync(session, session.Title);
 
@@ -67,8 +70,19 @@ public sealed class SessionTopicEnrichmentService(
             }
 
             var matched = keywords
-                .Select(k => Topics.FirstOrDefault(t => k.Contains(t, StringComparison.OrdinalIgnoreCase)))
-                .OfType<string>()
+                .SelectMany(k => Topics.Where(t =>
+                    k.Contains(t, StringComparison.OrdinalIgnoreCase) ||
+                    (t == "AI" && (
+                        k.Contains("neural", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("model", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("machine learning", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("deep learning", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("llm", StringComparison.OrdinalIgnoreCase))) ||
+                    (t == "Data" && (
+                        k.Contains("algorithm", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("optimiz", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("analytics", StringComparison.OrdinalIgnoreCase) ||
+                        k.Contains("graph", StringComparison.OrdinalIgnoreCase)))))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Take(3)
                 .ToArray();
