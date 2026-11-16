@@ -49,7 +49,9 @@ public partial class AgendaViewModel(
         Sessions.Clear();
         foreach (var session in matching)
         {
-            if (favoritesOnly && !favoriteIds.Contains(session.Id))
+            var isFavorite = favoriteIds.Contains(session.Id);
+            session.IsFavorite = isFavorite;
+            if (favoritesOnly && !isFavorite)
                 continue;
             Sessions.Add(session);
         }
@@ -58,6 +60,17 @@ public partial class AgendaViewModel(
     [RelayCommand]
     private void ToggleFavoritesFilter() =>
         ShowFavoritesOnly = !ShowFavoritesOnly;
+
+    [RelayCommand]
+    private void ToggleFavorite(Session? session)
+    {
+        if (session is null || !session.IsTalk)
+            return;
+
+        var isFavorite = !Preferences.IsFavorite(session.Id);
+        session.IsFavorite = isFavorite;
+        Preferences.SetFavorite(session.Id, isFavorite);
+    }
 
     [RelayCommand]
     private Task OpenSessionAsync(Session session) =>
