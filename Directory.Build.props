@@ -1,8 +1,0 @@
-<Project>
-
-    <PropertyGroup>
-        <UseArtifactsOutput>true</UseArtifactsOutput>
-        <NoWarn>$(NoWarn);NU1507</NoWarn>
-    </PropertyGroup>
-
-</Project>
