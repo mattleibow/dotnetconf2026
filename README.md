@@ -4,32 +4,31 @@
 
 This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
 
-`main` starts as a complete, working .NET MAUI 11 wireframe conference app (`ConferenceApp.slnx`, [`src/ConferenceApp/`](src/ConferenceApp/))—with the Event (sponsors + map), Agenda (literal `Contains` search + All/Favourites filter), Speakers, and Assistant pages, plus the design system ([`DESIGN.md`](DESIGN.md), [`PRODUCT.md`](PRODUCT.md), [`.impeccable/`](.impeccable/)) and [`Microsoft.Maui.DevFlow.Agent`](src/ConferenceApp/MauiProgram.cs) already wired up.
+`main` starts as a complete, styled .NET MAUI 11 conference app (`ConferenceApp.slnx`, [`src/ConferenceApp/`](src/ConferenceApp/))—with the Event (hero banner, sponsors, and map), Agenda (literal `Contains` search, All/Favourites filter, and swipeable ticket cards), Speakers, and Assistant pages, plus [`Microsoft.Maui.DevFlow.Agent`](src/ConferenceApp/MauiProgram.cs) wired up for live UI inspection and debugging.
 
-From `main`, two independent pull requests add visual styling and on-device AI with **zero overlapping files**, so they can be explored or merged in either order:
+From `main`, two pull requests cover the two halves of the talk:
 
-- **Visual Design & Styles ([#30](https://github.com/mattleibow/dotnetconf2026/pull/30)):** Uses the `impeccable` skill, [`DESIGN.md`](DESIGN.md), and [`PRODUCT.md`](PRODUCT.md) to style `Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, and `Views/*.xaml` for phone and desktop in light and dark themes (9 `.xaml` files only).
-- **On-Device AI ([#31](https://github.com/mattleibow/dotnetconf2026/pull/31)):** Adds `src/ConferenceApp/AI/` (`builder.AddConferenceAI()`) with local on-device chat (`AppleIntelligenceChatClient` / `GeminiNanoChatClient` with `OrderedFailoverChatClient`), ONNX MiniLM semantic search (`VectorStoreCollection<string, Session>`), background data enrichment (`SummaryEnricher` + `KeywordEnricher`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`) (`.cs` and project files only).
+- **Demo Bugs for MAUI DevFlow Bug Hunt ([#33](https://github.com/mattleibow/dotnetconf2026/pull/33), Draft):** Optional branch introducing silent bugs so you can demo [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) using DevFlow **Logs**, **Storage**, **UI Diagnostics**, and **Screenshots**.
+- **On-Device AI ([#31](https://github.com/mattleibow/dotnetconf2026/pull/31)):** Adds `src/ConferenceApp/AI/` (`builder.AddConferenceAI()`) with local on-device chat (`AppleIntelligenceChatClient` / `GeminiNanoChatClient` with `OrderedFailoverChatClient`), ONNX MiniLM semantic search (`VectorStoreCollection<string, Session>`), background data enrichment (`SummaryEnricher` + `KeywordEnricher`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`).
 
 ## What's here
 
 | Path | Contents |
 |---|---|
-| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 wireframe conference app: Event (with sponsors and map), Agenda (with literal `Contains` search and favourites filter), Speakers, Assistant, and DevFlow |
+| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with literal `Contains` search, swipeable cards, and favourites filter), Speakers, Assistant, and DevFlow |
 | [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `DatabasePreloadService`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
-| [`.github/prompts/`](.github/prompts/) | Three live demo prompts (`01-explore-app`, `02-bug-hunt`, and `03-make-it-beautiful`) |
+| [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-explore-app` and `02-bug-hunt`) |
 | [`docs/`](docs/README.md) | Speaker runbook split into [`01-whats-new-net11-maui11.md`](docs/01-whats-new-net11-maui11.md), [`02-agents-building-apps.md`](docs/02-agents-building-apps.md), and [`03-giving-the-app-ai.md`](docs/03-giving-the-app-ai.md) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
 | [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions, and images |
 
-## Feature Pull Requests (mergeable in either order)
+## Pull Requests
 
-| Pull Request | Branch | Files touched | Summary |
+| Pull Request | Branch | Status | Summary |
 |---|---|---|---|
-| [#30 — Add visual design and styles](https://github.com/mattleibow/dotnetconf2026/pull/30) | `mattleibow-layer-2-visual-design-and-styles` | 9 `.xaml` files (`Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, `Views/*.xaml`) | Styles all four tabs and detail pages following `DESIGN.md` and `PRODUCT.md` |
-| [#31 — Add on-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | `.cs`, `.csproj`, `Directory.Packages.props`, `models/`, `packages/`, `NuGet.config` | Adds `src/ConferenceApp/AI/` and upgrades `SearchService`, `ChatService`, and `Session` |
-| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | `UserPreferencesService.cs`, `SpeakerViewModel.cs`, `EventPage.xaml` | Optional branch introducing the 3 silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
+| [#31 — Add on-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | Ready | Adds `src/ConferenceApp/AI/`, `models/`, `packages/`, `NuGet.config`, and upgrades `SearchService`, `ChatService`, and `Session` |
+| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | Draft | Optional branch introducing silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
 
 ## Before you start
 
@@ -48,13 +47,12 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 
 ## Live Demo Flow
 
-### Part 1: Agents Building Apps (Prompts `01`–`03`)
+### Part 1: Agents Building Apps (Prompts `01`–`02`)
 
 | # | Prompt | What happens |
 |---|---|---|
 | 01 | [Explore app](.github/prompts/01-explore-app.prompt.md) | Launches the app with DevFlow, finds the .NET MAUI session on the Agenda, adds it to Favourites (verifying `Preferences` in DevFlow Storage), and opens the speaker's profile |
-| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (logged `InvalidOperationException` in `SpeakerViewModel`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics** (`venue-map` with `Height=0`) to diagnose and fix three silent bugs |
-| 03 | [Make it beautiful](.github/prompts/03-make-it-beautiful.prompt.md) | Uses `impeccable` and `DESIGN.md` to restyle all 4 tabs and detail pages into a dynamic Festival Pass design and verifies light/dark themes and `ui diagnostics` |
+| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (logged `InvalidOperationException` in `SpeakerViewModel`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics / Screenshots** to diagnose and fix silent bugs |
 
 ### Part 2: Giving the App That Same AI (`src/ConferenceApp/AI/`)
 
