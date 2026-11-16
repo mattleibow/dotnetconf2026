@@ -17,7 +17,7 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 |---|---|
 | [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 wireframe conference app: Event (with sponsors and map), Agenda (with literal `Contains` search and favourites filter), Speakers, Assistant, and DevFlow |
 | [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `DatabasePreloadService`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
-| [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-inspect-and-drive` and `02-make-it-beautiful`) |
+| [`.github/prompts/`](.github/prompts/) | Three live demo prompts (`01-explore-app`, `02-bug-hunt`, and `03-make-it-beautiful`) |
 | [`docs/`](docs/README.md) | Speaker runbook split into [`01-whats-new-net11-maui11.md`](docs/01-whats-new-net11-maui11.md), [`02-agents-building-apps.md`](docs/02-agents-building-apps.md), and [`03-giving-the-app-ai.md`](docs/03-giving-the-app-ai.md) |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
 | [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
@@ -47,12 +47,13 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 
 ## Live Demo Flow
 
-### Part 1: Agents Building Apps (Prompts `01`–`02`)
+### Part 1: Agents Building Apps (Prompts `01`–`03`)
 
 | # | Prompt | What happens |
 |---|---|---|
-| 01 | [Inspect and drive](.github/prompts/01-inspect-and-drive.prompt.md) | Opens the Mobile Device canvas + DevFlow Web Inspector (`http://localhost:19223/inspector/<agent-id>/`), checks `ui tree` and `ui diagnostics`, drives the wireframe UI, inspects sandboxed `Preferences`, and shows live `[AI]` logs |
-| 02 | [Make it beautiful](.github/prompts/02-make-it-beautiful.prompt.md) | Uses `impeccable` and `DESIGN.md` to style all 4 tabs and detail pages, adds an inline heart toggle (`session-favorite-<id>`) on Agenda talk cards, and verifies light/dark themes and `ui diagnostics` |
+| 01 | [Explore app](.github/prompts/01-explore-app.prompt.md) | Launches the app with DevFlow, finds the .NET MAUI session on the Agenda, adds it to Favourites (verifying `Preferences` in DevFlow Storage), and opens the speaker's profile |
+| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (swallowed `NullReferenceException` in `SearchService`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics** (`venue-map` with `Height=0`) to diagnose and fix three silent bugs |
+| 03 | [Make it beautiful](.github/prompts/03-make-it-beautiful.prompt.md) | Uses `impeccable` and `DESIGN.md` to restyle all 4 tabs and detail pages into a dynamic Festival Pass design and verifies light/dark themes and `ui diagnostics` |
 
 ### Part 2: Giving the App That Same AI (`src/ConferenceApp/AI/`)
 
