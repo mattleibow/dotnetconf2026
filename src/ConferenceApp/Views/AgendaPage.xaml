@@ -8,61 +8,257 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*" Padding="16" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-            <Entry AutomationId="agenda-search"
-                   Placeholder="Search sessions or speakers..."
-                   Text="{Binding SearchQuery}"
-                   ClearButtonVisibility="WhileEditing" />
+    <Grid RowDefinitions="Auto,*" Padding="16,12,16,0" RowSpacing="12">
+        <!-- Search & Filter Control Bar -->
+        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+            <Border Style="{StaticResource SearchContainerBorder}">
+                <Entry AutomationId="agenda-search"
+                       Placeholder="Search sessions, topics, or speakers..."
+                       Text="{Binding SearchQuery}"
+                       ClearButtonVisibility="WhileEditing" />
+            </Border>
             <Button Grid.Column="1"
                     AutomationId="favorites-filter"
+                    Style="{StaticResource SecondaryButton}"
                     Text="{ShowFavoritesOnly ? 'Showing: Favourites' : 'Showing: All Sessions'}"
-                    Command="{Binding ToggleFavoritesFilterCommand}" />
+                    Command="{Binding ToggleFavoritesFilterCommand}">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding ShowFavoritesOnly}" Value="True">
+                        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
+                        <Setter Property="TextColor" Value="{StaticResource White}" />
+                        <Setter Property="BorderWidth" Value="0" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
         </Grid>
+
+        <!-- Timeline Session Feed -->
         <CollectionView Grid.Row="1" AutomationId="session-list" ItemsSource="{Binding Sessions}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="Session">
-                    <Border StrokeShape="RoundRectangle 8"
-                            Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                            Background="Transparent"
-                            Padding="12"
-                            Margin="0,4"
-                            AutomationId="{$'session-{Id}'}">
-                        <VerticalStackLayout Spacing="6" Background="Transparent">
-                            <Label Text="{Binding Meta}"
-                                   FontSize="12"
-                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                            <HorizontalStackLayout Spacing="6"
-                                                   IsVisible="{Topics.Count > 0}"
-                                                   BindableLayout.ItemsSource="{Binding Topics}">
-                                <BindableLayout.ItemTemplate>
-                                    <DataTemplate x:DataType="x:String">
-                                        <Border StrokeShape="RoundRectangle 6"
-                                                Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
-                                                Padding="6,2">
-                                            <Label Text="{Binding .}" FontSize="11" />
-                                        </Border>
-                                    </DataTemplate>
-                                </BindableLayout.ItemTemplate>
-                            </HorizontalStackLayout>
-                            <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" />
-                            <Label Text="{Binding Summary}"
-                                   IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
-                                   FontSize="13"
-                                   MaxLines="2"
-                                   LineBreakMode="TailTruncation" />
-                            <Label Text="{Binding SpeakerNames}"
-                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}"
-                                   FontSize="13"
-                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                        </VerticalStackLayout>
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
-                                                  CommandParameter="{Binding .}" />
-                        </Border.GestureRecognizers>
+                    <SwipeView Background="Transparent">
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItem Text="{IsFavorite ? 'Unfavourite' : 'Favourite'}"
+                                           BackgroundColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}"
+                                           TextColor="{StaticResource White}"
+                                           IconColor="{StaticResource White}"
+                                           Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Execute">
+                                <SwipeItem Text="{IsFavorite ? 'Unfavourite' : 'Favourite'}"
+                                           BackgroundColor="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}"
+                                           TextColor="{StaticResource White}"
+                                           IconColor="{StaticResource White}"
+                                           Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
+                                           CommandParameter="{Binding .}" />
+                            </SwipeItems>
+                        </SwipeView.RightItems>
+
+                        <Border Style="{StaticResource TicketCardBorder}"
+                                Margin="0,6"
+                                AutomationId="{$'session-{Id}'}">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsTalk}" Value="False">
+                                    <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource MilestoneBackgroundLightBrush}, Dark={StaticResource MilestoneBackgroundDarkBrush}}" />
+                                    <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsFavorite}" Value="True">
+                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+
+                            <Grid Background="Transparent">
+                                <!-- General Milestone Row (Registration, Welcome, Lunch, Q&A) -->
+                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                      ColumnSpacing="12"
+                                      Padding="14,10"
+                                      IsVisible="{!IsTalk}"
+                                      Background="Transparent">
+                                    <Border Style="{StaticResource TopicPillBorder}"
+                                            Padding="10,4"
+                                            VerticalOptions="Center">
+                                        <Label Text="{Binding Time}"
+                                               Style="{StaticResource TopicPillLabel}" />
+                                    </Border>
+                                    <Label Grid.Column="1"
+                                           Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="15"
+                                           VerticalOptions="Center" />
+                                    <Label Grid.Column="2"
+                                           Text="{Binding Track}"
+                                           Style="{StaticResource Caption}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(Track)}"
+                                           VerticalOptions="Center" />
+                                </Grid>
+
+                                <!-- Talk Card -->
+                                <Grid ColumnDefinitions="6,76,1,*"
+                                      IsVisible="{IsTalk}"
+                                      Background="Transparent">
+                                    <!-- Left Favourite Indicator Bar (subtle lavender by default, vibrant Accent pink when favourited) -->
+                                    <BoxView Grid.Column="0"
+                                             Color="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource DividerDark}}">
+                                        <BoxView.Triggers>
+                                            <DataTrigger TargetType="BoxView" Binding="{Binding IsFavorite}" Value="True">
+                                                <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Accent}, Dark={StaticResource AccentDark}}" />
+                                            </DataTrigger>
+                                        </BoxView.Triggers>
+                                    </BoxView>
+
+                                    <!-- Dedicated Time Slot Column -->
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Padding="10,16"
+                                                         Spacing="2"
+                                                         VerticalOptions="Start"
+                                                         Background="Transparent">
+                                        <Label Text="{Binding Start, StringFormat='{0:HH:mm}'}"
+                                               Style="{StaticResource Subtitle}"
+                                               FontSize="16"
+                                               TextColor="{AppThemeBinding Light={StaticResource PrimaryTextLight}, Dark={StaticResource PrimaryTextDark}}"
+                                               HorizontalTextAlignment="Center" />
+                                        <Label Text="{Binding End, StringFormat='{0:HH:mm}'}"
+                                               Style="{StaticResource Caption}"
+                                               FontSize="12"
+                                               HorizontalTextAlignment="Center" />
+                                    </VerticalStackLayout>
+
+                                    <!-- Subtle Vertical Divider -->
+                                    <BoxView Grid.Column="2"
+                                             WidthRequest="1"
+                                             Margin="0,14" />
+
+                                    <!-- Session Details Column -->
+                                    <VerticalStackLayout Grid.Column="3"
+                                                         Padding="14,14,16,14"
+                                                         Spacing="8"
+                                                         Background="Transparent">
+                                        <!-- Track + Favourite Toggle Pill + AI Topics Strip -->
+                                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8" Background="Transparent">
+                                            <HorizontalStackLayout Spacing="6" VerticalOptions="Center">
+                                                <Border Style="{StaticResource AccentPillBorder}"
+                                                        IsVisible="{!string.IsNullOrWhiteSpace(Track)}">
+                                                    <Label Text="{Binding Track}"
+                                                           Style="{StaticResource AccentPillLabel}" />
+                                                </Border>
+                                                <HorizontalStackLayout Spacing="6"
+                                                                       IsVisible="{Topics.Count > 0}"
+                                                                       BindableLayout.ItemsSource="{Binding Topics}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="x:String">
+                                                            <Border Style="{StaticResource TopicPillBorder}">
+                                                                <Label Text="{Binding .}"
+                                                                       Style="{StaticResource TopicPillLabel}" />
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </HorizontalStackLayout>
+                                            </HorizontalStackLayout>
+
+                                            <Border Grid.Column="1"
+                                                    AutomationId="{$'session-favorite-{Id}'}"
+                                                    StrokeShape="RoundRectangle 999"
+                                                    StrokeThickness="1"
+                                                    Stroke="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}"
+                                                    Background="Transparent"
+                                                    Padding="10,4"
+                                                    VerticalOptions="Center">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border" Binding="{Binding IsFavorite}" Value="True">
+                                                        <Setter Property="Background" Value="{AppThemeBinding Light={StaticResource AccentBrush}, Dark={StaticResource AccentDarkBrush}}" />
+                                                        <Setter Property="StrokeThickness" Value="0" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding ToggleFavoriteCommand, Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel}"
+                                                                          CommandParameter="{Binding .}" />
+                                                </Border.GestureRecognizers>
+                                                <Label Text="{IsFavorite ? '★ Saved' : '☆ Save'}"
+                                                       Style="{StaticResource Label}"
+                                                       FontSize="11"
+                                                       TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label" Binding="{Binding IsFavorite}" Value="True">
+                                                            <Setter Property="TextColor" Value="{StaticResource White}" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Border>
+                                        </Grid>
+
+                                    <Label Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="17"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <Label Text="{Binding Summary}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                           Style="{StaticResource Body}"
+                                           FontSize="14"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+
+                                    <!-- Speaker Avatars + Names Strip -->
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="8"
+                                          Margin="0,2,0,0"
+                                          IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}"
+                                          Background="Transparent">
+                                        <HorizontalStackLayout Spacing="-6"
+                                                               BindableLayout.ItemsSource="{Binding Speakers}">
+                                            <BindableLayout.ItemTemplate>
+                                                <DataTemplate x:DataType="Speaker">
+                                                    <Border StrokeShape="RoundRectangle 14"
+                                                            Stroke="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+                                                            StrokeThickness="2"
+                                                            HeightRequest="28"
+                                                            WidthRequest="28"
+                                                            Padding="0"
+                                                            Background="{StaticResource SecondaryBrandBrush}"
+                                                            VerticalOptions="Center">
+                                                        <Grid>
+                                                            <Label Text="{Binding Initials}"
+                                                                   FontSize="10"
+                                                                   FontFamily="OpenSansSemibold"
+                                                                   TextColor="{StaticResource White}"
+                                                                   HorizontalOptions="Center"
+                                                                   VerticalOptions="Center" />
+                                                            <Image Source="{Binding Image, Converter={StaticResource PackagedImage}}"
+                                                                   Aspect="AspectFill"
+                                                                   HeightRequest="28"
+                                                                   WidthRequest="28" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </BindableLayout.ItemTemplate>
+                                        </HorizontalStackLayout>
+
+                                        <Label Grid.Column="1"
+                                               Text="{Binding SpeakerNames}"
+                                               Style="{StaticResource Caption}"
+                                               FontFamily="OpenSansSemibold"
+                                               TextColor="{AppThemeBinding Light={StaticResource TextPrimaryLight}, Dark={StaticResource TextPrimaryDark}}"
+                                               VerticalOptions="Center"
+                                               MaxLines="1"
+                                               LineBreakMode="TailTruncation" />
+                                    </Grid>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </Grid>
                     </Border>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </Grid>
+                </SwipeView>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
+</Grid>
 </BasePage>

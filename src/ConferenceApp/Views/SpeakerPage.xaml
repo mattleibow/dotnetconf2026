@@ -3,57 +3,125 @@
           x:DataType="SpeakerViewModel"
           Title="Speaker">
     <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="12">
-            <VerticalStackLayout Spacing="4">
-                <Label Text="{Binding Speaker.Name}" FontSize="22" FontAttributes="Bold" />
-                <Label Text="{Binding Speaker.Tagline}"
-                       FontSize="14"
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-            </VerticalStackLayout>
-            <Label Text="{Binding Bio}" FontSize="14" />
-            <Label Text="Sessions" FontSize="18" FontAttributes="Bold" Margin="0,4,0,0" />
-            <VerticalStackLayout AutomationId="speaker-sessions"
-                                 Spacing="8"
-                                 BindableLayout.ItemsSource="{Binding Sessions}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="Session">
-                        <Border StrokeShape="RoundRectangle 8"
-                                Stroke="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"
-                                Background="Transparent"
-                                Padding="12"
-                                Margin="0,4"
-                                AutomationId="{$'speaker-session-{Id}'}">
-                            <VerticalStackLayout Spacing="6" Background="Transparent">
-                                <Label Text="{Binding CityMeta}"
-                                       FontSize="12"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-                                <HorizontalStackLayout Spacing="6"
-                                                       IsVisible="{Topics.Count > 0}"
-                                                       BindableLayout.ItemsSource="{Binding Topics}">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="x:String">
-                                            <Border StrokeShape="RoundRectangle 6"
-                                                    Stroke="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
-                                                    Padding="6,2">
-                                                <Label Text="{Binding .}" FontSize="11" />
-                                            </Border>
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </HorizontalStackLayout>
-                                <Label Text="{Binding Title}" FontSize="16" FontAttributes="Bold" />
-                                <Label Text="{Binding Summary}"
-                                       IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
-                                       FontSize="13"
-                                       MaxLines="2"
-                                       LineBreakMode="TailTruncation" />
-                            </VerticalStackLayout>
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
-                                                      CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
+        <VerticalStackLayout Padding="16,12,16,28" Spacing="20" MaximumWidthRequest="1100">
+            <!-- Speaker Hero Badge Card -->
+            <Border Style="{StaticResource HeroPassBorder}">
+                <Grid>
+                    <Border StrokeShape="RoundRectangle 120"
+                            StrokeThickness="0"
+                            WidthRequest="220"
+                            HeightRequest="220"
+                            Background="{StaticResource HeroGlowPinkBrush}"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            Margin="0,-70,-50,0"
+                            InputTransparent="True" />
+
+                    <VerticalStackLayout Padding="24" Spacing="12" HorizontalOptions="Center">
+                        <Border StrokeShape="RoundRectangle 56"
+                                Stroke="{StaticResource FrostedBorder}"
+                                StrokeThickness="3"
+                                HeightRequest="112"
+                                WidthRequest="112"
+                                Padding="3"
+                                Background="{StaticResource AccentGradientBrush}"
+                                HorizontalOptions="Center">
+                            <Border StrokeShape="RoundRectangle 50"
+                                    StrokeThickness="0"
+                                    HeightRequest="100"
+                                    WidthRequest="100"
+                                    Padding="0"
+                                    Background="{StaticResource SecondaryBrandBrush}">
+                                <Grid>
+                                    <Label Text="{Binding Speaker.Initials}"
+                                           Style="{StaticResource Display}"
+                                           FontSize="30"
+                                           TextColor="{StaticResource White}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center" />
+                                    <Image Source="{Binding Speaker.Image, Converter={StaticResource PackagedImage}}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="100"
+                                           WidthRequest="100" />
+                                </Grid>
+                            </Border>
                         </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
+
+                        <VerticalStackLayout Spacing="4">
+                            <Label Text="{Binding Speaker.Name}"
+                                   Style="{StaticResource Display}"
+                                   FontSize="26"
+                                   HorizontalTextAlignment="Center" />
+                            <Label Text="{Binding Speaker.Tagline}"
+                                   Style="{StaticResource Body}"
+                                   TextColor="{StaticResource Secondary}"
+                                   HorizontalTextAlignment="Center" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+            <!-- Biography Card -->
+            <Border Style="{StaticResource CardBorder}"
+                    Padding="20"
+                    IsVisible="{!string.IsNullOrWhiteSpace(Bio)}">
+                <VerticalStackLayout Spacing="10">
+                    <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                        <BoxView WidthRequest="4"
+                                 HeightRequest="16"
+                                 CornerRadius="2"
+                                 Fill="{StaticResource AccentGradientBrush}" />
+                        <Label Text="ABOUT THE SPEAKER" Style="{StaticResource SectionHeader}" />
+                    </HorizontalStackLayout>
+                    <Label FormattedText="{Binding Bio, Converter={StaticResource MarkdownConverter}}"
+                           Style="{StaticResource Body}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Speaker Sessions -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="SESSIONS" Style="{StaticResource SectionHeader}" />
+
+                <VerticalStackLayout AutomationId="speaker-sessions"
+                                     Spacing="12"
+                                     BindableLayout.ItemsSource="{Binding Sessions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="Session">
+                            <Border Style="{StaticResource CardBorder}"
+                                    AutomationId="{$'speaker-session-{Id}'}">
+                                <VerticalStackLayout Spacing="8" Background="Transparent">
+                                    <Label Text="{Binding CityMeta}"
+                                           Style="{StaticResource Label}" />
+                                    <HorizontalStackLayout Spacing="6"
+                                                           IsVisible="{Topics.Count > 0}"
+                                                           BindableLayout.ItemsSource="{Binding Topics}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <Border Style="{StaticResource TopicPillBorder}">
+                                                    <Label Text="{Binding .}"
+                                                           Style="{StaticResource TopicPillLabel}" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </HorizontalStackLayout>
+                                    <Label Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="18" />
+                                    <Label Text="{Binding Summary}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(Summary)}"
+                                           Style="{StaticResource Body}"
+                                           TextColor="{AppThemeBinding Light={StaticResource TextSecondaryLight}, Dark={StaticResource TextSecondaryDark}}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type SpeakerViewModel}}, x:DataType=SpeakerViewModel}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ScrollView>
