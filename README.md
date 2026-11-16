@@ -29,7 +29,7 @@ From `main`, two independent pull requests add visual styling and on-device AI w
 |---|---|---|---|
 | [#30 — Add visual design and styles](https://github.com/mattleibow/dotnetconf2026/pull/30) | `mattleibow-layer-2-visual-design-and-styles` | 9 `.xaml` files (`Colors.xaml`, `Styles.xaml`, `AppShell.xaml`, `Views/*.xaml`) | Styles all four tabs and detail pages following `DESIGN.md` and `PRODUCT.md` |
 | [#31 — Add on-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | `.cs`, `.csproj`, `Directory.Packages.props`, `models/`, `packages/`, `NuGet.config` | Adds `src/ConferenceApp/AI/` and upgrades `SearchService`, `ChatService`, and `Session` |
-| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | `UserPreferencesService.cs`, `SessionViewModel.cs`, `SpeakerViewModel.cs`, `EventPage.xaml` | Optional branch introducing the 3 silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
+| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | `UserPreferencesService.cs`, `SpeakerViewModel.cs`, `EventPage.xaml` | Optional branch introducing the 3 silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
 
 ## Before you start
 

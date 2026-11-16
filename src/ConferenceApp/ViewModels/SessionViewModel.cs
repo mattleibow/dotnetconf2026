@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.Logging;
@@ -13,8 +12,7 @@ public partial class SessionViewModel(
     UserPreferencesService preferences,
     IDispatcher dispatcher,
     ILogger<SessionViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger),
-    IQueryAttributable,
-    IRecipient<FavoritesChangedMessage>
+    IQueryAttributable
 {
     private string? sessionId;
 
@@ -28,9 +26,6 @@ public partial class SessionViewModel(
 
     [ObservableProperty]
     public partial bool IsFavorite { get; set; }
-
-    public void Receive(FavoritesChangedMessage message) =>
-        Refresh();
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
