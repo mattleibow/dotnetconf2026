@@ -123,6 +123,29 @@
                 </BindableLayout.ItemTemplate>
             </VerticalStackLayout>
 
+            <!-- AI Summary Card -->
+            <VerticalStackLayout BindingContext="{Binding Session, x:DataType=SessionViewModel}">
+                <Border AutomationId="session-ai-summary"
+                        x:DataType="Session"
+                        Style="{StaticResource CardBorder}"
+                        Padding="20"
+                        IsVisible="{!string.IsNullOrWhiteSpace(Summary)}">
+                    <VerticalStackLayout Spacing="10">
+                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Border Style="{StaticResource AccentPillBorder}"
+                                    Padding="10,4"
+                                    VerticalOptions="Center">
+                                <Label Text="✦ ON-DEVICE AI SUMMARY"
+                                       Style="{StaticResource AccentPillLabel}" />
+                            </Border>
+                        </HorizontalStackLayout>
+                        <Label Text="{Binding Summary}"
+                               Style="{StaticResource Subtitle}"
+                               FontSize="16" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
             <!-- Abstract Card -->
             <Border Style="{StaticResource CardBorder}"
                     Padding="20"

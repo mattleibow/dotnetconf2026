@@ -1,3 +1,4 @@
+[assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.AI")]
 [assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Converters")]
 [assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Data")]
 [assembly: XmlnsDefinition("http://schemas.microsoft.com/dotnet/maui/global", "ConferenceApp.Services")]

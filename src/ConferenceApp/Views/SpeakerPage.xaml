@@ -61,6 +61,51 @@
                 </Grid>
             </Border>
 
+            <!-- AI Snapshot Card -->
+            <VerticalStackLayout BindingContext="{Binding Speaker, x:DataType=SpeakerViewModel}">
+                <Border AutomationId="speaker-ai-snapshot"
+                        x:DataType="Speaker"
+                        Style="{StaticResource CardBorder}"
+                        Padding="20"
+                        IsVisible="{!string.IsNullOrWhiteSpace(Summary)}">
+                    <VerticalStackLayout Spacing="12">
+                        <HorizontalStackLayout Spacing="8" VerticalOptions="Center">
+                            <Border Style="{StaticResource AccentPillBorder}"
+                                    Padding="10,4"
+                                    VerticalOptions="Center">
+                                <Label Text="✦ ON-DEVICE AI SNAPSHOT"
+                                       Style="{StaticResource AccentPillLabel}" />
+                            </Border>
+                        </HorizontalStackLayout>
+
+                        <HorizontalStackLayout Spacing="6"
+                                               IsVisible="{Expertise.Count > 0}"
+                                               BindableLayout.ItemsSource="{Binding Expertise}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="x:String">
+                                    <Border Style="{StaticResource TopicPillBorder}">
+                                        <Label Text="{Binding .}"
+                                               Style="{StaticResource TopicPillLabel}" />
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+
+                        <Label Text="{Binding Summary}"
+                               Style="{StaticResource Subtitle}"
+                               FontSize="16" />
+
+                        <VerticalStackLayout Spacing="4"
+                                             IsVisible="{!string.IsNullOrWhiteSpace(AskMeAbout)}">
+                            <Label Text="ASK THEM ABOUT"
+                                   Style="{StaticResource SectionHeader}" />
+                            <Label Text="{Binding AskMeAbout}"
+                                   Style="{StaticResource Body}" />
+                        </VerticalStackLayout>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
             <!-- Biography Card -->
             <Border Style="{StaticResource CardBorder}"
                     Padding="20"
