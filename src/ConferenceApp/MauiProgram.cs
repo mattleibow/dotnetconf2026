@@ -25,7 +25,7 @@ public static class MauiProgram
 
 #if ANDROID
         builder.ConfigureMauiHandlers(handlers =>
-            handlers.AddHandler<Shell, PopToRootShellRenderer>());
+            handlers.AddHandler<TabBar, PopToRootShellItemHandler>());
 #endif
 
         builder.Services.AddSingleton<ConferenceDbProvider>();
@@ -56,20 +56,11 @@ public static class MauiProgram
     }
 
 #if ANDROID
-    private sealed class PopToRootShellRenderer : Microsoft.Maui.Controls.Handlers.Compatibility.ShellRenderer
+    // Android BottomNavigationView reselection does not pop the Shell tab stack by default (dotnet/maui#15301).
+    private sealed class PopToRootShellItemHandler : Microsoft.Maui.Controls.Handlers.ShellItemHandler
     {
-        protected override Microsoft.Maui.Controls.Platform.Compatibility.IShellItemRenderer CreateShellItemRenderer(ShellItem shellItem) =>
-            new PopToRootShellItemRenderer(this);
-    }
-
-    private sealed class PopToRootShellItemRenderer(Microsoft.Maui.Controls.Platform.Compatibility.IShellContext context)
-        : Microsoft.Maui.Controls.Platform.Compatibility.ShellItemRenderer(context)
-    {
-        protected override void OnTabReselected(ShellSection shellSection)
-        {
-            base.OnTabReselected(shellSection);
+        protected override void OnTabReselected(ShellSection shellSection) =>
             _ = shellSection.Navigation.PopToRootAsync();
-        }
     }
 #endif
 }
