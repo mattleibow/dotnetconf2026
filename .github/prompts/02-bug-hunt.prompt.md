@@ -9,10 +9,13 @@ Users reported four issues in `src/ConferenceApp/`, none of which crash the app:
 3. **Venue map is invisible:** The Event tab loads the venue name and address, but the embedded map doesn't appear.
 4. **Search and chat text boxes have visual artifacts:** The `Entry` inputs in the search and chat bars look strange and have visual artifacts inside their containers.
 
-Load the `maui-devflow-debug` skill, connect to the app on the booted iOS simulator (reuse the running app from `maui devflow list` if already launched, or build and launch `net11.0-ios` on the booted simulator), and use **MAUI DevFlow** (`maui devflow batch` for multi-step UI flows) rather than guessing from source code first:
+Work fast and keep tool calls minimal:
 
-1. Reproduce the Speaker page issue and inspect `maui devflow logs` (or the **Logs** tab in the DevFlow Web Inspector) to find the logged exception and stack trace.
-2. Favourite a session and inspect `maui devflow storage preferences list` (or the **Storage** tab in the DevFlow Web Inspector) to see what keys and values are actually stored in `Preferences`.
-3. Inspect the Event tab with `maui devflow ui tree` and `maui devflow ui diagnostics --profile agent` to see why `venue-map` has zero height.
-4. Take a screenshot with `maui devflow ui screenshot` to see what the search and chat `Entry` text boxes look like on screen and fix the visual artifacts.
-5. Fix all four issues, redeploy to the iOS simulator (`net11.0-ios` only), and verify each fix live with `maui devflow`. Leave the fixed app running on the simulator, skip building other platforms, and do not commit changes.
+- First check `git status --short`: if the four fixes are already present in the working tree (for example during a synthesis pass) and the fixed app is already running on the iOS simulator, do **not** re-run the DevFlow reproduction, rebuild, or verification—inspect `git diff` and summarize the findings and fixes immediately.
+- Otherwise, load the `maui-devflow-debug` skill, reuse the running iOS simulator app from `maui devflow list`, and diagnose all four issues in one fast pass with **MAUI DevFlow** before reading source code:
+  1. Favourite a session, check `maui devflow storage preferences list`, and toggle **Showing: Favourites**.
+  2. Navigate to `//speakers`, tap a speaker card, and inspect `maui devflow logs --limit 20` to find the logged exception and stack trace.
+  3. Navigate to `//event` and inspect `venue-map` with `maui devflow ui tree` and `maui devflow ui diagnostics --profile agent` to see why it has zero height.
+  4. Take a screenshot with `maui devflow ui screenshot` to see the inner border artifacts on the search/chat `Entry` boxes.
+- Read the four affected files in parallel, apply all four fixes in a single batch of edits, and rebuild/redeploy once to the booted iOS simulator (`dotnet build -f net11.0-ios --no-restore` + `xcrun simctl install` + `xcrun simctl launch` + `maui devflow wait`).
+- Leave the fixed app running on the simulator and stop immediately—do not run a post-fix click-through loop, do not build other platforms, and do not commit changes.
