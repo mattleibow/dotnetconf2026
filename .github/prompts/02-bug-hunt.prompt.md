@@ -12,7 +12,7 @@ Users reported four issues in `src/ConferenceApp/`, none of which crash the app:
 Work fast and keep tool calls minimal:
 
 - First check `git status --short`: if the four fixes are already present in the working tree (for example during a synthesis pass) and the fixed app is already running on the iOS simulator, do **not** re-run the DevFlow reproduction, rebuild, or verification—inspect `git diff` and summarize the findings and fixes immediately.
-- Otherwise, load the `maui-devflow-debug` skill, reuse the running iOS simulator app from `maui devflow list`, and diagnose all four issues in one fast pass with **MAUI DevFlow** before reading source code:
+- Otherwise, load the `maui-devflow-debug` skill, reuse the running iOS simulator app from `maui devflow list`, and diagnose all four issues in one fast pass with **MAUI DevFlow** before reading source code (pipe mutating UI steps into a single `maui devflow batch` call so they share one CLI process lease with zero 10-second lease waits):
   1. Favourite a session, check `maui devflow storage preferences list`, and toggle **Showing: Favourites**.
   2. Navigate to `//speakers`, tap a speaker card, and inspect `maui devflow logs --limit 20` to find the logged exception and stack trace.
   3. Navigate to `//event` and inspect `venue-map` with `maui devflow ui tree` and `maui devflow ui diagnostics --profile agent` to see why it has zero height.
