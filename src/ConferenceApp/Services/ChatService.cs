@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
 using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
 
@@ -24,11 +25,11 @@ public partial class ChatItem(bool isUser, string text = "", string? author = nu
     public partial string Progress { get; set; } = "";
 }
 
-// Manages conversation history, streams responses from the local on-device IChatClient, and resolves referenced Session cards.
+// Manages conversation history, streams responses from the keyed "assistant" IChatClient, and resolves referenced Session cards.
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    IChatClient chatClient,
+    [FromKeyedServices("assistant")] IChatClient chatClient,
     ILogger<ChatService> logger)
 {
     private readonly List<ChatMessage> history = [];
@@ -81,52 +82,18 @@ public class ChatService(
             return;
         }
 
-        var db = await dbProvider.GetDbAsync();
-        var city = await preferences.GetSelectedCityAsync();
-        var favorites = db.Sessions
-            .Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id))
-            .Select(s => $"{s.Time} {s.Title}")
-            .ToArray();
-        var schedule = db.Sessions
-            .Where(s => s.CityId == city.Id)
-            .Select(s => $"- {s.Time} | {s.Title} ({s.SpeakerNames})");
-
-        // Build conversation history with a basic inline system prompt for city, favourites, and schedule.
-        List<ChatMessage> turnHistory =
-        [
-            new(ChatRole.System, $"""
-                You are the .NET Conf South Africa assistant.
-                Answer briefly using the schedule below and available tools.
-                When asked to favourite sessions by topic (such as all mobile or gaming sessions), call search_sessions first to find the matching talks and then call add_favorite for each matching session.
-                When asked to open or navigate to a session, speaker profile, or page, use navigate_to_session, navigate_to_speaker, or navigate_to_page.
-                Current City: {city.Name} | Event Date: {city.Date:dddd, yyyy-MM-dd} | Current Time: 08:30
-                Saved Favourites: {(favorites.Length > 0 ? string.Join("; ", favorites) : "None yet")}
-
-                Schedule:
-                {string.Join('\n', schedule)}
-                """),
-            .. history,
-            new(ChatRole.User, text)
-        ];
-
-        var options = new ChatOptions
-        {
-            Temperature = 0,
-            Tools =
-            [
-                .. ConferenceDataToolContext.Default.Tools,
-                .. FavoritesToolContext.Default.Tools,
-                .. NavigationToolContext.Default.Tools
-            ]
-        };
-
         var itemsByAuthor = new Dictionary<string, ChatItem>();
         var lastItem = reply;
         var updates = new List<ChatResponseUpdate>();
+        var turnHistory = new List<ChatMessage>(history)
+        {
+            new(ChatRole.User, text)
+        };
 
         try
         {
-            await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, options, cancellationToken))
+            // Stream from the keyed "assistant" IChatClient.
+            await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, cancellationToken: cancellationToken))
             {
                 updates.Add(update);
 

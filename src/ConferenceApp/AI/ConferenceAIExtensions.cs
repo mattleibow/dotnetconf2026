@@ -17,6 +17,9 @@ public static class ConferenceAIExtensions
         // Register source-generated AI tool contexts for conference data and favourites.
         builder.AddAITools();
 
+        // Register AI context providers, agents, multi-agent workflows, and semantic routing.
+        builder.AddAgents();
+
         return builder;
     }
 }
