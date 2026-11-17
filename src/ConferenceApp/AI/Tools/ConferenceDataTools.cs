@@ -80,6 +80,32 @@ public sealed class ConferenceDataTools(
         return string.Join("\n\n", results);
     }
 
+    [ExportAIFunction("get_sponsors")]
+    [Description("List the event sponsors and their sponsorship tiers for a city, or the current city if omitted.")]
+    public async Task<string> GetSponsorsAsync(
+        [Description("Optional city name ('Durban', 'Cape Town', 'Bloemfontein').")] string city = "",
+        CancellationToken cancellationToken = default)
+    {
+        var db = await dbProvider.GetDbAsync();
+        var currentCity = await preferences.GetSelectedCityAsync();
+        var targetCity = db.Cities.FirstOrDefault(c =>
+            !string.IsNullOrWhiteSpace(city) && (
+                c.Id.Equals(city.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                c.Name.Contains(city.Trim(), StringComparison.OrdinalIgnoreCase)))
+            ?? currentCity;
+
+        logger.LogInformation("[AI Tool] get_sponsors(city: '{CityId}')", targetCity.Id);
+
+        var sponsors = db.Sponsors
+            .Where(s => s.CityIds.Contains(targetCity.Id))
+            .Select(s => $"{s.Name} ({s.Tier}) — {s.Url}")
+            .ToArray();
+
+        return sponsors.Length > 0
+            ? string.Join('\n', sponsors)
+            : $"No sponsors listed for {targetCity.Name}.";
+    }
+
     internal static string FormatSessions(City city, IEnumerable<Session> sessions)
     {
         var matches = sessions.ToArray();
