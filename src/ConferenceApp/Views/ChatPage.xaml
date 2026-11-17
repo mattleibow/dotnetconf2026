@@ -133,19 +133,15 @@
         </CollectionView>
 
         <!-- Bottom Input Bar -->
-        <Grid Grid.Row="2" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-            <Button AutomationId="chat-new"
-                    Text="New chat"
-                    Style="{StaticResource SecondaryButton}"
-                    Command="{Binding ClearChatCommand}" />
-            <Border Grid.Column="1" Style="{StaticResource SearchContainerBorder}">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+            <Border Style="{StaticResource SearchContainerBorder}">
                 <Entry AutomationId="chat-input"
                        Placeholder="Ask about sessions, speakers, or your schedule..."
                        Text="{Binding Prompt}"
                        IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
                        ReturnCommand="{Binding SendCommand}" />
             </Border>
-            <Button Grid.Column="2"
+            <Button Grid.Column="1"
                     AutomationId="chat-send"
                     Text="Send"
                     Style="{StaticResource AccentButton}"

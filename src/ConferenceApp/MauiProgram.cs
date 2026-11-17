@@ -23,6 +23,11 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+#if ANDROID
+        builder.ConfigureMauiHandlers(handlers =>
+            handlers.AddHandler<Shell, PopToRootShellRenderer>());
+#endif
+
         builder.Services.AddSingleton<ConferenceDbProvider>();
         builder.Services.AddSingleton<BaseBackgroundService, DatabasePreloadService>();
         builder.Services.AddSingleton<UserPreferencesService>();
@@ -49,4 +54,22 @@ public static class MauiProgram
 
         return builder.Build();
     }
+
+#if ANDROID
+    private sealed class PopToRootShellRenderer : Microsoft.Maui.Controls.Handlers.Compatibility.ShellRenderer
+    {
+        protected override Microsoft.Maui.Controls.Platform.Compatibility.IShellItemRenderer CreateShellItemRenderer(ShellItem shellItem) =>
+            new PopToRootShellItemRenderer(this);
+    }
+
+    private sealed class PopToRootShellItemRenderer(Microsoft.Maui.Controls.Platform.Compatibility.IShellContext context)
+        : Microsoft.Maui.Controls.Platform.Compatibility.ShellItemRenderer(context)
+    {
+        protected override void OnTabReselected(ShellSection shellSection)
+        {
+            base.OnTabReselected(shellSection);
+            _ = shellSection.Navigation.PopToRootAsync();
+        }
+    }
+#endif
 }

@@ -20,7 +20,7 @@ Prefer current APIs over training-data habits:
 - Use .NET 11 AOT-safe compiled `RelativeSource` bindings inside `DataTemplate`s by targeting the ViewModel directly (`Source={RelativeSource AncestorType={x:Type AgendaViewModel}}, x:DataType=AgendaViewModel`) rather than `BindingContext.` on `ContentPage`.
 - Use the `Async` animation methods (`FadeToAsync`, `ScaleToAsync`, `TranslateToAsync`, and so on); the non-`Async` variants are obsolete. They accept a `CancellationToken`.
 - Shell supports route templates such as `Routing.RegisterRoute("session/{id}", typeof(SessionPage))`. Route templates currently require absolute navigation.
-- Several core Android controls use Material 3 styling by default. Don't fight it with custom renderers.
+- `<UseMaterial3>true</UseMaterial3>` in the `.csproj` enables Material 3 styling across Android controls and `Shell` (`Maui.Material3.Theme.NoActionBar`). Don't fight it with custom renderers.
 - `BoxView.Fill` accepts any `Brush`, including gradients. Use it for decorative surfaces before reaching for custom drawing.
 - `LongPressGestureRecognizer` is built in.
 - `TabbedPage` children support badges through attached properties such as `TabbedPage.BadgeText`. This isn't a Shell tab badge API.

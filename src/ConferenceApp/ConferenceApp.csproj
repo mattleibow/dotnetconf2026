@@ -19,6 +19,7 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
+		<UseMaterial3>true</UseMaterial3>
 		<MauiAndroidSystemBarsUseMauiChrome>true</MauiAndroidSystemBarsUseMauiChrome>
 		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001;IL2026;IL3050;CS9113</NoWarn>
 
