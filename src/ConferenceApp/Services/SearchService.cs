@@ -11,7 +11,7 @@ public class SearchService(
     ILogger<SearchService> logger)
 {
     private const int SemanticResultLimit = 10;
-    private const double MinimumSemanticScore = 0.3;
+    private const double MinimumSemanticScore = 0.25;
 
     public async Task<IReadOnlyList<Session>> SearchSessionsAsync(string cityId, string query)
     {
