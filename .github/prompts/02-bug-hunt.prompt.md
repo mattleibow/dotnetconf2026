@@ -9,10 +9,10 @@ Users reported four issues in `src/ConferenceApp/`, none of which crash the app:
 3. **Venue map is invisible:** The Event tab loads the venue name and address, but the embedded map doesn't appear.
 4. **Search and chat text boxes have visual artifacts:** The `Entry` inputs in the search and chat bars look strange and have visual artifacts inside their containers.
 
-Load the `maui-devflow-debug` skill, launch the app, and use **MAUI DevFlow** rather than guessing from source code first:
+Load the `maui-devflow-debug` skill, connect to the app on the booted iOS simulator (reuse the running app from `maui devflow list` if already launched, or build and launch `net11.0-ios` on the booted simulator), and use **MAUI DevFlow** (`maui devflow batch` for multi-step UI flows) rather than guessing from source code first:
 
 1. Reproduce the Speaker page issue and inspect `maui devflow logs` (or the **Logs** tab in the DevFlow Web Inspector) to find the logged exception and stack trace.
 2. Favourite a session and inspect `maui devflow storage preferences list` (or the **Storage** tab in the DevFlow Web Inspector) to see what keys and values are actually stored in `Preferences`.
 3. Inspect the Event tab with `maui devflow ui tree` and `maui devflow ui diagnostics --profile agent` to see why `venue-map` has zero height.
 4. Take a screenshot with `maui devflow ui screenshot` to see what the search and chat `Entry` text boxes look like on screen and fix the visual artifacts.
-5. Fix all four issues, redeploy, and verify each fix live with `maui devflow`.
+5. Fix all four issues, redeploy to the iOS simulator (`net11.0-ios` only), and verify each fix live with `maui devflow`. Leave the fixed app running on the simulator, skip building other platforms, and do not commit changes.
