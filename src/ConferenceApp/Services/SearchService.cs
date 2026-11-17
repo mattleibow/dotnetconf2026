@@ -1,8 +1,12 @@
 using ConferenceApp.Data;
+using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.Services;
 
-public class SearchService(ConferenceDbProvider dbProvider)
+// Searches conference sessions for the selected city.
+public class SearchService(
+    ConferenceDbProvider dbProvider,
+    ILogger<SearchService> logger)
 {
     public async Task<IReadOnlyList<Session>> SearchSessionsAsync(string cityId, string query)
     {
@@ -12,11 +16,13 @@ public class SearchService(ConferenceDbProvider dbProvider)
         if (string.IsNullOrEmpty(trimmed))
             return sessions;
 
-        return sessions
+        var results = sessions
             .Where(session =>
                 session.Title.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
                 (session.Description?.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ?? false) ||
                 session.Speakers.Any(s => s.Name.Contains(trimmed, StringComparison.OrdinalIgnoreCase)))
             .ToList();
+
+        return results;
     }
 }

@@ -20,7 +20,7 @@
 		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>true</EnablePreviewFeatures>
 		<MauiAndroidSystemBarsUseMauiChrome>true</MauiAndroidSystemBarsUseMauiChrome>
-		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001;IL2026;IL3050</NoWarn>
+		<NoWarn>$(NoWarn);MAUIAI0001;MEAI001;MAAI001;IL2026;IL3050;CS9113</NoWarn>
 
 		<!-- Display name -->
 		<ApplicationTitle>.NET Conf South Africa</ApplicationTitle>
