@@ -36,7 +36,7 @@ public class ChatService(
     ];
 
     public Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<string?>(null);
+        Task.FromResult<string?>("On-device AI isn't connected yet. In Part 2 we'll wire up local embeddings, data enrichment, tools, and multi-agent workflows.");
 
     public async IAsyncEnumerable<string> SendAsync(
         IReadOnlyList<ChatItem> messages,
@@ -50,10 +50,6 @@ public class ChatService(
         }
 
         reply.Progress = "Thinking on device...";
-
-        yield return "On-device AI isn't connected yet. In Part 2 we'll wire up local embeddings, data enrichment, tools, and multi-agent workflows.";
-
-        reply.Progress = "";
 
         await AddReferencedSessionsAsync(reply);
 
