@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
 using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
 
@@ -29,8 +29,7 @@ public partial class ChatItem(bool isUser, string text = "", string? author = nu
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    TimeProvider timeProvider,
-    IChatClient chatClient,
+    [FromKeyedServices("assistant")] IChatClient chatClient,
     ILogger<ChatService> logger)
 {
     private readonly List<ChatMessage> history = [];
@@ -83,61 +82,11 @@ public class ChatService(
             return;
         }
 
-        var db = await dbProvider.GetDbAsync();
-        var currentCity = await preferences.GetSelectedCityAsync();
-        var favorites = db.Sessions
-            .Where(s => s.CityId == currentCity.Id && preferences.IsFavorite(s.Id))
-            .Select(s => $"{s.Time} {s.Title}")
-            .ToArray();
-        var schedule = db.Sessions
-            .Where(s => s.CityId == currentCity.Id)
-            .Select(s => $"- {s.Time} | {s.Title} ({s.SpeakerNames})");
-
         List<ChatMessage> turnHistory =
         [
-            new(ChatRole.System, $"""
-                You are the .NET Conf South Africa assistant.
-                Answer briefly using the schedule below and available tools.
-                When asked about sponsors, call get_sponsors.
-                When asked to favourite sessions by topic (such as all mobile or gaming sessions), call search_sessions first to find the matching talks and then call add_favorite for each matching session.
-                When asked to open or navigate to a session, speaker profile, or page, use navigate_to_session, navigate_to_speaker, or navigate_to_page.
-                Current City: {currentCity.Name} | Event Date: {currentCity.Date:dddd, yyyy-MM-dd} | Current Time: {timeProvider.GetLocalNow():HH:mm}
-                Saved Favourites: {(favorites.Length > 0 ? string.Join("; ", favorites) : "None yet")}
-
-                Schedule:
-                {string.Join('\n', schedule)}
-                """),
             .. history,
             new(ChatRole.User, text)
         ];
-
-        var options = new ChatOptions
-        {
-            Temperature = 0,
-            Tools =
-            [
-                AIFunctionFactory.Create(
-                    [Description("List the event sponsors and their sponsorship tiers for a city, or the current city if omitted.")]
-                    ([Description("Optional city name ('Durban', 'Cape Town', 'Bloemfontein').")] string city = "") =>
-                    {
-                        var targetCity = db.Cities.FirstOrDefault(c =>
-                            !string.IsNullOrWhiteSpace(city) && (
-                                c.Id.Equals(city.Trim(), StringComparison.OrdinalIgnoreCase) ||
-                                c.Name.Contains(city.Trim(), StringComparison.OrdinalIgnoreCase)))
-                            ?? currentCity;
-
-                        logger.LogInformation("[AI Tool] get_sponsors(city: '{CityId}')", targetCity.Id);
-                        var sponsors = db.Sponsors
-                            .Where(s => s.CityIds.Contains(targetCity.Id))
-                            .Select(s => $"{s.Name} ({s.Tier}) — {s.Url}");
-                        return string.Join('\n', sponsors);
-                    },
-                    "get_sponsors"),
-                .. ConferenceDataToolContext.Default.Tools,
-                .. FavoritesToolContext.Default.Tools,
-                .. NavigationToolContext.Default.Tools
-            ]
-        };
 
         var itemsByAuthor = new Dictionary<string, ChatItem>();
         var lastItem = reply;
@@ -145,7 +94,7 @@ public class ChatService(
 
         try
         {
-            await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, options, cancellationToken))
+            await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, cancellationToken: cancellationToken))
             {
                 updates.Add(update);
 
