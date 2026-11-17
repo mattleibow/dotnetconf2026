@@ -110,7 +110,7 @@ public sealed class SpeakerProfileEnrichmentService(
         {
             var chunk = new IngestionChunk<string>(text, new IngestionDocument(speaker.Id));
 
-            await foreach (var enriched in enricher.ProcessAsync(SingleChunk(chunk)))
+            await foreach (var enriched in enricher.ProcessAsync(AsyncEnumerable.Repeat(chunk, 1)))
             {
                 if (enriched.Metadata.TryGetValue(SpeakerProfileEnricher.MetadataKey, out var value) &&
                     value is SpeakerProfile profile)

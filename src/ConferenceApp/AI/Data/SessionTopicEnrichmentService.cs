@@ -59,7 +59,7 @@ public sealed class SessionTopicEnrichmentService(
     {
         var chunk = new IngestionChunk<string>(text, new IngestionDocument(session.Id));
 
-        await foreach (var enriched in enricher.ProcessAsync(SingleChunk(chunk)))
+        await foreach (var enriched in enricher.ProcessAsync(AsyncEnumerable.Repeat(chunk, 1)))
         {
             if (!enriched.Metadata.TryGetValue(KeywordEnricher.MetadataKey, out var value) ||
                 value is not IEnumerable<string> keywords)

@@ -35,7 +35,7 @@ public sealed class SessionSummaryEnrichmentService(
     {
         var chunk = new IngestionChunk<string>(text, new IngestionDocument(session.Id));
 
-        await foreach (var enriched in enricher.ProcessAsync(SingleChunk(chunk)))
+        await foreach (var enriched in enricher.ProcessAsync(AsyncEnumerable.Repeat(chunk, 1)))
         {
             if (enriched.Metadata.TryGetValue(SummaryEnricher.MetadataKey, out var value) &&
                 value is string raw &&
