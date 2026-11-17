@@ -11,6 +11,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
+// Represents a user or assistant turn in the Assistant conversation, with optional attached Session cards.
 public partial class ChatItem(bool isUser, string text = "") : ObservableObject
 {
     public bool IsUser { get; } = isUser;
@@ -24,6 +25,7 @@ public partial class ChatItem(bool isUser, string text = "") : ObservableObject
     public partial string Progress { get; set; } = "";
 }
 
+// Streams responses from the keyed "assistant" IChatClient and attaches referenced Session cards.
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
