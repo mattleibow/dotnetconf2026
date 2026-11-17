@@ -1,13 +1,23 @@
 namespace ConferenceApp.AI;
 
+// Central entry point for registering the app's on-device AI stack.
 public static class ConferenceAIExtensions
 {
     public static MauiAppBuilder AddConferenceAI(this MauiAppBuilder builder)
     {
+        // Register platform on-device IChatClient (Apple Intelligence, Gemini Nano, or Windows AI).
         builder.AddChatClients();
+
+        // Register semantic search embeddings, in-memory vector store, and session indexing.
         builder.AddEmbeddings();
+
+        // Register background DataIngestion enrichers for session summaries and topic tags.
         builder.AddDataEnrichment();
+
+        // Register source-generated AI tool contexts for conference data and favourites.
         builder.AddAITools();
+
+        // Register AI context providers, agents, multi-agent workflows, and semantic routing.
         builder.AddAgents();
 
         return builder;

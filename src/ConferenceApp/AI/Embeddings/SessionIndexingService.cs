@@ -5,10 +5,8 @@ using Microsoft.Extensions.VectorData;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Background vector indexing service: populates VectorStoreCollection&lt;string, Session&gt;
-/// from the loaded ConferenceDb using the [VectorStoreVector] EmbeddingText property.
-/// </summary>
+// Background vector indexing service that populates VectorStoreCollection<string, Session>
+// from the loaded ConferenceDb using the declarative [VectorStoreVector] EmbeddingText property.
 public sealed class SessionIndexingService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,

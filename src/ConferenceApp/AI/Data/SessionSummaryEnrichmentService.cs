@@ -6,9 +6,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Background AI enrichment worker that populates Session.Summary using SummaryEnricher.
-/// </summary>
+// Background AI enrichment worker that populates Session.Summary using SummaryEnricher.
 public sealed class SessionSummaryEnrichmentService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,

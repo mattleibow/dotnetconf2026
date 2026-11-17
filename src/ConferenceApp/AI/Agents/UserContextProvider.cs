@@ -4,9 +4,7 @@ using Microsoft.Agents.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Injects the user's current city, event date, current time, venue, and saved favourites.
-/// </summary>
+// Injects the user's current city, event date, current time, venue, and saved favourites.
 public sealed class UserContextProvider(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences) : AIContextProvider

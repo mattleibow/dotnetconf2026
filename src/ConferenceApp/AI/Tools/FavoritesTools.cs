@@ -7,12 +7,11 @@ using Microsoft.Maui.AI.Attributes;
 
 namespace ConferenceApp.AI;
 
+// Source-generated AOT-safe tool context exposing FavoritesTools as AITool instances.
 [AIToolSource(typeof(FavoritesTools))]
 public partial class FavoritesToolContext : AIToolContext;
 
-/// <summary>
-/// Tools for reading and updating the user's saved favourite sessions.
-/// </summary>
+// Tools for reading and updating the user's saved favourite sessions.
 public sealed class FavoritesTools(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,

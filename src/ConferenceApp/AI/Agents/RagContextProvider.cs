@@ -5,10 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Finds the top matching sessions by semantic similarity and injects
-/// each session's ID, title, and 1-line summary.
-/// </summary>
+// Finds the top matching sessions by semantic similarity and injects each session's ID, title, and 1-line summary.
 public static class RagContextProvider
 {
     private const int TopRagSessions = 3;

@@ -5,11 +5,8 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Sequential -> Concurrent fan-out workflow:
-/// SessionResearcher gathers the session abstract and speaker bio via tools, then
-/// TakeawaysAgent (what to expect) and QuestionsCoachAgent (questions to ask) run in parallel.
-/// </summary>
+// Sequential -> Concurrent fan-out workflow: SessionResearcher gathers the session abstract and speaker bio
+// via tools, then TakeawaysAgent (what to expect) and QuestionsCoachAgent (questions to ask) run in parallel.
 public static class SessionDeepDiveWorkflow
 {
     public static IReadOnlyList<string> Utterances { get; } =

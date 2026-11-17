@@ -7,12 +7,11 @@ using Microsoft.Maui.AI.Attributes;
 
 namespace ConferenceApp.AI;
 
+// Source-generated AOT-safe tool context exposing ConferenceDataTools as AITool instances.
 [AIToolSource(typeof(ConferenceDataTools))]
 public partial class ConferenceDataToolContext : AIToolContext;
 
-/// <summary>
-/// Read-only tools for searching and reading sessions, schedules, and speaker biographies.
-/// </summary>
+// Read-only tools for searching and reading sessions, schedules, and speaker biographies.
 public sealed class ConferenceDataTools(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,

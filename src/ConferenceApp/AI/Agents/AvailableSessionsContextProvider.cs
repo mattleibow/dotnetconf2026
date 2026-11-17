@@ -4,9 +4,7 @@ using Microsoft.Agents.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Injects candidate talks in the current city that are not yet saved in the attendee's favourites.
-/// </summary>
+// Injects candidate talks in the current city that are not yet saved in the attendee's favourites.
 public sealed class AvailableSessionsContextProvider(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences) : AIContextProvider

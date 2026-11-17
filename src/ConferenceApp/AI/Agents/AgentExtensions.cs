@@ -4,14 +4,18 @@ using Microsoft.Extensions.AI;
 
 namespace ConferenceApp.AI;
 
+// Registers AIContextProviders, single-agent and multi-agent workflows, and semantic chat routing.
 public static class AgentExtensions
 {
     public static MauiAppBuilder AddAgents(this MauiAppBuilder builder)
     {
+        // Register composable AIContextProviders for user state, city schedule, candidate talks, and RAG.
         builder.Services.AddKeyedSingleton<AIContextProvider, UserContextProvider>("user");
         builder.Services.AddKeyedSingleton<AIContextProvider, ScheduleContextProvider>("schedule");
         builder.Services.AddKeyedSingleton<AIContextProvider, AvailableSessionsContextProvider>("available-sessions");
         builder.Services.AddKeyedSingleton<AIContextProvider>("rag", (services, _) => RagContextProvider.Create(services));
+
+        // Register the keyed "assistant" IChatClient that routes between the assistant and workflows.
         builder.Services.AddKeyedChatClient("assistant", CreateAssistantRouter);
 
         return builder;

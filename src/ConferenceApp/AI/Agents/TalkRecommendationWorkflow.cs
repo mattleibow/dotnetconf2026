@@ -5,11 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Multi-turn group chat workflow for recommending sessions:
-/// Turn 1: Concierge clarifies/confirms topics (using saved favourites as a starting point).
-/// Turn 2: Concierge -> DepthAdvocate -> BreadthAdvocate -> PracticalAdvocate -> Moderator.
-/// </summary>
+// Multi-turn group chat workflow for recommending sessions:
+// Turn 1: Concierge clarifies/confirms topics (using saved favourites as a starting point).
+// Turn 2: Concierge -> DepthAdvocate -> BreadthAdvocate -> PracticalAdvocate -> Moderator.
 public static class TalkRecommendationWorkflow
 {
     public static IReadOnlyList<string> Utterances { get; } =

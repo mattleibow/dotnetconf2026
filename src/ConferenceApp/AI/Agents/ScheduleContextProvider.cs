@@ -4,9 +4,7 @@ using Microsoft.Agents.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Injects the full day schedule of times, rooms, topics, and titles for the current city.
-/// </summary>
+// Injects the full day schedule of times, rooms, topics, and titles for the current city.
 public sealed class ScheduleContextProvider(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences) : AIContextProvider

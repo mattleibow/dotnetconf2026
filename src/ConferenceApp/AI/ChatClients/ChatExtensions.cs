@@ -5,6 +5,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
 
+// Registers the platform's local on-device IChatClient and model availability checks.
 public static class ChatExtensions
 {
 #if ANDROID
@@ -19,6 +20,7 @@ public static class ChatExtensions
 
     public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
     {
+        // Register a transient local IChatClient so concurrent agents don't contend on one session.
         builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
         return builder;
     }

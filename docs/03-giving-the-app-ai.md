@@ -110,8 +110,9 @@ Because `[VectorStoreVector(384)]` is placed on the `string EmbeddingText` prope
 [`EmbeddingExtensions.cs`](../src/ConferenceApp/AI/Embeddings/EmbeddingExtensions.cs) registers the ONNX `MiniLmEmbeddingGenerator` with `.UseLogging()`, the in-memory vector store, and the strongly-typed `Session` collection:
 
 ```csharp
+builder.Services.AddSingleton<MiniLmEmbeddingGenerator>();
 builder.Services
-    .AddEmbeddingGenerator(sp => ActivatorUtilities.CreateInstance<MiniLmEmbeddingGenerator>(sp))
+    .AddEmbeddingGenerator(sp => sp.GetRequiredService<MiniLmEmbeddingGenerator>())
     .UseLogging();
 
 builder.Services.AddInMemoryVectorStore();
@@ -126,15 +127,15 @@ await sessionVectors.EnsureCollectionExistsAsync();
 await sessionVectors.UpsertAsync(sessions);
 ```
 
-And [`SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs) performs hybrid search—matching literal title/speaker substrings first, then appending semantic vector matches from `VectorStoreCollection<string, Session>` filtered by `CityId`:
+And [`SearchService.cs`](../src/ConferenceApp/Services/SearchService.cs) performs hybrid search—matching literal title/description/speaker substrings first, then appending semantic vector matches from `VectorStoreCollection<string, Session>` filtered by `CityId`:
 
 ```csharp
 await foreach (var match in sessionVectors.SearchAsync(
     trimmed,
-    top: SemanticResultLimit + results.Count,
+    top: SemanticResultLimit,
     new() { Filter = s => s.CityId == cityId }))
 {
-    if (seen.Add(match.Record.Id))
+    if (match.Score >= MinimumSemanticScore && !results.Contains(match.Record))
         results.Add(match.Record);
 }
 ```

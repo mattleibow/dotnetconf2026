@@ -4,10 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Generic conference assistant for fast everyday actions
-/// (times, rooms, speaker bios, and managing favourites).
-/// </summary>
+// Generic conference assistant for fast everyday actions (times, rooms, speaker bios, and managing favourites).
 public static class ConferenceAssistantAgent
 {
     public static AIAgent Create(IServiceProvider services)

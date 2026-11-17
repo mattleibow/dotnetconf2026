@@ -7,6 +7,8 @@ using Microsoft.ML.Tokenizers;
 
 namespace ConferenceApp.AI;
 
+// Local 384-dimension sentence embedding generator powered by the bundled all-MiniLM-L6-v2 ONNX model,
+// Microsoft.ML.Tokenizers BertTokenizer, and SIMD TensorPrimitives pooling and L2 normalization.
 public sealed class MiniLmEmbeddingGenerator(ILogger<MiniLmEmbeddingGenerator> logger)
     : IEmbeddingGenerator<string, Embedding<float>>
 {

@@ -6,9 +6,7 @@ using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Background AI enrichment worker that populates Session.Topics using KeywordEnricher.
-/// </summary>
+// Background AI enrichment worker that populates Session.Topics using KeywordEnricher.
 public sealed class SessionTopicEnrichmentService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,

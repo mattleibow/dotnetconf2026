@@ -3,9 +3,7 @@ using Microsoft.Extensions.AI;
 
 namespace ConferenceApp.AI;
 
-/// <summary>
-/// Fallback IChatClient registered when the current OS or device does not support on-device chat.
-/// </summary>
+// Fallback no-op IChatClient used when the device or OS does not support local on-device AI.
 public sealed class UnavailableChatClient : IChatClient
 {
     private const string Message = "On-device chat isn't available on this device right now. You can still browse the agenda and favourites.";
