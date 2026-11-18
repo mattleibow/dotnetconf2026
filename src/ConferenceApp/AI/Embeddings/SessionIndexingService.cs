@@ -16,7 +16,13 @@ public sealed class SessionIndexingService(
 {
     protected override async Task ExecuteAsync()
     {
-        var sessions = await GetTalkSessionsAsync();
+        var db = await DbProvider.GetDbAsync();
+        var activeCity = await Preferences.GetSelectedCityAsync();
+        var sessions = db.Sessions
+            .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
+            .OrderByDescending(s => s.CityId == activeCity.Id)
+            .ToList();
+
         await sessionVectors.EnsureCollectionExistsAsync();
         await sessionVectors.UpsertAsync(sessions);
         Logger.LogInformation("[AI] Indexed {Count} session abstracts into VectorStoreCollection<string, Session>.", sessions.Count);
