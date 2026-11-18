@@ -2,7 +2,7 @@
 
 **This is the separate native AI stack, not the implementation on `main`.** `main` has literal search and an unavailable Assistant UI. Keep this guide on `main` for the whole talk, but switch to the [ordered stack #34 → #35 → #42 → #39 → #36 → #37 → #41](../README.md#demo-branches) to run these features.
 
-Source links below point to the [combined top-of-stack branch](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling). That branch can temporarily lag revisions to lower PRs; the enrichment split in #39 is called out below.
+Source links below point to the [combined top-of-stack branch](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling). That branch can temporarily lag revisions to lower PRs; the enrichment section links to the revised #39 source.
 
 Start at [`AI/ConferenceAIExtensions.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/ConferenceAIExtensions.cs). One entry point organizes five areas:
 
@@ -142,20 +142,20 @@ The demo moved from Apple's OS embedding table to MiniLM for domain-synonym retr
 
 ## 3. Typed app data & background enrichment (`AI/Data/` — ~3 mins)
 
-Open [PR #39](https://github.com/mattleibow/dotnetconf2026/pull/39) and [`AI/Data/`](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/Data/). The revision uses `Microsoft.Extensions.AI` typed `GetResponseAsync<T>` outputs, **not `Microsoft.Extensions.DataIngestion`, `SummaryEnricher`, `KeywordEnricher`, or Windows-specific ingestion wrappers**.
+Open [PR #39](https://github.com/mattleibow/dotnetconf2026/pull/39) and its [`AI/Data/` source at 220a32a](https://github.com/mattleibow/dotnetconf2026/tree/220a32a433c6589e0bccdda11a591f8108038fc9/src/ConferenceApp/AI/Data). It uses `Microsoft.Extensions.AI` typed `GetResponseAsync<T>` outputs, **not `Microsoft.Extensions.DataIngestion`, `SummaryEnricher`, `KeywordEnricher`, or Windows-specific ingestion wrappers**.
 
 ### Two independent background services
 
-The intended #39 revision has **one session service and one speaker service running in parallel**, each with its own **nested output model** and minimal logging. Each service processes its own items; this is not one service that finishes all sessions before beginning speakers. The exact final service and nested-type names are pending, so this guide uses roles rather than inventing file links.
+[`SessionEnrichmentService`](https://github.com/mattleibow/dotnetconf2026/blob/220a32a433c6589e0bccdda11a591f8108038fc9/src/ConferenceApp/AI/Data/SessionEnrichmentService.cs) and [`SpeakerEnrichmentService`](https://github.com/mattleibow/dotnetconf2026/blob/220a32a433c6589e0bccdda11a591f8108038fc9/src/ConferenceApp/AI/Data/SpeakerEnrichmentService.cs) run independently in parallel, each with a nested output model (`SessionInsights` and `SpeakerProfile`, respectively). Each service processes its own items; this is not one service that finishes all sessions before beginning speakers.
 
-**Revision boundary:** the inspected top-stack snapshot still contains a single sequential `ConferenceEnrichmentService` with standalone `SessionInsights` / `SpeakerProfile` types. Those describe the superseded shape, not the agreed two-service revision. Use the updated #39 source when presenting the split.
+**Revision boundary:** until the higher layers incorporate #39's revision, the top-stack branch may still contain the earlier sequential implementation.
 
 - **Session role:** one typed request per title and abstract produces a useful concise `Summary` and one to three `Topics`. Allowed topics are `AI`, `Agents`, `Cloud`, `Data`, `Mobile`, `Web`, `IoT`, `Architecture`, `Security`, `DevOps`, and `Gaming`. Match exact allowed values ignoring case/outer whitespace, discard unknown values, and deduplicate.
-- **Partial session output:** preserve independently valid fields. At most one title-only request fills missing summary/topics without overwriting good output. This is for completed invalid/unusable results, not a timeout retry.
+- **Partial session output:** preserve independently valid fields. At most one title-only request fills missing summary/topics without overwriting good output; a failed or unusable request can also lead to this fallback. A timeout instead skips the item without retrying.
 - **Speaker role:** use the biography and talk descriptions to populate the existing `Summary`, `Expertise`, and `AskMeAbout` fields. Keep the structured output flat and non-nullable; compact native models do not need nested metadata wrappers, ingestion chunks, or batch arrays.
 - **UI updates:** apply observable session/speaker fields on the main thread. Original abstracts and biographies stay unchanged; cards and profiles update in place rather than resetting their lists.
 
-The inspected timeout behavior uses a fresh **120-second deadline per attempt**, linked to app shutdown. A timeout discards late output and advances to the next item without retrying or halting the entire job. Native cancellation, especially Windows producer drainage, is not guaranteed to finish immediately; late output must not update UI. Keep this caveat distinct from layer 6's serialized Windows request gate. Two logical services do not promise simultaneous native inference, nor do they gate all chat usage across platforms. Confirm timeout details against the revised #39 source before presenting them as exact implementation.
+[`EnrichmentRequest`](https://github.com/mattleibow/dotnetconf2026/blob/220a32a433c6589e0bccdda11a591f8108038fc9/src/ConferenceApp/AI/Data/EnrichmentRequest.cs) uses a fresh **120-second deadline per attempt**, linked to app shutdown. A timeout is logged, discards late output, and advances to the next item without retrying or halting the entire job. Native cancellation, especially Windows producer drainage, is not guaranteed to finish immediately; late output must not update UI. Keep this caveat distinct from layer 6's serialized Windows request gate. Two logical services do not promise simultaneous native inference, nor do they gate all chat usage across platforms.
 
 Use the concise service/error logs and actual card updates to demonstrate enrichment, not a fixed transcript or per-item telemetry contract. Startup/shutdown behavior is described in [Part 1](01-whats-new-net11-maui11.md#cooperative-shutdown-not-a-process-exit-promise).
 

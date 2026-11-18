@@ -104,7 +104,7 @@ On `main`, search is literal and chat is unavailable. Queries such as `football 
 
 ## AI-stack requirements and Windows caveats
 
-The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Typed session and speaker enrichment replaces the older ingestion-enricher approach. [Part 3](docs/03-giving-the-app-ai.md) documents the two independent enrichment roles and current revision caveats.
+The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Typed session and speaker enrichment replaces the older ingestion-enricher approach: `SessionEnrichmentService` and `SpeakerEnrichmentService` run independently, each with its own nested output model. [Part 3](docs/03-giving-the-app-ai.md) covers the revision and its timeout behavior.
 
 Local chat needs a supported, available device model: Apple Intelligence on supported iOS / Mac Catalyst 26+ devices, Gemini Nano on supported Android hardware, or Windows AI on a compatible Copilot+ PC. An emulator capable of running ONNX search does not necessarily support chat. No cloud fallback or automatic model download is configured.
 

@@ -112,7 +112,7 @@ Pages and view models are registered separately with `AddTransient<Page>().AddTr
 
 [`UserPreferencesService`](../src/ConferenceApp/Services/UserPreferencesService.cs) stores only local user state: `selected_city` and comma-separated `favorites`. [`SearchService`](../src/ConferenceApp/Services/SearchService.cs) is literal substring search; [`ChatService`](../src/ConferenceApp/Services/ChatService.cs) returns an explicit unavailable reason.
 
-**On the AI stack**, `builder.AddConferenceAI()` adds clients, embeddings, enrichment, tools, and agents. Vector indexing is independent of enrichment. The enrichment revision uses **two parallel background services**—one processes sessions, the other speakers—with a nested typed output model in each, not the older single sequential `ConferenceEnrichmentService`. Final service/type names are being revised in [#39](https://github.com/mattleibow/dotnetconf2026/pull/39); see [Part 3](03-giving-the-app-ai.md#3-typed-app-data--background-enrichment-aidata--3-mins).
+**On the AI stack**, `builder.AddConferenceAI()` adds clients, embeddings, enrichment, tools, and agents. Vector indexing is independent of enrichment. [#39](https://github.com/mattleibow/dotnetconf2026/pull/39) adds **two parallel background services**, `SessionEnrichmentService` and `SpeakerEnrichmentService`, with nested `SessionInsights` and `SpeakerProfile` output models; see [Part 3](03-giving-the-app-ai.md#3-typed-app-data--background-enrichment-aidata--3-mins).
 
 ### Cooperative shutdown, not a process-exit promise
 
