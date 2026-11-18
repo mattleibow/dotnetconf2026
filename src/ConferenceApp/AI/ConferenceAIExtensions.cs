@@ -11,7 +11,7 @@ public static class ConferenceAIExtensions
         // Register semantic search embeddings, in-memory vector store, and session indexing.
         builder.AddEmbeddings();
 
-        // Register sequential structured-output enrichment for sessions and speakers.
+        // Register independent session and speaker enrichment services that run in parallel.
         builder.AddDataEnrichment();
 
         // Register source-generated AI tool contexts for conference data and favourites.
