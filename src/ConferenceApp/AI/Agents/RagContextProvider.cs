@@ -49,7 +49,12 @@ public static class RagContextProvider
                 SearchInputMessageFilter = messages => messages
                     .Where(m => m.Role == ChatRole.User && string.IsNullOrEmpty(m.AuthorName))
                     .TakeLast(1),
-                CitationsPrompt = "If the user is asking about a specific session from the matching sessions above, use its title or ID and call get_session or get_speaker only when you need its full abstract or speaker biography. Ignore these matching sessions if the user is asking about their saved favourites or general schedule."
+                CitationsPrompt =
+#if WINDOWS
+                    "Use the matching session titles, IDs, and summaries to ground your answer. Full abstracts and speaker biographies cannot be fetched on Windows; if the supplied context is insufficient, direct the user to the Agenda or Speakers page. Ignore these matching sessions if the user is asking about their saved favourites or general schedule."
+#else
+                    "If the user is asking about a specific session from the matching sessions above, use its title or ID and call get_session or get_speaker only when you need its full abstract or speaker biography. Ignore these matching sessions if the user is asking about their saved favourites or general schedule."
+#endif
             },
             loggerFactory);
     }
