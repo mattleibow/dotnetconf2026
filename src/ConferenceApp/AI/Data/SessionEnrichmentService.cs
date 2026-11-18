@@ -31,16 +31,15 @@ public sealed class SessionEnrichmentService(
 
     protected override async Task ExecuteAsync()
     {
-        if (await ChatExtensions.GetModelAvailabilityAsync(StoppingToken, Logger) != ChatModelAvailability.Available)
+        if (await ChatExtensions.GetModelAvailabilityAsync(logger: Logger) != ChatModelAvailability.Available)
             return;
 
         var enriched = 0;
         foreach (var session in await GetTalkSessionsAsync())
         {
-            StoppingToken.ThrowIfCancellationRequested();
             var (insights, timedOut) = await EnrichmentRequest.GetAsync<SessionInsights>(
                 chatClient, Logger, SessionPrompt,
-                $"Title: {session.Title}\n\nAbstract: {session.Description}", "session", session.Id, StoppingToken);
+                $"Title: {session.Title}\n\nAbstract: {session.Description}", "session", session.Id);
             if (timedOut)
                 continue;
 
@@ -48,7 +47,7 @@ public sealed class SessionEnrichmentService(
             if (string.IsNullOrWhiteSpace(session.Summary) || session.Topics.Count == 0)
             {
                 var (fallback, fallbackTimedOut) = await EnrichmentRequest.GetAsync<SessionInsights>(
-                    chatClient, Logger, SessionPrompt, $"Title: {session.Title}", "session-title", session.Id, StoppingToken);
+                    chatClient, Logger, SessionPrompt, $"Title: {session.Title}", "session-title", session.Id);
                 if (fallbackTimedOut)
                     continue;
 

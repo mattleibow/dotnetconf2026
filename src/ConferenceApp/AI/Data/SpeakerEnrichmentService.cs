@@ -25,7 +25,7 @@ public sealed class SpeakerEnrichmentService(
 
     protected override async Task ExecuteAsync()
     {
-        if (await ChatExtensions.GetModelAvailabilityAsync(StoppingToken, Logger) != ChatModelAvailability.Available)
+        if (await ChatExtensions.GetModelAvailabilityAsync(logger: Logger) != ChatModelAvailability.Available)
             return;
 
         var enriched = 0;
@@ -33,7 +33,6 @@ public sealed class SpeakerEnrichmentService(
         var activeCity = await Preferences.GetSelectedCityAsync();
         foreach (var speaker in db.Speakers.OrderByDescending(s => s.CityIds.Contains(activeCity.Id)))
         {
-            StoppingToken.ThrowIfCancellationRequested();
             var talks = db.Sessions
                 .Where(s => s.IsTalk && s.SpeakerIds.Contains(speaker.Id))
                 .Select(s => $"- {s.Title}: {s.Description}")
@@ -47,7 +46,7 @@ public sealed class SpeakerEnrichmentService(
                 """;
 
             var (profile, _) = await EnrichmentRequest.GetAsync<SpeakerProfile>(
-                chatClient, Logger, SpeakerPrompt, text, "speaker", speaker.Id, StoppingToken);
+                chatClient, Logger, SpeakerPrompt, text, "speaker", speaker.Id);
             if (profile is null)
                 continue;
 

@@ -13,27 +13,14 @@ public abstract class BaseBackgroundService(
     protected ConferenceDbProvider DbProvider { get; } = dbProvider;
     protected UserPreferencesService Preferences { get; } = preferences;
     protected ILogger Logger { get; } = logger;
-    protected CancellationToken StoppingToken { get; private set; }
 
-    public Task StartAsync(CancellationToken cancellationToken = default)
-    {
-        if (processing is not null)
-            return processing;
-
-        StoppingToken = cancellationToken;
-        return processing = Task.Run(RunCoreAsync);
-    }
+    public Task StartAsync() => processing ??= Task.Run(RunCoreAsync);
 
     private async Task RunCoreAsync()
     {
         try
         {
-            StoppingToken.ThrowIfCancellationRequested();
             await ExecuteAsync();
-        }
-        catch (OperationCanceledException) when (StoppingToken.IsCancellationRequested)
-        {
-            Logger.LogInformation("[AI] Background service {ServiceName} stopped for app shutdown.", GetType().Name);
         }
         catch (Exception exception)
         {
