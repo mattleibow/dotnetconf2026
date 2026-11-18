@@ -3,7 +3,6 @@ using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.AI;
 
@@ -12,9 +11,9 @@ public sealed class SpeakerEnrichmentService(
     UserPreferencesService preferences,
     IChatClient chatClient,
     ILogger<SpeakerEnrichmentService> logger)
-    : BaseBackgroundService(dbProvider, preferences, logger)
+    : EnrichmentService(dbProvider, preferences, chatClient, logger)
 {
-    private const string SpeakerPrompt =
+    protected override string Instructions =>
         """
         You are generating an attendee snapshot for a conference speaker badge.
         Using ONLY the speaker's biography and talk descriptions provided, produce a structured SpeakerProfile:
@@ -23,11 +22,8 @@ public sealed class SpeakerEnrichmentService(
         - AskMeAbout: 1 short, specific topic or question attendees can ask them about in the hallway (max 15 words).
         """;
 
-    protected override async Task ExecuteAsync()
+    protected override async Task<int> EnrichAsync()
     {
-        if (await ChatExtensions.GetModelAvailabilityAsync(logger: Logger) != ChatModelAvailability.Available)
-            return;
-
         var enriched = 0;
         var db = await DbProvider.GetDbAsync();
         var activeCity = await Preferences.GetSelectedCityAsync();
@@ -37,20 +33,17 @@ public sealed class SpeakerEnrichmentService(
                 .Where(s => s.IsTalk && s.SpeakerIds.Contains(speaker.Id))
                 .Select(s => $"- {s.Title}: {s.Description}")
                 .Distinct();
-            var text = $"""
+            var (profile, _) = await GetResponseAsync<SpeakerProfile>($"""
                 Speaker: {speaker.Name}
                 Tagline: {speaker.Tagline}
                 Biography: {speaker.Bio}
                 Talks:
                 {string.Join("\n", talks)}
-                """;
-
-            var (profile, _) = await EnrichmentRequest.GetAsync<SpeakerProfile>(
-                chatClient, Logger, SpeakerPrompt, text, "speaker", speaker.Id);
+                """);
             if (profile is null)
                 continue;
 
-            await MainThread.InvokeOnMainThreadAsync(() => ApplySpeakerProfile(speaker, profile));
+            Apply(speaker, profile);
             if (!string.IsNullOrWhiteSpace(speaker.Summary))
                 enriched++;
             if (string.IsNullOrWhiteSpace(speaker.Summary) || speaker.Expertise.Count == 0 ||
@@ -58,10 +51,10 @@ public sealed class SpeakerEnrichmentService(
                 Logger.LogWarning("[AI] Speaker {SpeakerId} has incomplete profile fields after enrichment.", speaker.Id);
         }
 
-        Logger.LogInformation("[AI] Speaker enrichment completed. Speakers: {SpeakerCount}.", enriched);
+        return enriched;
     }
 
-    private static void ApplySpeakerProfile(Speaker speaker, SpeakerProfile profile)
+    private static void Apply(Speaker speaker, SpeakerProfile profile)
     {
         if (!string.IsNullOrWhiteSpace(profile.Summary))
             speaker.Summary = profile.Summary.Trim();
