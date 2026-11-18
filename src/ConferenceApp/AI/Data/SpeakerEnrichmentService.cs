@@ -11,7 +11,7 @@ public sealed class SpeakerEnrichmentService(
     UserPreferencesService preferences,
     IChatClient chatClient,
     ILogger<SpeakerEnrichmentService> logger)
-    : EnrichmentService(dbProvider, preferences, chatClient, logger)
+    : EnrichmentService<Speaker>(dbProvider, preferences, chatClient, logger)
 {
     protected override string Instructions =>
         """
@@ -22,40 +22,41 @@ public sealed class SpeakerEnrichmentService(
         - AskMeAbout: 1 short, specific topic or question attendees can ask them about in the hallway (max 15 words).
         """;
 
-    protected override async Task<int> EnrichAsync()
+    protected override async Task<List<Speaker>> GetItemsAsync()
     {
-        var enriched = 0;
         var db = await DbProvider.GetDbAsync();
         var activeCity = await Preferences.GetSelectedCityAsync();
-        foreach (var speaker in db.Speakers.OrderByDescending(s => s.CityIds.Contains(activeCity.Id)))
-        {
-            var talks = db.Sessions
-                .Where(s => s.IsTalk && s.SpeakerIds.Contains(speaker.Id))
-                .Select(s => $"- {s.Title}: {s.Description}")
-                .Distinct();
-            var (profile, _) = await GetResponseAsync<SpeakerProfile>($"""
-                Speaker: {speaker.Name}
-                Tagline: {speaker.Tagline}
-                Biography: {speaker.Bio}
-                Talks:
-                {string.Join("\n", talks)}
-                """);
-            if (profile is null)
-                continue;
 
-            Apply(speaker, profile);
-            if (!string.IsNullOrWhiteSpace(speaker.Summary))
-                enriched++;
-            if (string.IsNullOrWhiteSpace(speaker.Summary) || speaker.Expertise.Count == 0 ||
-                string.IsNullOrWhiteSpace(speaker.AskMeAbout))
-                Logger.LogWarning("[AI] Speaker {SpeakerId} has incomplete profile fields after enrichment.", speaker.Id);
-        }
-
-        return enriched;
+        return [.. db.Speakers.OrderByDescending(s => s.CityIds.Contains(activeCity.Id))];
     }
 
-    private static void Apply(Speaker speaker, SpeakerProfile profile)
+    protected override async Task<bool> EnrichAsync(Speaker speaker)
     {
+        var db = await DbProvider.GetDbAsync();
+        var talks = db.Sessions
+            .Where(s => s.IsTalk && s.SpeakerIds.Contains(speaker.Id))
+            .Select(s => $"- {s.Title}: {s.Description}")
+            .Distinct();
+
+        var profile = await AskAsync<SpeakerProfile>(speaker.Id, $"""
+            Speaker: {speaker.Name}
+            Tagline: {speaker.Tagline}
+            Biography: {speaker.Bio}
+            Talks:
+            {string.Join("\n", talks)}
+            """);
+
+        Apply(speaker, profile);
+
+        return !string.IsNullOrWhiteSpace(speaker.Summary) && speaker.Expertise.Count > 0 &&
+            !string.IsNullOrWhiteSpace(speaker.AskMeAbout);
+    }
+
+    private static void Apply(Speaker speaker, SpeakerProfile? profile)
+    {
+        if (profile is null)
+            return;
+
         if (!string.IsNullOrWhiteSpace(profile.Summary))
             speaker.Summary = profile.Summary.Trim();
 
