@@ -114,14 +114,8 @@ Pages and view models are registered separately with `AddTransient<Page>().AddTr
 
 **On the AI stack**, `builder.AddConferenceAI()` adds clients, embeddings, enrichment, tools, and agents. Vector indexing is independent of enrichment. [#39](https://github.com/mattleibow/dotnetconf2026/pull/39) adds **two parallel background services**, `SessionEnrichmentService` and `SpeakerEnrichmentService`, with nested `SessionInsights` and `SpeakerProfile` output models; see [Part 3](03-giving-the-app-ai.md#3-typed-app-data--background-enrichment-aidata--3-mins).
 
-### Cooperative shutdown, not a process-exit promise
+### No shutdown cancellation
 
-`App` owns a shutdown `CancellationTokenSource` and passes its token to `BaseBackgroundService.StartAsync`. A single `Window.Destroying` handler cancels it; there is no extra `MauiProgram` lifecycle hook.
-
-On Android that handler cancels only when `window.Handler?.PlatformView is Android.App.Activity { IsFinishing: true }`, not when Android is recreating an activity. For the MAUI 11 window lifecycle, destruction corresponds to Android `OnDestroy`, iOS / Mac Catalyst `SceneDidDisconnect` (not the legacy `WillTerminate` path), and Windows `Closed`. See [MAUI app lifecycle](https://learn.microsoft.com/dotnet/maui/fundamentals/app-lifecycle?view=net-maui-11.0).
-
-`Stopped` / `OnSleep` means backgrounding, not exit; permanently cancelling these once-only services there would leave them stopped after resuming. Mobile operating systems can kill a process without calling cleanup callbacks. In particular, Android [`Application.OnTerminate`](https://learn.microsoft.com/dotnet/api/android.app.application.onterminate) is not called on production devices.
-
-Cancellation is cooperative: expected token cancellation is quiet, other errors are logged. The preload shares `ConferenceDbProvider`'s uncancellable load task, so an already-running database load can finish. Derived background services must observe the token themselves; this mechanism cannot guarantee native work or cleanup completes before process termination.
+Background services run once and are not cancelled when the app exits. Mobile operating systems can end the process without calling any cleanup code: Android [`Application.OnTerminate`](https://learn.microsoft.com/dotnet/api/android.app.application.onterminate) is not called on production devices, and `Stopped` / `OnSleep` means the app went to the background, not that it exited. When the process ends, its in-flight work ends with it, so the demo doesn't need app-exit cancellation. See [MAUI app lifecycle](https://learn.microsoft.com/dotnet/maui/fundamentals/app-lifecycle?view=net-maui-11.0).
 
 Next: [**Part 2 — Agents Building Apps**](02-agents-building-apps.md)
