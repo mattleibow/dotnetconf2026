@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.Logging;
@@ -13,8 +12,7 @@ public partial class AgendaViewModel(
     UserPreferencesService preferences,
     SearchService search,
     IDispatcher dispatcher,
-    ILogger<AgendaViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger),
-    IRecipient<FavoritesChangedMessage>
+    ILogger<AgendaViewModel> logger) : BaseViewModel(dbProvider, preferences, dispatcher, logger)
 {
     private int loadVersion;
 
@@ -30,9 +28,6 @@ public partial class AgendaViewModel(
         Refresh();
 
     partial void OnShowFavoritesOnlyChanged(bool value) =>
-        Refresh();
-
-    public void Receive(FavoritesChangedMessage message) =>
         Refresh();
 
     protected override async Task OnLoadAsync()
@@ -72,6 +67,8 @@ public partial class AgendaViewModel(
         var isFavorite = !Preferences.IsFavorite(session.Id);
         session.IsFavorite = isFavorite;
         Preferences.SetFavorite(session.Id, isFavorite);
+        if (ShowFavoritesOnly && !isFavorite)
+            Sessions.Remove(session);
     }
 
     [RelayCommand]
