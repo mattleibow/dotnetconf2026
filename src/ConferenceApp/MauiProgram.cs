@@ -4,6 +4,9 @@ using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;
 using Microsoft.Extensions.Logging;
+#if ANDROID
+using Microsoft.Maui.LifecycleEvents;
+#endif
 #if DEBUG
 using Microsoft.Maui.DevFlow.Agent;
 #endif
@@ -27,6 +30,12 @@ public static class MauiProgram
 #if ANDROID
         builder.ConfigureMauiHandlers(handlers =>
             handlers.AddHandler<TabBar, PopToRootShellItemHandler>());
+        builder.ConfigureLifecycleEvents(events => events.AddAndroid(android =>
+            android.OnDestroy(activity =>
+            {
+                if (activity.IsFinishing && Application.Current is App app)
+                    app.StopBackgroundServices();
+            })));
 #endif
 
         builder.Services.AddSingleton<TimeProvider>(new ConferenceTimeProvider(new TimeOnly(8, 30)));
