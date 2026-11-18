@@ -20,12 +20,12 @@ public class MarkdownToFormattedStringConverter : IValueConverter
 
     private static void WriteBlocks(ContainerBlock container, FormattedString formatted, string? listPrefix)
     {
-        var index = 1;
         foreach (var block in container)
         {
             switch (block)
             {
                 case ListBlock list:
+                    var index = 1;
                     foreach (var item in list.OfType<ListItemBlock>())
                         WriteBlocks(item, formatted, list.IsOrdered ? $"{index++}. " : "• ");
                     break;
