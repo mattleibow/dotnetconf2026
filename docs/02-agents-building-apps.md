@@ -1,6 +1,6 @@
 # Part 2: Agents Building Apps — Explore & Debug (12–15 mins)
 
-Use a coding agent and MAUI DevFlow to inspect and drive the **already-styled app on `main`**. This is not a wireframe-to-design exercise, and it does not require the in-app AI stack.
+Use a coding agent and MAUI DevFlow to inspect and drive the app on `main`.
 
 ## Step 00: Prepare before the talk
 
@@ -57,12 +57,8 @@ Use [PR #33's bug branch](https://github.com/mattleibow/dotnetconf2026/pull/33),
 | Invisible venue map | Inspect `venue-map` bounds and zero-height diagnostics on Event |
 | Search/chat input artifacts | Capture a screenshot and inspect the inner `Entry` styling |
 
-The correct preference keys on `main` are **`selected_city` and `favorites`**. Don't assume an old `favorite_sessions` / `favorite-sessions` story matches the checked-out bug branch; compare its actual reads and writes.
-
-The prompt requests one diagnosis pass, one combined fix, and one iOS rebuild/redeploy, then stops without a post-fix click-through or extra platform builds. Its `--no-restore` rebuild assumes Step 00 has already restored that checkout; don't use it for the first build of a fresh worktree. If fixes are already present and the fixed app is running, the prompt asks for diff inspection rather than repeated reproduction.
-
 ## Design and MAUI talking points
 
-These are already part of the baseline, not a missing “make it beautiful” prompt: themed surfaces, a gradient Event hero, native map, swipeable Agenda tickets, inline favourites, and Assistant starter suggestions. Use [`DESIGN.md`](../DESIGN.md) and [`PRODUCT.md`](../PRODUCT.md) for phone/desktop layout checks. Chat remains unavailable on `main`.
+Show themed surfaces, a gradient Event hero, native map, swipeable Agenda tickets, inline favourites, and Assistant starter suggestions. Use [`DESIGN.md`](../DESIGN.md) and [`PRODUCT.md`](../PRODUCT.md) for phone/desktop layout checks.
 
 Next: [**Part 3 — Giving the App That Same AI**](03-giving-the-app-ai.md) (switch to the native AI stack).

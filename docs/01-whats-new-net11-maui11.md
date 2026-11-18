@@ -2,13 +2,11 @@
 
 Open these files before [Prompt 01](../.github/prompts/01-explore-app.prompt.md) to show a small, modern baseline app.
 
-**Branch boundary:** examples below describe `main`. The complete guide also covers the [separate native AI stack](../README.md#demo-branches), whose model assets and registration are called out explicitly.
-
-Sources: [What's new in .NET 11](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-11/overview) and [What's new in .NET MAUI 11](https://learn.microsoft.com/dotnet/maui/whats-new/dotnet-11). Check the installed SDK/workload and native toolchain rather than inferring compatibility from a framework name.
+Sources: [What's new in .NET 11](https://learn.microsoft.com/dotnet/core/whats-new/dotnet-11/overview) and [What's new in .NET MAUI 11](https://learn.microsoft.com/dotnet/maui/whats-new/dotnet-11).
 
 ## 1. Small solution, central packages, clean outputs
 
-- [`ConferenceApp.slnx`](../ConferenceApp.slnx): compact XML solution format; easier to read and merge, not a guarantee against conflicts.
+- [`ConferenceApp.slnx`](../ConferenceApp.slnx): compact XML solution format.
 - [`Directory.Build.props`](../Directory.Build.props): `UseArtifactsOutput=true` puts build outputs under the root `artifacts` directory.
 - [`Directory.Packages.props`](../Directory.Packages.props): central package versions, including CommunityToolkit.Mvvm **8.4.2**, with versionless references in the app project. MAUI packages use the workload's `MauiVersion`.
 
@@ -29,11 +27,9 @@ The baseline links the conference snapshot directly as raw assets:
 
 [`ConferenceDb`](../src/ConferenceApp/Data/ConferenceDb.cs) opens `conference/conference.json` with `FileSystem.OpenAppPackageFileAsync`. JSON, Markdown abstracts/bios, and real images are packaged; the app does not import data at startup. Map tiles and external links are separate network-dependent features.
 
-Only the AI stack adds the `models/all-MiniLM-L6-v2` ONNX assets. See [Part 3](03-giving-the-app-ai.md); there is no `models` directory on `main`.
-
 ## 3. Global XAML namespaces and compiled bindings
 
-[`GlobalXmlns.cs`](../src/ConferenceApp/GlobalXmlns.cs) registers app namespaces and `Microsoft.Maui.Controls.Maps` under the MAUI global namespace. XAML can use `<Map />`, `<BasePage />`, view models, models, and converters without repetitive namespace aliases. An AI namespace registration is present for the later demo but does not imply an AI implementation on `main`.
+[`GlobalXmlns.cs`](../src/ConferenceApp/GlobalXmlns.cs) registers app namespaces and `Microsoft.Maui.Controls.Maps` under the MAUI global namespace. XAML can use `<Map />`, `<BasePage />`, view models, models, and converters without repetitive namespace aliases.
 
 Keep the correct `x:DataType` on pages and templates. .NET 11 compiles resolvable `RelativeSource` ancestor bindings in an AOT-safe way; target the view model directly rather than reaching through a page's `BindingContext`.
 
@@ -56,7 +52,7 @@ AutomationId="{$'session-{Id}'}"
 IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
 ```
 
-[`ChatPage.xaml`](../src/ConferenceApp/Views/ChatPage.xaml) uses `CollectionView.EmptyView` for suggestions and the availability/busy expression to disable inputs. On `main`, the unavailability reason is always set; the presence of chat controls is not evidence of a connected model.
+[`ChatPage.xaml`](../src/ConferenceApp/Views/ChatPage.xaml) uses `CollectionView.EmptyView` for suggestions and the availability/busy expression to disable inputs.
 
 Other useful MAUI 11 notes (not a checklist of features used by this app):
 
@@ -78,7 +74,7 @@ Use handlers, not removed compatibility renderers. For navigation-transition-dep
 
 [`BaseViewModel`](../src/ConferenceApp/ViewModels/BaseViewModel.cs) centralizes data access, preferences, dispatcher, logger, city changes, and load/city-picker commands. Page view models use primary constructors, `[ObservableProperty]` partial properties, and `[RelayCommand]`.
 
-[`BasePage`](../src/ConferenceApp/Views/BasePage.cs) sets the binding context and runs `LoadCommand` from `OnAppearing`. Most page code-behind just accepts its view model and initializes XAML. This lifecycle choice describes the current app, not a guarantee that a navigation transition has finished.
+[`BasePage`](../src/ConferenceApp/Views/BasePage.cs) sets the binding context and runs `LoadCommand` from `OnAppearing`. Most page code-behind just accepts its view model and initializes XAML.
 
 [`AppShell.xaml`](../src/ConferenceApp/AppShell.xaml) defines separate Agenda, Event, Speakers, and Assistant tabs. [`AppShell.xaml.cs`](../src/ConferenceApp/AppShell.xaml.cs) registers `session` and `speaker`; view-model commands navigate with query-string IDs. The app does not fake tabs with visibility switches.
 
@@ -92,7 +88,7 @@ Use handlers, not removed compatibility renderers. For navigation-transition-dep
 #:package AngleSharp@1.10.1
 ```
 
-`dotnet run data/ImportConference.cs` deliberately refreshes the snapshot and needs website access. It is not a build or app-startup prerequisite. The separate AI stack adds a model-download utility; don't run a nonexistent `models/DownloadModels.cs` on `main`.
+`dotnet run data/ImportConference.cs` refreshes the snapshot and needs website access.
 
 ## 7. Startup, DevFlow, and the data layer
 
@@ -106,16 +102,12 @@ builder.Services.AddSingleton<SearchService>();
 builder.Services.AddSingleton<ChatService>();
 ```
 
-Pages and view models are registered separately with `AddTransient<Page>().AddTransient<ViewModel>()`. In Debug, it enables logging and `AddMauiDevFlowAgent` with layout diagnostics and profiling. There is **no `AddConferenceAI()` call on `main`**.
+Pages and view models are registered separately with `AddTransient<Page>().AddTransient<ViewModel>()`. In Debug, it enables logging and `AddMauiDevFlowAgent` with layout diagnostics and profiling.
 
 [`App.xaml.cs`](../src/ConferenceApp/App.xaml.cs) starts the registered `IEnumerable<BaseBackgroundService>` at app creation; on `main` this is the database preload service. [`ConferenceDbProvider`](../src/ConferenceApp/Data/ConferenceDbProvider.cs) shares one lazy asynchronous load. [`ConferenceDb`](../src/ConferenceApp/Data/ConferenceDb.cs) caches Markdown content, links city/venue and session/speaker relationships, and orders the data.
 
 [`UserPreferencesService`](../src/ConferenceApp/Services/UserPreferencesService.cs) stores only local user state: `selected_city` and comma-separated `favorites`. [`SearchService`](../src/ConferenceApp/Services/SearchService.cs) is literal substring search; [`ChatService`](../src/ConferenceApp/Services/ChatService.cs) returns an explicit unavailable reason.
 
 **On the AI stack**, `builder.AddConferenceAI()` adds clients, embeddings, enrichment, tools, and agents. Vector indexing is independent of enrichment. [#39](https://github.com/mattleibow/dotnetconf2026/pull/39) adds **two parallel background services**, `SessionEnrichmentService` and `SpeakerEnrichmentService`, with nested `SessionInsights` and `SpeakerProfile` output models; see [Part 3](03-giving-the-app-ai.md#3-typed-app-data--background-enrichment-aidata--3-mins).
-
-### No shutdown cancellation
-
-Background services run once and are not cancelled when the app exits. Mobile operating systems can end the process without calling any cleanup code: Android [`Application.OnTerminate`](https://learn.microsoft.com/dotnet/api/android.app.application.onterminate) is not called on production devices, and `Stopped` / `OnSleep` means the app went to the background, not that it exited. When the process ends, its in-flight work ends with it, so the demo doesn't need app-exit cancellation. See [MAUI app lifecycle](https://learn.microsoft.com/dotnet/maui/fundamentals/app-lifecycle?view=net-maui-11.0).
 
 Next: [**Part 2 — Agents Building Apps**](02-agents-building-apps.md)

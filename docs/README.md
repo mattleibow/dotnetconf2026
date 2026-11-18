@@ -5,7 +5,7 @@
 
 Start on `main`: a **styled, functional .NET MAUI 11 conference app** with offline content, literal agenda search, manual favourites, speaker profiles, and an Assistant availability stub. It has no on-device model integration.
 
-This guide covers the whole talk, including the separate native AI stack. Follow [the README's ordered PR stack](../README.md#demo-branches) for the AI portion; Part 3 links to that branch's source. Local inference needs a supported device and an available model. Offline content does not make map tiles, external links, or initial model provisioning offline.
+Follow [the README's ordered PR stack](../README.md#demo-branches) for the AI portion.
 
 ## Runbook sections
 
@@ -22,7 +22,7 @@ This guide covers the whole talk, including the separate native AI stack. Follow
 3. Run [`00-prepare-demo.prompt.md`](../.github/prompts/00-prepare-demo.prompt.md) before the live portion. It builds/launches only iOS, opens the Mobile Device and DevFlow Inspector canvases, and **clears app preferences**, including favourites.
 4. Confirm the app is visible in `maui devflow list`. The Inspector URL comes from that output; don't hardcode an agent ID.
 5. Verify the phone layout and a wide desktop layout, in light and dark themes. Use the existing design tokens in [`DESIGN.md`](../DESIGN.md).
-6. For Part 3, switch to the intended AI layer, verify local-model availability and vector indexing, and keep logs visible. Windows tool calling is experimental; retain the manual Agenda / Speakers fallback.
+6. For Part 3, switch to the intended AI branch, verify local-model availability and vector indexing, and keep logs visible.
 
 ```sh
 maui devflow list

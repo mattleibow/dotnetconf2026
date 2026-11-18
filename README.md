@@ -6,17 +6,15 @@ The companion app and speaker guide for .NET Conf 2026 South Africa.
 
 ## What runs on `main`
 
-`main` is a complete, styled **.NET 11 / .NET MAUI 11** conference app, not the in-app AI implementation:
+`main` is a **.NET 11 / .NET MAUI 11** conference app:
 
 - **Agenda:** city-scoped, case-insensitive substring search over titles, abstracts, and speaker names; All / Favourites filter; swipeable session cards and inline favourite controls.
 - **Event:** conference details, sponsors, venue photos, and an embedded map.
 - **Speakers:** profiles, biographies, and links to their sessions.
-- **Assistant:** the chat UI and starter suggestions, with a deterministic “On-device AI isn't connected yet” availability message. Inputs are disabled; this is not a working model or a rule-based conference assistant.
+- **Assistant:** chat UI and starter suggestions, ready for the AI walkthrough.
 - **Local state:** selected city and favourites in `Preferences`. Conference content for **Durban, Cape Town, and Bloemfontein** ships with the app.
 
 The schedule, biographies, images, search, and favourites work offline. Map tiles, external maps, and sponsor websites can require network access. The layouts support portrait phones and wide desktop windows, with light and dark themes. Debug builds register the MAUI DevFlow agent.
-
-The full demo guide intentionally lives on `main`, including [Part 3's AI walkthrough](docs/03-giving-the-app-ai.md). Its AI source links point to the separate stack, not nonexistent files on `main`.
 
 ## Repository map
 
@@ -47,7 +45,7 @@ The native on-device AI stack is ordered **bottom to top**:
 | 5 | [#37](https://github.com/mattleibow/dotnetconf2026/pull/37) | Multi-agent workflows and routing |
 | 6 | [#41](https://github.com/mattleibow/dotnetconf2026/pull/41) | Experimental Windows tool calling |
 
-Use the corresponding branch for each walkthrough, or the [top-of-stack source](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling) for the combined demo. Stack files such as `AI/`, `models/`, `packages/`, and `NuGet.config` are **not prerequisites for `main`**.
+Use the corresponding branch for each walkthrough, or the [top-of-stack source](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling) for the combined demo.
 
 ## Check tooling, then build one target
 
@@ -60,7 +58,7 @@ dotnet workload list
 maui doctor
 ```
 
-Use a .NET 11 SDK, compatible MAUI 11 workloads, and the platform tools reported by the workload release notes. Do not assume an installed Xcode or Android SDK matches the selected workload. The MAUI CLI (`maui`) and [MAUI Labs skills](https://github.com/dotnet/maui-labs) support the live agent demo; a coding agent is not needed to build the app. No SDK/workload installation commands are required by this guide.
+Use a .NET 11 SDK, compatible MAUI 11 workloads, and the platform tools reported by the workload release notes. The MAUI CLI (`maui`) and [MAUI Labs skills](https://github.com/dotnet/maui-labs) support the live agent demo.
 
 Build the project for **one target framework at a time**, on a host configured for it. Let the first build restore:
 
@@ -78,15 +76,7 @@ For iOS, use `-f net11.0-ios` with a configured Mac/Xcode and the intended devic
 dotnet build .\src\ConferenceApp\ConferenceApp.csproj -f net11.0-windows10.0.19041.0
 ```
 
-If using an already-provisioned isolated SDK on Windows, select it only for the current PowerShell process (replace the placeholder with your SDK directory):
-
-```powershell
-$env:DOTNET_ROOT = 'C:\path\to\isolated\dotnet'
-$env:PATH = "$env:DOTNET_ROOT;$env:PATH"
-dotnet --info
-```
-
-Do not change machine-wide settings or install workloads as part of a demo check. See [Part 1](docs/01-whats-new-net11-maui11.md) for the framework features and [the runbook](docs/README.md) for device preparation.
+See [Part 1](docs/01-whats-new-net11-maui11.md) for framework features and [the runbook](docs/README.md) for device preparation.
 
 ## Live demo
 
@@ -102,13 +92,11 @@ maui devflow logs --follow --no-json
 
 On `main`, search is literal and chat is unavailable. Queries such as `football forecasts` demonstrate semantic retrieval **only on the AI stack**, after indexing.
 
-## AI-stack requirements and Windows caveats
+## On-device AI requirements
 
-The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Typed session and speaker enrichment replaces the older ingestion-enricher approach: `SessionEnrichmentService` and `SpeakerEnrichmentService` run independently, each with its own nested output model. [Part 3](docs/03-giving-the-app-ai.md) covers the revision and its timeout behavior.
+The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Follow [Part 3](docs/03-giving-the-app-ai.md) for the code walkthrough.
 
-Local chat needs a supported, available device model: Apple Intelligence on supported iOS / Mac Catalyst 26+ devices, Gemini Nano on supported Android hardware, or Windows AI on a compatible Copilot+ PC. An emulator capable of running ONNX search does not necessarily support chat. No cloud fallback or automatic model download is configured.
-
-**Windows layer 6:** use the packaged launch profile on Windows 11 build 26100+, with MSIX identity, `systemAIModels`, a compatible Windows App SDK runtime, and any required Phi Silica access approval. The [experimental package provenance and reproduction guide](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/packages/README.md) records the source commit, license, and checksum. Tool calling is unreliable and can be slow; manual navigation and favourites remain the reliable route. An unavailable model shows the availability message instead of invoking the agent. `-p:WindowsPackageType=None` is only for checking the stack's unpackaged unavailable path.
+Local chat needs Apple Intelligence on supported iOS / Mac Catalyst 26+ devices, Gemini Nano on supported Android hardware, or a packaged Windows 11 build 26100+ launch on a compatible Copilot+ PC with Windows AI available.
 
 ## Conference data
 
