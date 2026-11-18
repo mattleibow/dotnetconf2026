@@ -17,6 +17,15 @@ public sealed class SessionEnrichmentService(
 
     private static readonly string[] AllowedTopics = TopicList.Split(", ");
 
+    public sealed class SessionInsights
+    {
+        [Description("A useful, concise summary in one or two sentences, using only the supplied session details.")]
+        public string Summary { get; set; } = "";
+
+        [Description("One to three distinct topics chosen only from " + TopicList + ".")]
+        public string[] Topics { get; set; } = [];
+    }
+
     protected override string Instructions =>
         $"""
         Using ONLY the supplied session title and abstract, produce SessionInsights:
@@ -78,14 +87,5 @@ public sealed class SessionEnrichmentService(
             if (topics.Length > 0)
                 session.Topics = topics;
         }
-    }
-
-    public sealed class SessionInsights
-    {
-        [Description("A useful, concise summary in one or two sentences, using only the supplied session details.")]
-        public string Summary { get; set; } = "";
-
-        [Description("One to three distinct topics chosen only from " + TopicList + ".")]
-        public string[] Topics { get; set; } = [];
     }
 }
