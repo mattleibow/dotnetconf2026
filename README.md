@@ -44,6 +44,7 @@ From `main`, two pull requests cover the two halves of the talk:
   copilot plugin install dotnet/skills:plugins/dotnet   # optional: C# and MSBuild
   ```
 - **For on-device AI:** a Mac with Apple Intelligence works best (run the app as Mac Catalyst or iOS Simulator). Android and Windows use the bundled ONNX model for semantic search; local chat there uses Gemini Nano or Windows AI on supported hardware.
+- **Windows:** use the packaged Windows launch profile on Windows 11 24H2 (build 26100) or newer. Local chat requires a compatible Copilot+ PC and its on-device model; semantic search runs on the CPU without it. Windows tool calling is experimental in [AI layer 6 (#41)](https://github.com/mattleibow/dotnetconf2026/pull/41) and can be slow or fail; use the app's pages for reliable navigation and favourites.
 
 ## Live Demo Flow
 

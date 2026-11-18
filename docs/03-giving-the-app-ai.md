@@ -37,7 +37,7 @@ LoggingEmbeddingGenerator: GenerateAsync generated 51 embedding(s).
 
 Open [`src/ConferenceApp/AI/ChatClients/ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) and [`UnavailableChatClient.cs`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs).
 
-`Microsoft.Maui.Essentials.AI` (`11.0.0-preview.8.26555.2`) provides local on-device `IChatClient` implementations for each platform: `AppleIntelligenceChatClient` on iOS / Mac Catalyst 26+, `GeminiNanoChatClient` on Android API 26+, and `WindowsAIChatClient` on Windows 10.0.26100+.
+`Microsoft.Maui.Essentials.AI` (`11.0.0-preview.9.26567.2`) provides local on-device `IChatClient` implementations for each platform: `AppleIntelligenceChatClient` on iOS / Mac Catalyst 26+, `GeminiNanoChatClient` on Android API 26+, and `WindowsAIChatClient` on Windows 10.0.26100+.
 
 ```csharp
 #if IOS || MACCATALYST
@@ -70,11 +70,13 @@ return new UnavailableChatClient();
 
 Point out three important details here:
 
-First, notice how `AppleIntelligenceChatClient` takes `functionInvocationServices: services` directly in its constructor (without `.UseFunctionInvocation()`), because Apple's native Foundation Models runtime executes tools inside its native bridge and uses `functionInvocationServices` to resolve `[FromServices]` parameters. On Android and Windows, `.UseFunctionInvocation(loggerFactory)` + `.Build(services)` adds the managed `Microsoft.Extensions.AI` tool-calling loop.
+First, notice how `AppleIntelligenceChatClient` takes `functionInvocationServices: services` directly in its constructor (without `.UseFunctionInvocation()`), because Apple's native Foundation Models runtime executes tools inside its native bridge and uses `functionInvocationServices` to resolve `[FromServices]` parameters. On Android, `.UseFunctionInvocation(loggerFactory)` + `.Build(services)` adds the managed `Microsoft.Extensions.AI` tool-calling loop. The native Windows client supports chat but not function calling, so layers 2–5 answer from supplied conference context without tools. [Layer 6 (#41)](https://github.com/mattleibow/dotnetconf2026/pull/41) adds an experimental Windows adapter inside that managed loop; tool calls can be slow or fail.
+
+Windows chat requires a packaged app with the `systemAIModels` manifest capability, a compatible Copilot+ PC and its on-device model, and Windows App SDK 2.6.4 or newer. Use the packaged Windows launch profile; no cloud fallback is configured.
 
 Second, on Android, **`OrderedFailoverChatClient`** (`Microsoft.Extensions.AI` 11.0.0) chains the Gemini Nano profiles (`gemini-nano-preview-fast`, `gemini-nano-preview-full`, `gemini-nano-full`, `gemini-nano-fast`) in order. If a profile isn't downloaded or doesn't support a capability (such as tool calling), `OrderedFailoverChatClient` automatically advances to the next profile.
 
-Third, if the current OS or device doesn't support local AI (for example an Android emulator where Google AICore isn't installed), `CreateLocalChatClient` falls back to [`UnavailableChatClient`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs) and `GetModelAvailabilityAsync()` catches platform status exceptions to return `ChatModelAvailability.NotSupported`. That means `IChatClient`, enrichers, and agents **always resolve cleanly from DI**, while `ChatPage` displays the `chat-unavailable` banner (`"On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."`) and disables chat inputs.
+Third, `GetModelAvailabilityAsync()` checks whether the local model is ready before chat or enrichment runs. `ChatPage` displays the `chat-unavailable` banner and disables chat inputs when it isn't. On Windows, DI still supplies the native client; a failed message does not replace it with [`UnavailableChatClient`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs).
 
 ---
 
@@ -162,6 +164,8 @@ Putting all 51 full Markdown abstracts into a compact on-device model's context 
 
 - **[`SessionSummaryEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionSummaryEnrichmentService.cs)** uses `SummaryEnricher(enricherOptions, maxWordCount: 24)` to populate `session.Summary`.
 - **[`SessionTopicEnrichmentService.cs`](../src/ConferenceApp/AI/Data/SessionTopicEnrichmentService.cs)** uses `KeywordEnricher(enricherOptions, predefinedKeywords: Topics, maxKeywords: 3, confidenceThreshold: 0.7)` across the 11 conference topics (`AI`, `Agents`, `Cloud`, `Data`, `Mobile`, `Web`, `IoT`, `Architecture`, `Security`, `DevOps`, `Gaming`) to populate `session.Topics`.
+
+On Windows, `WindowsSessionSummaryEnricher` and `WindowsSessionTopicEnricher` request one flat JSON object per session instead of batch arrays, which Phi Silica does not reliably return in the expected shape.
 
 Because `Session` inherits `ObservableObject` and `Summary` and `Topics` (`IReadOnlyList<string>`) are `[ObservableProperty]`s, XAML bindings (`BindableLayout.ItemsSource="{Binding Topics}"`) update each card in place automatically without rebuilding or resetting the `CollectionView`.
 
