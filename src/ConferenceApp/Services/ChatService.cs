@@ -96,7 +96,9 @@ public class ChatService(
         [
             new(ChatRole.System, $"""
                 You are the .NET Conf South Africa assistant.
-                Answer briefly using the schedule below.
+                Answer briefly using the schedule below and available tools.
+                When asked to favourite sessions by topic (such as all mobile or gaming sessions), call search_sessions first to find the matching talks and then call add_favorite for each matching session.
+                When asked to open or navigate to a session, speaker profile, or page, use navigate_to_session, navigate_to_speaker, or navigate_to_page.
                 Current City: {city.Name} | Event Date: {city.Date:dddd, yyyy-MM-dd} | Current Time: 08:30
                 Saved Favourites: {(favorites.Length > 0 ? string.Join("; ", favorites) : "None yet")}
 
@@ -109,7 +111,13 @@ public class ChatService(
 
         var options = new ChatOptions
         {
-            Temperature = 0
+            Temperature = 0,
+            Tools =
+            [
+                .. ConferenceDataToolContext.Default.Tools,
+                .. FavoritesToolContext.Default.Tools,
+                .. NavigationToolContext.Default.Tools
+            ]
         };
 
         var itemsByAuthor = new Dictionary<string, ChatItem>();
@@ -121,6 +129,9 @@ public class ChatService(
             await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, options, cancellationToken))
             {
                 updates.Add(update);
+
+                foreach (var call in update.Contents.OfType<FunctionCallContent>())
+                    AddToolCall(reply, call.Name);
 
                 if (update.Role is null || update.Role == ChatRole.Assistant)
                     lastItem = AppendText(reply, itemsByAuthor, update.Text, update.AuthorName);

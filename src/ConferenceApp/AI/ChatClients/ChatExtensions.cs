@@ -30,7 +30,7 @@ public static class ChatExtensions
 #if IOS || MACCATALYST
         if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
         {
-            return new AppleIntelligenceChatClient(loggerFactory: loggerFactory)
+            return new AppleIntelligenceChatClient(loggerFactory: loggerFactory, functionInvocationServices: services)
                 .AsBuilder()
                 .UseLogging(loggerFactory)
                 .Build();
@@ -51,16 +51,34 @@ public static class ChatExtensions
                             .Build())
                 ])
                 .AsBuilder()
+                .UseFunctionInvocation(loggerFactory)
                 .UseLogging(loggerFactory)
                 .Build(services);
         }
 #elif WINDOWS
         if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
         {
-            return new WindowsAIChatClient()
+            IChatClient platformClient = new WindowsAIChatClient();
+            IChatClient toolClient = new QwenChatClient(loggerFactory.CreateLogger<QwenChatClient>())
                 .AsBuilder()
-                .UseLogging(loggerFactory)
-                .Build();
+                .UseFunctionInvocation(loggerFactory, invocation =>
+                {
+                    invocation.MaximumIterationsPerRequest = 6;
+                    invocation.MaximumConsecutiveErrorsPerRequest = 1;
+                })
+                .Build(services);
+
+            var logger = loggerFactory.CreateLogger(typeof(ChatExtensions));
+            return RoutingChatClient.Create((context, _) =>
+            {
+                var toolCount = context.ChatOptions?.Tools?.Count ?? 0;
+                logger.LogInformation("[AI Chat] Routing to {Provider} ({ToolCount} tools).",
+                    toolCount > 0 ? "ONNX Qwen3-0.6B" : "Windows AI", toolCount);
+                return ValueTask.FromResult(toolCount > 0 ? toolClient : platformClient);
+            })
+            .AsBuilder()
+            .UseLogging(loggerFactory)
+            .Build();
         }
 #endif
         return new UnavailableChatClient();
