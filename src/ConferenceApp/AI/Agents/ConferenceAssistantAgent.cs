@@ -15,6 +15,11 @@ public static class ConferenceAssistantAgent
         var scheduleContext = services.GetRequiredKeyedService<AIContextProvider>("schedule");
         var ragContext = services.GetRequiredKeyedService<AIContextProvider>("rag");
 
+#if WINDOWS
+        loggerFactory.CreateLogger("ConferenceApp.AI.ConferenceAssistantAgent")
+            .LogInformation("[AI Chat] Windows assistant uses context-only answers; function tools are unavailable.");
+#endif
+
         return localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
@@ -30,6 +35,21 @@ public static class ConferenceAssistantAgent
                         The city's full schedule of times, rooms, and titles (plus the
                         user's Saved Favourites) is already in your context, so you can
                         answer schedule, favourite, and time-clash questions immediately.
+                        """ +
+#if WINDOWS
+                        """
+
+                        You cannot call tools on Windows. Use only the supplied context.
+                        If Saved Favourites is "None yet", tell the user they haven't
+                        saved any favourite sessions yet and can tap Save on the Agenda.
+                        You cannot add or remove favourites, navigate, or fetch full
+                        session abstracts or speaker biographies. Never claim to have
+                        performed these actions or invent missing details. Explain the
+                        limitation briefly and direct the user to the Agenda or Speakers
+                        page to view details, save talks, or open a profile manually.
+                        """,
+#else
+                        """
 
                         If Saved Favourites is "None yet", tell the user they haven't
                         saved any favourite sessions yet and can tap ☆ Save on the
@@ -50,13 +70,18 @@ public static class ConferenceAssistantAgent
                         Never announce tool calls in text—either invoke the tool or
                         answer directly.
                         """,
+#endif
                     Temperature = 0,
                     Tools =
+#if WINDOWS
+                        null
+#else
                     [
                         .. ConferenceDataToolContext.Default.Tools,
                         .. FavoritesToolContext.Default.Tools,
                         .. NavigationToolContext.Default.Tools
                     ]
+#endif
                 },
                 AIContextProviders = [userContext, scheduleContext, ragContext]
             },
