@@ -14,7 +14,11 @@ public sealed class SessionSummaryEnrichmentService(
     ILogger<SessionSummaryEnrichmentService> logger)
     : BaseBackgroundService(dbProvider, preferences, logger)
 {
+#if WINDOWS
+    private readonly WindowsSessionSummaryEnricher enricher = new(enricherOptions);
+#else
     private readonly SummaryEnricher enricher = new(enricherOptions, maxWordCount: 24);
+#endif
 
     protected override async Task ExecuteAsync()
     {
