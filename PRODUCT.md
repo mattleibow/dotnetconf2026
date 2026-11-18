@@ -29,7 +29,7 @@ Used live during one-day developer events across three South African cities, as 
 - Agenda search on `main` uses case-insensitive substrings across session titles, abstracts, and speaker names within the selected city; semantic retrieval is stack-only.
 - City switching lives in the toolbar on each top-level tab and refreshes the city-scoped views. Selected city (`selected_city`) and favourite session IDs (`favorites`) are stored locally with `Preferences`.
 - No network is needed for packaged conference content or manual favourites. Map tiles, external maps, and sponsor websites can need connectivity.
-- AI-stack chat requires a supported, available device model; there is no cloud fallback. Windows tool calling is experimental, so manual browsing and favourites remain essential.
+- AI-stack chat requires a supported device model; there is no cloud fallback.
 - Must look great on both a phone in portrait and a wide desktop window (Mac Catalyst).
 
 ## Brand Commitments

@@ -92,11 +92,9 @@ maui devflow logs --follow --no-json
 
 On `main`, search is literal and chat is unavailable. Queries such as `football forecasts` demonstrate semantic retrieval **only on the AI stack**, after indexing.
 
-## On-device AI requirements
+## On-device AI
 
-The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Follow [Part 3](docs/03-giving-the-app-ai.md) for the code walkthrough.
-
-Local chat needs Apple Intelligence on supported iOS / Mac Catalyst 26+ devices, Gemini Nano on supported Android hardware, or a packaged Windows 11 build 26100+ launch on a compatible Copilot+ PC with Windows AI available.
+Local chat needs Apple Intelligence (iOS / Mac Catalyst 26+), Gemini Nano (Android), or a packaged launch on a Windows Copilot+ PC.
 
 ## Conference data
 
