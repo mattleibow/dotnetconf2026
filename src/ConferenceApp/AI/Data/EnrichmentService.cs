@@ -58,11 +58,8 @@ public abstract class EnrichmentService<TItem>(
                 new(ChatRole.User, prompt)
             ];
 
-            var request = chatClient.GetResponseAsync<T>(
-                messages,
-                new ChatOptions { Temperature = 0, MaxOutputTokens = 512 },
-                useJsonSchemaResponseFormat: true,
-                cancellationToken: deadline.Token);
+            var options = new ChatOptions { Temperature = 0, MaxOutputTokens = 512 };
+            var request = chatClient.GetResponseAsync<T>(messages, options, cancellationToken: deadline.Token);
 
             // Native work can ignore cancellation; skip at the deadline so late output never reaches Apply.
             var response = await request.WaitAsync(deadline.Token);
