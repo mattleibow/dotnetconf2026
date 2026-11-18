@@ -11,68 +11,65 @@ public sealed class SessionEnrichmentService(
     UserPreferencesService preferences,
     IChatClient chatClient,
     ILogger<SessionEnrichmentService> logger)
-    : EnrichmentService(dbProvider, preferences, chatClient, logger)
+    : EnrichmentService<Session>(dbProvider, preferences, chatClient, logger)
 {
-    private static readonly string[] AllowedTopics =
-    [
-        "AI", "Agents", "Cloud", "Data", "Mobile", "Web",
-        "IoT", "Architecture", "Security", "DevOps", "Gaming"
-    ];
+    private const string TopicList = "AI, Agents, Cloud, Data, Mobile, Web, IoT, Architecture, Security, DevOps, Gaming";
+
+    private static readonly string[] AllowedTopics = TopicList.Split(", ");
 
     protected override string Instructions =>
-        """
+        $"""
         Using ONLY the supplied session title and abstract, produce SessionInsights:
         - Summary: a useful, concise summary in one or two sentences. Do not invent details.
         - Topics: one to three distinct topics chosen only from
-          AI, Agents, Cloud, Data, Mobile, Web, IoT, Architecture, Security, DevOps, Gaming.
+          {TopicList}.
         If only a title is supplied, use only that title.
         """;
 
-    protected override async Task<int> EnrichAsync()
+    protected override Task<List<Session>> GetItemsAsync() => GetTalkSessionsAsync();
+
+    protected override async Task<bool> EnrichAsync(Session session)
     {
-        var enriched = 0;
-        foreach (var session in await GetTalkSessionsAsync())
+        var insights = await AskAsync<SessionInsights>(session.Title,
+            $"Title: {session.Title}\n\nAbstract: {session.Description}");
+
+        Apply(session, insights);
+
+        if (!IsComplete(session))
         {
-            var (insights, timedOut) = await GetResponseAsync<SessionInsights>(
-                $"Title: {session.Title}\n\nAbstract: {session.Description}");
-            if (timedOut)
-                continue;
+            var fallback = await AskAsync<SessionInsights>(session.Title, $"Title: {session.Title}");
 
-            Apply(session, insights);
-            if (string.IsNullOrWhiteSpace(session.Summary) || session.Topics.Count == 0)
-            {
-                var (fallback, fallbackTimedOut) = await GetResponseAsync<SessionInsights>($"Title: {session.Title}");
-                if (fallbackTimedOut)
-                    continue;
-
-                Apply(session, fallback);
-            }
-
-            if (!string.IsNullOrWhiteSpace(session.Summary) && session.Topics.Count > 0)
-                enriched++;
-            else
-                Logger.LogWarning("[AI] Session {SessionId} has incomplete insights after enrichment.", session.Id);
+            Apply(session, fallback);
         }
 
-        return enriched;
+        return IsComplete(session);
     }
+
+    private static bool IsComplete(Session session) =>
+        !string.IsNullOrWhiteSpace(session.Summary) && session.Topics.Count > 0;
 
     private static void Apply(Session session, SessionInsights? insights)
     {
         if (insights is null)
             return;
 
+        // Fill only empty fields so a retry preserves useful output from the first attempt.
         if (string.IsNullOrWhiteSpace(session.Summary) && !string.IsNullOrWhiteSpace(insights.Summary))
             session.Summary = insights.Summary.Trim();
 
         if (session.Topics.Count == 0)
-            session.Topics = (insights.Topics ?? [])
+        {
+            var topics = (insights.Topics ?? [])
                 .Select(topic => AllowedTopics.FirstOrDefault(allowed =>
                     string.Equals(allowed, topic?.Trim(), StringComparison.OrdinalIgnoreCase)))
                 .OfType<string>()
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .Take(3)
                 .ToArray();
+
+            if (topics.Length > 0)
+                session.Topics = topics;
+        }
     }
 
     public sealed class SessionInsights
@@ -80,7 +77,7 @@ public sealed class SessionEnrichmentService(
         [Description("A useful, concise summary in one or two sentences, using only the supplied session details.")]
         public string Summary { get; set; } = "";
 
-        [Description("One to three distinct topics chosen only from AI, Agents, Cloud, Data, Mobile, Web, IoT, Architecture, Security, DevOps, Gaming.")]
+        [Description("One to three distinct topics chosen only from " + TopicList + ".")]
         public string[] Topics { get; set; } = [];
     }
 }
