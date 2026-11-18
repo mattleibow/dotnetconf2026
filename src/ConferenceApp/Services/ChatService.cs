@@ -10,6 +10,7 @@ namespace ConferenceApp.Services;
 public partial class ChatItem(bool isUser, string text = "") : ObservableObject
 {
     public bool IsUser { get; } = isUser;
+    public bool IsError { get; set; }
     public ObservableCollection<Session> Sessions { get; } = [];
 
     [ObservableProperty]

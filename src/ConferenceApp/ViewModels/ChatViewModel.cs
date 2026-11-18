@@ -63,6 +63,7 @@ public partial class ChatViewModel(
         using var turn = new CancellationTokenSource();
         activeTurn = turn;
         ChatItem? reply = null;
+        List<ChatItem> history = [];
 
         try
         {
@@ -72,7 +73,7 @@ public partial class ChatViewModel(
 
             Prompt = "";
             Messages.Add(new ChatItem(isUser: true, text));
-            var history = Messages.ToList();
+            history = Messages.Where(message => !message.IsError).ToList();
             reply = new ChatItem(isUser: false);
             Messages.Add(reply);
 
@@ -86,6 +87,9 @@ public partial class ChatViewModel(
         {
             if (reply is not null)
             {
+                reply.IsError = true;
+                if (history.Count > 0)
+                    history[^1].IsError = true;
                 reply.Progress = "";
                 reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
             }
