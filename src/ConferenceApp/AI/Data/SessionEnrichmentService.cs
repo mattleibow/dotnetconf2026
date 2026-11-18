@@ -26,7 +26,15 @@ public sealed class SessionEnrichmentService(
         If only a title is supplied, use only that title.
         """;
 
-    protected override Task<List<Session>> GetItemsAsync() => GetTalkSessionsAsync();
+    protected override async Task<List<Session>> GetItemsAsync()
+    {
+        var db = await DbProvider.GetDbAsync();
+        var activeCity = await Preferences.GetSelectedCityAsync();
+
+        return [.. db.Sessions
+            .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
+            .OrderByDescending(s => s.CityId == activeCity.Id)];
+    }
 
     protected override async Task<bool> EnrichAsync(Session session)
     {

@@ -28,16 +28,5 @@ public abstract class BaseBackgroundService(
         }
     }
 
-    protected async Task<List<Session>> GetTalkSessionsAsync()
-    {
-        var db = await DbProvider.GetDbAsync();
-        var activeCity = await Preferences.GetSelectedCityAsync();
-
-        return db.Sessions
-            .Where(s => s.IsTalk && !string.IsNullOrWhiteSpace(s.Description))
-            .OrderByDescending(s => s.CityId == activeCity.Id)
-            .ToList();
-    }
-
     protected abstract Task ExecuteAsync();
 }
