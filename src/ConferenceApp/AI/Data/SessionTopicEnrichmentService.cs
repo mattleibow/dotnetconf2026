@@ -29,11 +29,15 @@ public sealed class SessionTopicEnrichmentService(
         "Gaming"
     ];
 
+#if WINDOWS
+    private readonly WindowsSessionTopicEnricher enricher = new(enricherOptions);
+#else
     private readonly KeywordEnricher enricher = new(
         enricherOptions,
         predefinedKeywords: Topics,
         maxKeywords: 3,
         confidenceThreshold: 0.7);
+#endif
 
     protected override async Task ExecuteAsync()
     {
