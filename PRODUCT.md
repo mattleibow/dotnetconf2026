@@ -12,21 +12,24 @@ Attendees at .NET Conf 2026 South Africa (Durban, Cape Town, Bloemfontein) brows
 
 ## Product Purpose
 
-An offline companion app for .NET Conf 2026 South Africa that lets attendees switch cities, browse sessions and speakers, save favourites, check venue details and sponsors, and ask an on-device AI assistant questions about the schedule.
+An offline companion app for .NET Conf 2026 South Africa that lets attendees switch cities, browse sessions and speakers, save favourites, and check venue details and sponsors. The separate native AI demo stack adds an on-device assistant; `main` includes its UI with an explicit unavailable message, not model-backed answers.
 
 ## Positioning
 
-A real, offline-first .NET MAUI 11 conference app built and enhanced live on stage with coding agents and on-device AI (`Microsoft.Extensions.AI`, `.NET MAUI Essentials AI`, and `Microsoft.Extensions.DataIngestion`).
+A real, offline-first .NET 11 / .NET MAUI 11 conference app built and enhanced live on stage with coding agents. The [native AI stack](README.md#demo-branches) adds `Microsoft.Extensions.AI` typed structured outputs, MAUI Essentials AI, semantic search, and agent workflows. The complete demo guide lives on `main`; the AI implementation does not.
 
 ## Operating Context
 
-Used live during one-day developer events across four South African cities, as well as by workshop attendees running the numbered prompts in this repository.
+Used live during one-day developer events across three South African cities, as well as by workshop attendees running the preparation, exploration, and optional bug-hunt prompts in this repository.
 
 ## Capabilities and Constraints
 
 - Offline conference data packaged in `data/conference/` (`conference.json`, Markdown abstracts, speaker photos, sponsor logos, venue photos).
-- Four primary tabs: **Event** (hero header, sponsors, and venue with embedded map), **Agenda** (with All / Favourites filter), **Speakers**, and **Assistant**.
-- City switching lives in the top-right toolbar on every tab, updating Event, Agenda, Speakers, Favourites, and Assistant context immediately.
+- Four primary tabs: **Agenda** (initial tab, literal search, swipe/inline favourites, and All / Favourites filter), **Event** (hero header, sponsors, and venue with embedded map), **Speakers**, and **Assistant** (unavailable on `main`).
+- Agenda search on `main` uses case-insensitive substrings across session titles, abstracts, and speaker names within the selected city; semantic retrieval is stack-only.
+- City switching lives in the toolbar on each top-level tab and refreshes the city-scoped views. Selected city (`selected_city`) and favourite session IDs (`favorites`) are stored locally with `Preferences`.
+- No network is needed for packaged conference content or manual favourites. Map tiles, external maps, and sponsor websites can need connectivity.
+- AI-stack chat requires a supported, available device model; there is no cloud fallback. Windows tool calling is experimental, so manual browsing and favourites remain essential.
 - Must look great on both a phone in portrait and a wide desktop window (Mac Catalyst).
 
 ## Brand Commitments

@@ -2,81 +2,120 @@
 
 > Use AI to build the app, then give the app that same AI.
 
-This repository is the companion to the .NET Conf 2026 South Africa talk and a hands-on workshop.
+The companion app and speaker guide for .NET Conf 2026 South Africa.
 
-`main` starts as a complete, styled .NET MAUI 11 conference app (`ConferenceApp.slnx`, [`src/ConferenceApp/`](src/ConferenceApp/))—with the Event (hero banner, sponsors, and map), Agenda (literal `Contains` search, All/Favourites filter, and swipeable ticket cards), Speakers, and Assistant pages, plus [`Microsoft.Maui.DevFlow.Agent`](src/ConferenceApp/MauiProgram.cs) wired up for live UI inspection and debugging.
+## What runs on `main`
 
-From `main`, two pull requests cover the two halves of the talk:
+`main` is a complete, styled **.NET 11 / .NET MAUI 11** conference app, not the in-app AI implementation:
 
-- **Demo Bugs for MAUI DevFlow Bug Hunt ([#33](https://github.com/mattleibow/dotnetconf2026/pull/33), Draft):** Optional branch introducing silent bugs so you can demo [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) using DevFlow **Logs**, **Storage**, **UI Diagnostics**, and **Screenshots**.
-- **On-Device AI ([#31](https://github.com/mattleibow/dotnetconf2026/pull/31)):** Adds `src/ConferenceApp/AI/` (`builder.AddConferenceAI()`) with local on-device chat (`AppleIntelligenceChatClient` / `GeminiNanoChatClient` with `OrderedFailoverChatClient`), ONNX MiniLM semantic search (`VectorStoreCollection<string, Session>`), background data enrichment (`SummaryEnricher` + `KeywordEnricher`), source-generated tools (`[AIToolSource]` with `[FromServices]`), and multi-agent workflows (`Microsoft.Agents.AI.Workflows`).
+- **Agenda:** city-scoped, case-insensitive substring search over titles, abstracts, and speaker names; All / Favourites filter; swipeable session cards and inline favourite controls.
+- **Event:** conference details, sponsors, venue photos, and an embedded map.
+- **Speakers:** profiles, biographies, and links to their sessions.
+- **Assistant:** the chat UI and starter suggestions, with a deterministic “On-device AI isn't connected yet” availability message. Inputs are disabled; this is not a working model or a rule-based conference assistant.
+- **Local state:** selected city and favourites in `Preferences`. Conference content for **Durban, Cape Town, and Bloemfontein** ships with the app.
 
-## What's here
+The schedule, biographies, images, search, and favourites work offline. Map tiles, external maps, and sponsor websites can require network access. The layouts support portrait phones and wide desktop windows, with light and dark themes. Debug builds register the MAUI DevFlow agent.
+
+The full demo guide intentionally lives on `main`, including [Part 3's AI walkthrough](docs/03-giving-the-app-ai.md). Its AI source links point to the separate stack, not nonexistent files on `main`.
+
+## Repository map
 
 | Path | Contents |
 |---|---|
-| [`src/ConferenceApp/`](src/ConferenceApp/) | The .NET MAUI 11 conference app: Event (with sponsors and map), Agenda (with literal `Contains` search, swipeable cards, and favourites filter), Speakers, Assistant, and DevFlow |
-| [`src/ConferenceApp/Data/`](src/ConferenceApp/Data/) | Read-only conference database (`ConferenceDbProvider`, `ConferenceDb`, `DatabasePreloadService`, `Session`, `City`, `Speaker`, `Venue`, `Sponsor`) |
-| [`.github/prompts/`](.github/prompts/) | Two live demo prompts (`01-explore-app` and `02-bug-hunt`) |
-| [`docs/`](docs/README.md) | Speaker runbook split into [`01-whats-new-net11-maui11.md`](docs/01-whats-new-net11-maui11.md), [`02-agents-building-apps.md`](docs/02-agents-building-apps.md), and [`03-giving-the-app-ai.md`](docs/03-giving-the-app-ai.md) |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Shared guidance the agent reads automatically: .NET 11 and MAUI 11 notes, architecture, skills, and DevFlow workflow |
-| [`DESIGN.md`](DESIGN.md) & [`PRODUCT.md`](PRODUCT.md) | The Impeccable design system and product brief: brand colours, type tokens, spacing, components, and layouts |
-| [`data/`](data/README.md) | An offline snapshot of the conference: a JSON catalogue, Markdown descriptions, and images |
+| [`ConferenceApp.slnx`](ConferenceApp.slnx), [`src/ConferenceApp/`](src/ConferenceApp/) | MAUI app, XAML views, view models, and platform projects |
+| [`Data/`](src/ConferenceApp/Data/) | `ConferenceDbProvider`, read-only `ConferenceDb`, preload service, and conference models |
+| [`Services/`](src/ConferenceApp/Services/) | Literal search, user preferences, chat availability stub, and background-service base |
+| [`.github/prompts/`](.github/prompts/) | `00-prepare-demo`, `01-explore-app`, and `02-bug-hunt` |
+| [`docs/`](docs/README.md) | .NET 11 notes, DevFlow runbook, and the separate AI-stack walkthrough |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Agent guidance for the whole demo, including stack-only AI conventions |
+| [`DESIGN.md`](DESIGN.md), [`PRODUCT.md`](PRODUCT.md) | Design system and product brief |
+| [`data/`](data/README.md) | Packaged JSON catalogue, Markdown descriptions, and real conference images |
 
-## Pull Requests
+## Demo branches
 
-| Pull Request | Branch | Status | Summary |
-|---|---|---|---|
-| [#31 — Add on-device AI stack](https://github.com/mattleibow/dotnetconf2026/pull/31) | `mattleibow-layer-3-on-device-ai` | Ready | Adds `src/ConferenceApp/AI/`, `models/`, `packages/`, `NuGet.config`, and upgrades `SearchService`, `ChatService`, and `Session` |
-| [#33 — Demo bugs for MAUI DevFlow bug hunt](https://github.com/mattleibow/dotnetconf2026/pull/33) | `mattleibow-demo-bugs-for-devflow-bug-hunt` | Draft | Optional branch introducing silent bugs for [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) |
+The optional [bug-hunt PR #33](https://github.com/mattleibow/dotnetconf2026/pull/33) introduces the four issues in [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md). They are not intentional defects on `main`.
 
-## Before you start
+The native on-device AI stack is ordered **bottom to top**:
 
-- **.NET 11 SDK** with the MAUI workload (`dotnet workload install maui`), and the platform tooling for your target: Xcode for iOS and Mac Catalyst, the Android SDK for Android.
-- **MAUI CLI** from [MAUI Labs](https://github.com/dotnet/maui-labs): `dotnet tool install -g Microsoft.Maui.Cli --prerelease`, then run `maui doctor`.
-- **A coding agent** that reads `.github/copilot-instructions.md`, such as GitHub Copilot, with the `impeccable` design skill and the MAUI Labs skills. With the Copilot CLI:
-
-  ```sh
-  npx skills add google-labs-code/impeccable
-  copilot plugin marketplace add dotnet/maui-labs
-  copilot plugin install dotnet-maui@dotnet-maui-labs
-  copilot plugin install dotnet-maui-tooling@dotnet-maui-labs
-  copilot plugin install dotnet/skills:plugins/dotnet   # optional: C# and MSBuild
-  ```
-- **For on-device AI:** a Mac with Apple Intelligence works best (run the app as Mac Catalyst or iOS Simulator). Android and Windows use the bundled ONNX model for semantic search; local chat there uses Gemini Nano or Windows AI on supported hardware.
-- **Windows:** use the packaged Windows launch profile on Windows 11 24H2 (build 26100) or newer. Local chat requires a compatible Copilot+ PC and its on-device model; semantic search runs on the CPU without it. Windows tool calling is experimental in [AI layer 6 (#41)](https://github.com/mattleibow/dotnetconf2026/pull/41) and can be slow or fail; use the app's pages for reliable navigation and favourites.
-
-## Live Demo Flow
-
-### Part 1: Agents Building Apps (Prompts `01`–`02`)
-
-| # | Prompt | What happens |
+| Layer | Pull request | Adds |
 |---|---|---|
-| 01 | [Explore app](.github/prompts/01-explore-app.prompt.md) | Launches the app with DevFlow, finds the .NET MAUI session on the Agenda, adds it to Favourites (verifying `Preferences` in DevFlow Storage), and opens the speaker's profile |
-| 02 | [Bug hunt](.github/prompts/02-bug-hunt.prompt.md) | Uses DevFlow **Logs** (logged `InvalidOperationException` in `SpeakerViewModel`), **Storage** (`favorite_sessions` vs `favorite-sessions` key mismatch), and **UI Diagnostics / Screenshots** to diagnose and fix silent bugs |
+| 1 | [#34](https://github.com/mattleibow/dotnetconf2026/pull/34) | Platform chat clients and availability checks |
+| 2 | [#35](https://github.com/mattleibow/dotnetconf2026/pull/35) | ONNX embeddings, vector indexing, and semantic search |
+| 2b | [#42](https://github.com/mattleibow/dotnetconf2026/pull/42) | Source-generated tools |
+| 3 | [#39](https://github.com/mattleibow/dotnetconf2026/pull/39) | Typed background session and speaker enrichment |
+| 4 | [#36](https://github.com/mattleibow/dotnetconf2026/pull/36) | Assistant context and agent integration |
+| 5 | [#37](https://github.com/mattleibow/dotnetconf2026/pull/37) | Multi-agent workflows and routing |
+| 6 | [#41](https://github.com/mattleibow/dotnetconf2026/pull/41) | Experimental Windows tool calling |
 
-### Part 2: Giving the App That Same AI (`src/ConferenceApp/AI/`)
+Use the corresponding branch for each walkthrough, or the [top-of-stack source](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling) for the combined demo. Stack files such as `AI/`, `models/`, `packages/`, and `NuGet.config` are **not prerequisites for `main`**.
 
-Watch what the on-device model and tools are doing in real time from a terminal (or in the **Logs** tab of the DevFlow Web Inspector):
+## Check tooling, then build one target
+
+From the repository root, inspect the installed toolchain before changing anything:
 
 ```sh
+dotnet --info
+dotnet --list-sdks
+dotnet workload list
+maui doctor
+```
+
+Use a .NET 11 SDK, compatible MAUI 11 workloads, and the platform tools reported by the workload release notes. Do not assume an installed Xcode or Android SDK matches the selected workload. The MAUI CLI (`maui`) and [MAUI Labs skills](https://github.com/dotnet/maui-labs) support the live agent demo; a coding agent is not needed to build the app. No SDK/workload installation commands are required by this guide.
+
+Build the project for **one target framework at a time**, on a host configured for it. Let the first build restore:
+
+```sh
+# macOS: convenient desktop demo target
+dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-maccatalyst
+
+# Android: use separately, with the Android toolchain configured
+dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-android
+```
+
+For iOS, use `-f net11.0-ios` with a configured Mac/Xcode and the intended device or simulator runtime identifier. The [prepare prompt](.github/prompts/00-prepare-demo.prompt.md) targets the already-booted simulator. Windows has a conditional packaged target:
+
+```powershell
+dotnet build .\src\ConferenceApp\ConferenceApp.csproj -f net11.0-windows10.0.19041.0
+```
+
+If using an already-provisioned isolated SDK on Windows, select it only for the current PowerShell process (replace the placeholder with your SDK directory):
+
+```powershell
+$env:DOTNET_ROOT = 'C:\path\to\isolated\dotnet'
+$env:PATH = "$env:DOTNET_ROOT;$env:PATH"
+dotnet --info
+```
+
+Do not change machine-wide settings or install workloads as part of a demo check. See [Part 1](docs/01-whats-new-net11-maui11.md) for the framework features and [the runbook](docs/README.md) for device preparation.
+
+## Live demo
+
+1. [`00-prepare-demo.prompt.md`](.github/prompts/00-prepare-demo.prompt.md): build/launch the iOS simulator app and open the device and DevFlow Inspector canvases. **Clears saved preferences.**
+2. [`01-explore-app.prompt.md`](.github/prompts/01-explore-app.prompt.md): find the MAUI talk, favourite it, inspect storage, and open the speaker profile.
+3. On the optional bug branch, [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md): diagnose the blank speaker, empty favourites filter, invisible map, and input-border artifacts.
+4. On the native AI stack, follow [Part 3](docs/03-giving-the-app-ai.md) for local chat, semantic search, typed enrichment, tools, and workflows.
+
+```sh
+maui devflow list
 maui devflow logs --follow --no-json
 ```
 
-| Path | Feature |
-|---|---|
-| [`AI/ConferenceAIExtensions.cs`](src/ConferenceApp/AI/ConferenceAIExtensions.cs) | `builder.AddConferenceAI()` calling `AddChatClients()`, `AddEmbeddings()`, `AddDataEnrichment()`, `AddAITools()`, and `AddAgents()` |
-| [`AI/ChatClients/`](src/ConferenceApp/AI/ChatClients/) | `ChatExtensions.cs` (`AppleIntelligenceChatClient`, `GeminiNanoChatClient` with `OrderedFailoverChatClient`, `WindowsAIChatClient` with `.UseLogging()`) |
-| [`AI/Data/`](src/ConferenceApp/AI/Data/) | `DataExtensions.cs` (`EnricherOptions`), `SessionSummaryEnrichmentService.cs` (`SummaryEnricher`), and `SessionTopicEnrichmentService.cs` (`KeywordEnricher`) |
-| [`AI/Embeddings/`](src/ConferenceApp/AI/Embeddings/) & [`Services/SearchService.cs`](src/ConferenceApp/Services/SearchService.cs) | `EmbeddingExtensions.cs` (`AddEmbeddingGenerator`, `AddInMemoryVectorStore`, `AddInMemoryVectorStoreRecordCollection<string, Session>("sessions")`), `MiniLmEmbeddingGenerator.cs`, and `SessionIndexingService.cs` |
-| [`AI/Tools/`](src/ConferenceApp/AI/Tools/) | `ToolExtensions.cs`, `ConferenceDataTools.cs` (`ConferenceDataToolContext`), and `FavoritesTools.cs` (`FavoritesToolContext`) using `[FromServices]` |
-| [`AI/Agents/`](src/ConferenceApp/AI/Agents/) | `AgentExtensions.cs` (`RoutingChatClient.Create` + `SemanticRoutingChatClient`), `ConferenceAssistantAgent.cs`, `SessionDeepDiveWorkflow.cs`, `TalkRecommendationWorkflow.cs`, and `UserContextProvider.cs`, `ScheduleContextProvider.cs`, `AvailableSessionsContextProvider.cs`, `RagContextProvider.cs` |
+On `main`, search is literal and chat is unavailable. Queries such as `football forecasts` demonstrate semantic retrieval **only on the AI stack**, after indexing.
 
-## Refreshing the data and model
+## AI-stack requirements and Windows caveats
 
-Both are already included. To refresh them (with the .NET 11 SDK, from the repository root):
+The stack uses `Microsoft.Extensions.AI`, MAUI Essentials AI, bundled ONNX embeddings, and Agent Framework workflows. Typed session and speaker enrichment replaces the older ingestion-enricher approach. [Part 3](docs/03-giving-the-app-ai.md) documents the two independent enrichment roles and current revision caveats.
+
+Local chat needs a supported, available device model: Apple Intelligence on supported iOS / Mac Catalyst 26+ devices, Gemini Nano on supported Android hardware, or Windows AI on a compatible Copilot+ PC. An emulator capable of running ONNX search does not necessarily support chat. No cloud fallback or automatic model download is configured.
+
+**Windows layer 6:** use the packaged launch profile on Windows 11 build 26100+, with MSIX identity, `systemAIModels`, a compatible Windows App SDK runtime, and any required Phi Silica access approval. The [experimental package provenance and reproduction guide](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/packages/README.md) records the source commit, license, and checksum. Tool calling is unreliable and can be slow; manual navigation and favourites remain the reliable route. An unavailable model shows the availability message instead of invoking the agent. `-p:WindowsPackageType=None` is only for checking the stack's unpackaged unavailable path.
+
+## Conference data
+
+The snapshot is already included; building and browsing do not scrape the website or download models. To deliberately refresh the conference snapshot, see [`data/README.md`](data/README.md) and run the importer from the repository root:
 
 ```sh
 dotnet run data/ImportConference.cs
-dotnet run models/DownloadModels.cs
 ```
+
+The AI stack separately contains `models/DownloadModels.cs`; it is not present or needed on `main`.
