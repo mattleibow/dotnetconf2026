@@ -11,6 +11,9 @@ public static class ConferenceAIExtensions
         // Register semantic search embeddings, in-memory vector store, and session indexing.
         builder.AddEmbeddings();
 
+        // Register source-generated AI tool contexts for conference data and favourites.
+        builder.AddAITools();
+
         return builder;
     }
 }
