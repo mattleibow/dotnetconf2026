@@ -90,6 +90,7 @@
 		<PackageReference Include="Microsoft.Extensions.AI" />
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" />
 		<PackageReference Include="Microsoft.ML.Tokenizers" />
+		<PackageReference Include="Microsoft.Maui.Essentials.AI" />
 	</ItemGroup>
 
 	<Target Name="RequireEmbeddingModel" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">

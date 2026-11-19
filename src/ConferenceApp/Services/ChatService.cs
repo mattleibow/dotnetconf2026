@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using ConferenceApp.AI;
 using ConferenceApp.Data;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
@@ -25,8 +28,11 @@ public partial class ChatItem(bool isUser, string text = "", string? author = nu
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
+    IChatClient chatClient,
     ILogger<ChatService> logger)
 {
+    private readonly List<ChatMessage> history = [];
+
     public ObservableCollection<ChatItem> Messages { get; } = [];
     public ObservableCollection<Session> Sessions { get; } = [];
 
@@ -42,10 +48,20 @@ public class ChatService(
     {
         Messages.Clear();
         Sessions.Clear();
+        history.Clear();
     }
 
-    public Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult<string?>("On-device AI isn't connected yet. In Part 2 we'll wire up local embeddings, data enrichment, tools, and multi-agent workflows.");
+    public async Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
+        await ChatExtensions.GetModelAvailabilityAsync(cancellationToken, logger) switch
+        {
+            ChatModelAvailability.Available => null,
+            ChatModelAvailability.RequirementsNotMet =>
+                "This device doesn't currently meet the requirements for on-device chat. You can still browse the agenda and favourites. No cloud service is used.",
+            ChatModelAvailability.Disabled => "On-device AI is turned off. Enable it in your device settings to chat locally. No cloud service is used.",
+            ChatModelAvailability.NotReady or ChatModelAvailability.Downloading =>
+                "The on-device model isn't ready yet. Try again when it's ready.",
+            _ => "On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."
+        };
 
     public async Task SendAsync(string text, CancellationToken cancellationToken = default)
     {
@@ -65,11 +81,58 @@ public class ChatService(
             return;
         }
 
+        var db = await dbProvider.GetDbAsync();
+        var city = await preferences.GetSelectedCityAsync();
+        var favorites = db.Sessions
+            .Where(s => s.CityId == city.Id && preferences.IsFavorite(s.Id))
+            .Select(s => $"{s.Time} {s.Title}")
+            .ToArray();
+        var schedule = db.Sessions
+            .Where(s => s.CityId == city.Id)
+            .Select(s => $"- {s.Time} | {s.Title} ({s.SpeakerNames})");
+
+        // Build conversation history with a basic inline system prompt for city, favourites, and schedule.
+        List<ChatMessage> turnHistory =
+        [
+            new(ChatRole.System, $"""
+                You are the .NET Conf South Africa assistant.
+                Answer briefly using the schedule below.
+                Current City: {city.Name} | Event Date: {city.Date:dddd, yyyy-MM-dd} | Current Time: 08:30
+                Saved Favourites: {(favorites.Length > 0 ? string.Join("; ", favorites) : "None yet")}
+
+                Schedule:
+                {string.Join('\n', schedule)}
+                """),
+            .. history,
+            new(ChatRole.User, text)
+        ];
+
+        var options = new ChatOptions
+        {
+            Temperature = 0
+        };
+
         var itemsByAuthor = new Dictionary<string, ChatItem>();
         var lastItem = reply;
+        var updates = new List<ChatResponseUpdate>();
 
         try
         {
+            await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, options, cancellationToken))
+            {
+                updates.Add(update);
+
+                if (update.Role is null || update.Role == ChatRole.Assistant)
+                    lastItem = AppendText(reply, itemsByAuthor, update.Text, update.AuthorName);
+            }
+
+            history.Add(new(ChatRole.User, text));
+            history.AddRange(updates
+                .ToChatResponse()
+                .Messages
+                .Where(m => !string.IsNullOrWhiteSpace(m.Text) ||
+                            m.Contents.Any(c => c is FunctionCallContent or FunctionResultContent)));
+
             await UpdateReferencedSessionsAsync(lastItem.Text);
 
             logger.LogInformation("[AI Chat] Completed reply ({Length} chars, {Cards} session cards).",
