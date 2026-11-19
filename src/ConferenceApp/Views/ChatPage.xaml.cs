@@ -35,3 +35,12 @@ public partial class ChatPage : BasePage
             ToolbarItems.Remove(newChatToolbarItem);
     }
 }
+
+public class ChatItemTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate? MessageTemplate { get; set; }
+    public DataTemplate? ToolTemplate { get; set; }
+
+    protected override DataTemplate? OnSelectTemplate(object item, BindableObject container) =>
+        item is ChatItem { IsTool: true } ? ToolTemplate : MessageTemplate;
+}

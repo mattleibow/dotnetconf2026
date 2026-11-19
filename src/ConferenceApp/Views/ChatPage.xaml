@@ -64,72 +64,97 @@
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="ChatItem">
-                    <VerticalStackLayout Padding="0,6" Spacing="8">
-                        <Border StrokeShape="RoundRectangle 18"
-                                Stroke="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}"
-                                StrokeThickness="1"
-                                Background="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}"
-                                Padding="16,12"
-                                Shadow="{StaticResource CardElevationShadow}"
-                                MaximumWidthRequest="680"
-                                HorizontalOptions="{IsUser ? LayoutOptions.End : LayoutOptions.Start}">
-                            <Border.Triggers>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsUser}" Value="True">
-                                    <Setter Property="Background" Value="{StaticResource HeroGradientBrush}" />
-                                    <Setter Property="StrokeThickness" Value="0" />
-                                </DataTrigger>
-                            </Border.Triggers>
-                            <VerticalStackLayout Spacing="6">
+                <ChatItemTemplateSelector>
+                    <ChatItemTemplateSelector.ToolTemplate>
+                        <DataTemplate x:DataType="ChatItem">
+                            <Grid Padding="0,4">
                                 <Border Style="{StaticResource TopicPillBorder}"
-                                        HorizontalOptions="Start"
-                                        IsVisible="{!string.IsNullOrWhiteSpace(Progress)}">
-                                    <Label AutomationId="chat-progress"
-                                           Text="{Binding Progress}"
-                                           Style="{StaticResource TopicPillLabel}"
-                                           FontAttributes="Italic" />
+                                        Padding="12,6"
+                                        HorizontalOptions="Start">
+                                    <Label AutomationId="{$'chat-tool-{Text}'}"
+                                           Text="{$'⚙ {Text}'}"
+                                           Style="{StaticResource TopicPillLabel}" />
                                 </Border>
-                                <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}"
-                                       Style="{StaticResource Body}">
-                                    <Label.Triggers>
-                                        <DataTrigger TargetType="Label" Binding="{Binding IsUser}" Value="True">
-                                            <Setter Property="TextColor" Value="{StaticResource White}" />
-                                        </DataTrigger>
-                                    </Label.Triggers>
-                                </Label>
-                            </VerticalStackLayout>
-                        </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ChatItemTemplateSelector.ToolTemplate>
 
-                        <!-- Referenced Session Cards -->
-                        <VerticalStackLayout Spacing="8"
-                                             MaximumWidthRequest="680"
-                                             HorizontalOptions="Start"
-                                             BindableLayout.ItemsSource="{Binding Sessions}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="Session">
-                                    <Border Style="{StaticResource CompactCardBorder}"
-                                            AutomationId="{$'chat-session-card-{Id}'}">
-                                        <VerticalStackLayout Spacing="4" Background="Transparent">
-                                            <Label Text="{Binding CityMeta}"
-                                                   Style="{StaticResource Label}" />
-                                            <Label Text="{Binding Title}"
-                                                   Style="{StaticResource Subtitle}"
-                                                   FontSize="15" />
-                                            <Label Text="{Binding SpeakerNames}"
-                                                   Style="{StaticResource Caption}"
-                                                   IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
-                                        </VerticalStackLayout>
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </Border.GestureRecognizers>
-                                    </Border>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-                    </VerticalStackLayout>
-                </DataTemplate>
+                    <ChatItemTemplateSelector.MessageTemplate>
+                        <DataTemplate x:DataType="ChatItem">
+                            <Grid Padding="0,6">
+                                <Border StrokeShape="RoundRectangle 18"
+                                        Stroke="{AppThemeBinding Light={StaticResource DividerLight}, Dark={StaticResource DividerDark}}"
+                                        StrokeThickness="1"
+                                        Background="{AppThemeBinding Light={StaticResource SurfaceLightBrush}, Dark={StaticResource SurfaceDarkBrush}}"
+                                        Padding="16,12"
+                                        Shadow="{StaticResource CardElevationShadow}"
+                                        MaximumWidthRequest="680"
+                                        HorizontalOptions="{IsUser ? LayoutOptions.End : LayoutOptions.Start}">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border" Binding="{Binding IsUser}" Value="True">
+                                            <Setter Property="Background" Value="{StaticResource HeroGradientBrush}" />
+                                            <Setter Property="StrokeThickness" Value="0" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <VerticalStackLayout Spacing="6">
+                                        <Label AutomationId="chat-author"
+                                               Text="{Binding Author}"
+                                               Style="{StaticResource SectionHeader}"
+                                               IsVisible="{!string.IsNullOrWhiteSpace(Author)}" />
+                                        <Border Style="{StaticResource TopicPillBorder}"
+                                                HorizontalOptions="Start"
+                                                IsVisible="{!string.IsNullOrWhiteSpace(Progress)}">
+                                            <Label AutomationId="chat-progress"
+                                                   Text="{Binding Progress}"
+                                                   Style="{StaticResource TopicPillLabel}"
+                                                   FontAttributes="Italic" />
+                                        </Border>
+                                        <Label FormattedText="{Binding Text, Converter={StaticResource MarkdownConverter}}"
+                                               Style="{StaticResource Body}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsUser}" Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource White}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </VerticalStackLayout>
+                                </Border>
+                            </Grid>
+                        </DataTemplate>
+                    </ChatItemTemplateSelector.MessageTemplate>
+                </ChatItemTemplateSelector>
             </CollectionView.ItemTemplate>
+
+            <CollectionView.Footer>
+                <VerticalStackLayout Padding="0,6"
+                                     Spacing="8"
+                                     MaximumWidthRequest="680"
+                                     HorizontalOptions="Start"
+                                     IsVisible="{Sessions.Count > 0}"
+                                     BindableLayout.ItemsSource="{Binding Sessions}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="Session">
+                            <Border Style="{StaticResource CompactCardBorder}"
+                                    AutomationId="{$'chat-session-card-{Id}'}">
+                                <VerticalStackLayout Spacing="4" Background="Transparent">
+                                    <Label Text="{Binding CityMeta}"
+                                           Style="{StaticResource Label}" />
+                                    <Label Text="{Binding Title}"
+                                           Style="{StaticResource Subtitle}"
+                                           FontSize="15" />
+                                    <Label Text="{Binding SpeakerNames}"
+                                           Style="{StaticResource Caption}"
+                                           IsVisible="{!string.IsNullOrWhiteSpace(SpeakerNames)}" />
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding OpenSessionCommand, Source={RelativeSource AncestorType={x:Type ChatViewModel}}, x:DataType=ChatViewModel}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </CollectionView.Footer>
         </CollectionView>
 
         <!-- Bottom Input Bar -->

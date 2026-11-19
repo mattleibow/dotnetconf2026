@@ -18,6 +18,7 @@ public partial class ChatViewModel(
     private CancellationTokenSource? activeTurn;
 
     public ObservableCollection<ChatItem> Messages => chat.Messages;
+    public ObservableCollection<Session> Sessions => chat.Sessions;
     public IReadOnlyList<string> Suggestions => chat.Suggestions;
 
     [ObservableProperty]
@@ -43,7 +44,7 @@ public partial class ChatViewModel(
     private void ClearChat()
     {
         activeTurn?.Cancel();
-        Messages.Clear();
+        chat.Clear();
         Prompt = "";
         IsBusy = false;
     }
@@ -62,8 +63,6 @@ public partial class ChatViewModel(
         IsBusy = true;
         using var turn = new CancellationTokenSource();
         activeTurn = turn;
-        ChatItem? reply = null;
-        List<ChatItem> history = [];
 
         try
         {
@@ -72,32 +71,13 @@ public partial class ChatViewModel(
                 return;
 
             Prompt = "";
-            Messages.Add(new ChatItem(isUser: true, text));
-            history = Messages.Where(message => !message.IsError).ToList();
-            reply = new ChatItem(isUser: false);
-            Messages.Add(reply);
-
-            await foreach (var chunk in chat.SendAsync(history, reply, turn.Token))
-                reply.Text += chunk;
+            await chat.SendAsync(text, turn.Token);
         }
         catch (OperationCanceledException) when (turn.IsCancellationRequested)
         {
         }
-        catch (Exception ex)
-        {
-            if (reply is not null)
-            {
-                reply.IsError = true;
-                if (history.Count > 0)
-                    history[^1].IsError = true;
-                reply.Progress = "";
-                reply.Text = string.IsNullOrWhiteSpace(reply.Text) ? ex.Message : $"{reply.Text}\n\n{ex.Message}";
-            }
-        }
         finally
         {
-            if (reply is not null)
-                reply.Progress = "";
             if (ReferenceEquals(activeTurn, turn))
             {
                 activeTurn = null;
