@@ -1,0 +1,113 @@
+using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Logging;
+using Microsoft.Maui.Essentials.AI;
+
+namespace ConferenceApp.AI;
+
+// Registers the platform's local on-device IChatClient and model availability checks.
+public static class ChatExtensions
+{
+#if ANDROID
+    private static readonly string[] AndroidCandidateModels =
+    [
+        "gemini-nano-preview-fast",
+        "gemini-nano-preview-full",
+        "gemini-nano-full",
+        "gemini-nano-fast"
+    ];
+#endif
+
+    public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
+    {
+        // Register a transient local IChatClient so concurrent agents don't contend on one session.
+        builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
+        return builder;
+    }
+
+    private static IChatClient CreateLocalChatClient(IServiceProvider services)
+    {
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+#if IOS || MACCATALYST
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+        {
+            return new AppleIntelligenceChatClient(loggerFactory: loggerFactory)
+                .AsBuilder()
+                .UseLogging(loggerFactory)
+                .Build();
+        }
+#elif ANDROID
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            return new OrderedFailoverChatClient(
+                [
+                    .. AndroidCandidateModels.Select(modelId =>
+                        new GeminiNanoChatClient()
+                            .AsBuilder()
+                            .ConfigureOptions(options =>
+                            {
+                                options.ModelId = modelId;
+                                options.MaxOutputTokens ??= 1024;
+                            })
+                            .Build())
+                ])
+                .AsBuilder()
+                .UseLogging(loggerFactory)
+                .Build(services);
+        }
+#elif WINDOWS
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+        {
+            return new WindowsAIChatClient()
+                .AsBuilder()
+                .UseLogging(loggerFactory)
+                .Build();
+        }
+#endif
+        return new UnavailableChatClient();
+    }
+
+    public static async Task<ChatModelAvailability> GetModelAvailabilityAsync(
+        CancellationToken cancellationToken = default,
+        ILogger? logger = null)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+#if IOS || MACCATALYST
+        if (OperatingSystem.IsIOSVersionAtLeast(26) || OperatingSystem.IsMacCatalystVersionAtLeast(26))
+            return (await AppleIntelligenceChatClient.GetModelStatusAsync(cancellationToken)).Availability;
+#elif ANDROID
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            ChatModelAvailability fallback = ChatModelAvailability.NotSupported;
+            foreach (var modelId in AndroidCandidateModels)
+            {
+                try
+                {
+                    var status = await GeminiNanoChatClient.GetModelStatusAsync(modelId, cancellationToken);
+                    if (status.Availability == ChatModelAvailability.Available)
+                        return ChatModelAvailability.Available;
+
+                    if (fallback == ChatModelAvailability.NotSupported && status.Availability != ChatModelAvailability.Unavailable)
+                        fallback = status.Availability;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger?.LogWarning(ex, "[AI Chat] Could not query Android model {ModelId}; trying the next profile.", modelId);
+                }
+            }
+
+            return fallback;
+        }
+#elif WINDOWS
+        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 26100))
+        {
+            var status = await WindowsAIChatClient.GetModelStatusAsync(cancellationToken);
+            logger?.LogInformation("[AI Chat] Windows model availability: {Availability}; capabilities: {Capabilities}.",
+                status.Availability, string.Join(", ", status.Capabilities ?? []));
+            return status.Availability;
+        }
+#endif
+
+        await Task.CompletedTask;
+        return ChatModelAvailability.NotSupported;
+    }
+}
