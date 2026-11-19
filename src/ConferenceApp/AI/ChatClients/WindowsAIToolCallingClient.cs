@@ -100,7 +100,7 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 
 	private const int DeterministicTopK = 1;
 
-	private static readonly TimeSpan ToolPhaseTimeout = TimeSpan.FromSeconds(30);
+	private static readonly TimeSpan ToolPhaseTimeout = TimeSpan.FromMinutes(2);
 
 	public WindowsAIToolCallingClient(IChatClient inner) : base(inner) { }
 
@@ -264,6 +264,9 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 					$"What value should I use for the required {string.Join(", ", missing)} parameter?";
 				return new([new TextContent(clarification)], clarification, modelId);
 			}
+			// In auto mode an unusable selection just means answering without tools.
+			if (!requiresFirstTool)
+				return null;
 			throw new InvalidOperationException(
 				string.Join(" ", deferred.Concat(suppressed).Select(tool => tool.Reason)));
 		}
@@ -1034,39 +1037,10 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		CancellationToken cancellationToken,
 		string? clarification = null)
 	{
-		var response = await WithDeadlineAsync(
-			token => base.GetResponseAsync(AnswerHistory(messages, clarification), WithoutTools(options), token),
-			"final answer", cancellationToken);
+		var response = await base.GetResponseAsync(
+			AnswerHistory(messages, clarification), WithoutTools(options), cancellationToken);
 		response.ModelId ??= ResponseModelId(response);
 		return response;
-	}
-
-	// The native call may ignore cancellation, so the deadline is enforced with WaitAsync and the
-	// abandoned task is observed rather than awaited.
-	private static async Task<T> WithDeadlineAsync<T>(
-		Func<CancellationToken, Task<T>> call, string phase, CancellationToken cancellationToken)
-	{
-		cancellationToken.ThrowIfCancellationRequested();
-		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-		timeout.CancelAfter(ToolPhaseTimeout);
-		var task = call(timeout.Token);
-		try
-		{
-			var result = await task.WaitAsync(ToolPhaseTimeout, cancellationToken);
-			cancellationToken.ThrowIfCancellationRequested();
-			return result;
-		}
-		catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
-		{
-			timeout.Cancel();
-			_ = task.ContinueWith(t => _ = t.Exception, CancellationToken.None,
-				TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-				TaskScheduler.Default);
-			if (cancellationToken.IsCancellationRequested)
-				throw;
-			throw new TimeoutException(
-				$"Windows AI {phase} did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
-		}
 	}
 
 	private async IAsyncEnumerable<ChatResponseUpdate> StreamAnswerAsync(
@@ -1075,55 +1049,12 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		[EnumeratorCancellation] CancellationToken cancellationToken,
 		string? clarification = null)
 	{
-		cancellationToken.ThrowIfCancellationRequested();
-		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-		timeout.CancelAfter(ToolPhaseTimeout);
-		var deadline = DateTime.UtcNow + ToolPhaseTimeout;
-		var enumerator = base.GetStreamingResponseAsync(
-			AnswerHistory(messages, clarification), WithoutTools(options), timeout.Token)
-			.GetAsyncEnumerator(timeout.Token);
-		var abandoned = false;
-		try
+		await foreach (var update in base.GetStreamingResponseAsync(
+			AnswerHistory(messages, clarification), WithoutTools(options), cancellationToken)
+			.WithCancellation(cancellationToken))
 		{
-			while (true)
-			{
-				var next = enumerator.MoveNextAsync().AsTask();
-				bool hasNext;
-				try
-				{
-					var remaining = deadline - DateTime.UtcNow;
-					hasNext = await next.WaitAsync(remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero, cancellationToken);
-				}
-				catch (Exception ex) when (ex is TimeoutException or OperationCanceledException)
-				{
-					timeout.Cancel();
-					if (!next.IsCompleted)
-					{
-						abandoned = true;
-						_ = next.ContinueWith(t => _ = t.Exception, CancellationToken.None,
-							TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-							TaskScheduler.Default);
-					}
-					if (cancellationToken.IsCancellationRequested)
-						throw;
-					throw new TimeoutException(
-						$"Windows AI final-answer streaming did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
-				}
-
-				if (!hasNext)
-					yield break;
-
-				cancellationToken.ThrowIfCancellationRequested();
-				var update = enumerator.Current;
-				update.ModelId ??= InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
-				yield return update;
-			}
-		}
-		finally
-		{
-			// Disposing while MoveNextAsync is still pending is not allowed.
-			if (!abandoned)
-				await enumerator.DisposeAsync();
+			update.ModelId ??= InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
+			yield return update;
 		}
 	}
 
@@ -1253,9 +1184,19 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		if (!string.IsNullOrWhiteSpace(options?.Instructions))
 			request[0] = new ChatMessage(ChatRole.System, $"{instructions}\n\nCaller instructions:\n{options.Instructions}");
 
-		return await WithDeadlineAsync(
-			token => base.GetResponseAsync(request, requestOptions, token),
-			$"{schemaName} generation", cancellationToken);
+		// Stops a runaway constrained generation. The budget includes time queued behind other
+		// requests because the native model runs one generation at a time.
+		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+		timeout.CancelAfter(ToolPhaseTimeout);
+		try
+		{
+			return await base.GetResponseAsync(request, requestOptions, timeout.Token);
+		}
+		catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+		{
+			throw new TimeoutException(
+				$"Windows AI {schemaName} generation did not complete within {ToolPhaseTimeout.TotalMinutes:0} minutes.", ex);
+		}
 	}
 
 	private string? ResponseModelId(ChatResponse response) =>
