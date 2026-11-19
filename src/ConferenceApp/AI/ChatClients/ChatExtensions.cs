@@ -84,6 +84,13 @@ public static class ChatExtensions
         return new UnavailableChatClient();
     }
 
+#if WINDOWS
+    // Adds the copied MAUI Labs tool-calling adapter between function invocation and the native client.
+    public static ChatClientBuilder UseWindowsAIToolCalling(this ChatClientBuilder builder, ILoggerFactory? loggerFactory = null) =>
+        builder.Use((inner, services) => new WindowsAIToolCallingClient(inner,
+            (loggerFactory ?? services.GetRequiredService<ILoggerFactory>()).CreateLogger<WindowsAIToolCallingClient>()));
+#endif
+
     public static async Task<ChatModelAvailability> GetModelAvailabilityAsync(
         CancellationToken cancellationToken = default,
         ILogger? logger = null)
