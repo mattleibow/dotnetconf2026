@@ -12,6 +12,19 @@ Sources: [What's new in .NET 11](https://learn.microsoft.com/dotnet/core/whats-n
 
 `.slnx`, central package management, file-based apps, primary constructors, and observable partial properties are useful modern .NET features, not all inventions of .NET 11. C# 15 is the default language version for .NET 11 targets.
 
+### .NET 11 mobile CLI
+
+From `src/ConferenceApp`, let the SDK choose the runtime for the selected simulator and handle build/install/launch:
+
+```sh
+dotnet run --framework net11.0-ios --list-devices
+dotnet run --framework net11.0-ios --device <booted-simulator-UDID> --no-launch-profile
+```
+
+Device discovery and `--device` support are new in .NET 11. Explicit framework/device selection avoids interactive pickers during an agent demo. Run from the project directory to keep artifact-relative launch paths correct; the launch-profile flag bypasses this repo's Windows-only profile. Keep the process alive and use DevFlow readiness rather than waiting for `dotnet run` to exit. See [Apple build targets](https://learn.microsoft.com/dotnet/ios/building-apps/build-targets).
+
+`dotnet watch` also supports mobile device selection and can host .NET 11 XAML Incremental Hot Reload. Plain `dotnet run` is not a watcher. For iOS, check the [current `dotnet watch` requirements](https://learn.microsoft.com/dotnet/maui/whats-new/dotnet-11#dotnet-watch-for-ios), including the documented `MtouchLink=None` requirement, before choosing that workflow. The preparation prompts use `dotnet run`; they do not change linker/runtime settings merely to enable watching.
+
 ## 2. CoreCLR, XAML source generation, and real offline assets
 
 [`ConferenceApp.csproj`](../src/ConferenceApp/ConferenceApp.csproj) targets .NET 11. CoreCLR is the default MAUI runtime; leave runtime defaults alone rather than copying old Mono/interpreter workarounds. On Apple mobile platforms, CoreCLR uses precompiled code and an interpreter where JIT is unavailable—“CoreCLR” does not mean desktop-style JIT everywhere.

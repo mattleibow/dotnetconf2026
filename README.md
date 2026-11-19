@@ -31,7 +31,7 @@ The schedule, biographies, images, search, and favourites work offline. Map tile
 
 ## Demo branches
 
-The optional [bug-hunt PR #33](https://github.com/mattleibow/dotnetconf2026/pull/33) introduces the four issues in [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md). They are not intentional defects on `main`.
+The optional [bug-hunt PR #33](https://github.com/mattleibow/dotnetconf2026/pull/33) uses **`mattleibow-demo-bugs-for-devflow-bug-hunt`**. Prepare that branch in an isolated worktree/session and ensure it is rebased onto the latest fetched `main` before the demo. Its seed adds the speaker, favourites, and map regressions; the input-border artifact is also present on `main`. Run [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) on that baseline, not on `main`; see [the bug-hunt preflight](docs/02-agents-building-apps.md#step-02-optional-bug-hunt).
 
 The native on-device AI stack is ordered **bottom to top**:
 
@@ -47,7 +47,7 @@ The native on-device AI stack is ordered **bottom to top**:
 
 Use the corresponding branch for each walkthrough, or the [top-of-stack source](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling) for the combined demo.
 
-## Check tooling, then build one target
+## Check tooling, then run one target
 
 From the repository root, inspect the installed toolchain before changing anything:
 
@@ -60,17 +60,25 @@ maui doctor
 
 Use a .NET 11 SDK, compatible MAUI 11 workloads, and the platform tools reported by the workload release notes. The MAUI CLI (`maui`) and [MAUI Labs skills](https://github.com/dotnet/maui-labs) support the live agent demo.
 
-Build the project for **one target framework at a time**, on a host configured for it. Let the first build restore:
+For the iOS demo, reuse the booted simulator (`xcrun simctl list devices booted`). **.NET 11 `dotnet run` handles device selection, building, installation, and launch**:
 
 ```sh
-# macOS: convenient desktop demo target
-dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-maccatalyst
+cd src/ConferenceApp
+dotnet run --framework net11.0-ios --list-devices
+dotnet run --framework net11.0-ios --device <booted-simulator-UDID> --no-launch-profile
+```
 
-# Android: use separately, with the Android toolchain configured
+Run from the project directory so project-relative launch paths resolve correctly with this repo's `UseArtifactsOutput`. `--no-launch-profile` bypasses the Windows-only profile. Let the first run restore, keep its process alive, and wait for the app with `maui devflow wait --wait-platform iOS`. Do not hardcode a `.app` path or manually install/launch with `simctl` for the normal .NET 11 workflow. See [Apple build targets](https://learn.microsoft.com/dotnet/ios/building-apps/build-targets) for device selection.
+
+Build **one target framework at a time** when build-only validation is wanted. These are separate alternatives from the repository root, not extra steps in the iOS demo:
+
+```sh
+# macOS desktop, or Android on a configured host
+dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-maccatalyst
 dotnet build src/ConferenceApp/ConferenceApp.csproj -f net11.0-android
 ```
 
-For iOS, use `-f net11.0-ios` with a configured Mac/Xcode and the intended device or simulator runtime identifier. The [prepare prompt](.github/prompts/00-prepare-demo.prompt.md) targets the already-booted simulator. Windows has a conditional packaged target:
+Windows has a conditional packaged target:
 
 ```powershell
 dotnet build .\src\ConferenceApp\ConferenceApp.csproj -f net11.0-windows10.0.19041.0
@@ -80,9 +88,9 @@ See [Part 1](docs/01-whats-new-net11-maui11.md) for framework features and [the 
 
 ## Live demo
 
-1. [`00-prepare-demo.prompt.md`](.github/prompts/00-prepare-demo.prompt.md): build/launch the iOS simulator app and open the device and DevFlow Inspector canvases. **Clears saved preferences.**
+1. [`00-prepare-demo.prompt.md`](.github/prompts/00-prepare-demo.prompt.md): use .NET 11 `dotnet run` on the booted iOS simulator and open the available device/Inspector canvases. **Clears saved preferences and resets live Agenda search/filter state.**
 2. [`01-explore-app.prompt.md`](.github/prompts/01-explore-app.prompt.md): find the MAUI talk, favourite it, inspect storage, and open the speaker profile.
-3. On the optional bug branch, [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md): diagnose the blank speaker, empty favourites filter, invisible map, and input-border artifacts.
+3. On `mattleibow-demo-bugs-for-devflow-bug-hunt`, [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md): diagnose, fix, and verify the blank speaker, empty favourites filter, invisible map, and input-border artifacts.
 4. On the native AI stack, follow [Part 3](docs/03-giving-the-app-ai.md) for local chat, semantic search, typed enrichment, tools, and workflows.
 
 ```sh

@@ -1,12 +1,10 @@
 ---
-description: Pre-build, launch on the booted iOS simulator, and open the Mobile Device and DevFlow Inspector canvases before a live demo
+description: Launch the app on the booted iOS simulator and prepare MAUI DevFlow for a live demo
 ---
 
-Prepare this workspace for a live **MAUI DevFlow** demo on the booted iOS simulator:
+Prepare this workspace for a live **MAUI DevFlow** demo on the booted iOS simulator. Load the `maui-devflow-debug` skill.
 
-1. Load the `maui-devflow-debug` skill.
-2. Open the **Mobile Device** canvas (`open_canvas` with `canvasId: "mobile-device"`) and select the booted iOS simulator (`select_device`) so it is visible in the side panel.
-3. Build `src/ConferenceApp/ConferenceApp.csproj` for `net11.0-ios` (`-t:Build` targeting the booted simulator UDID), install and launch the `.app` on the booted simulator with `xcrun simctl`, and wait for the agent with `maui devflow wait --wait-platform iOS`.
-4. Clear any saved preferences with `maui devflow storage preferences clear` so the app starts in a clean state on the **Agenda** tab.
-5. Open the **MAUI DevFlow Web Inspector** (`http://localhost:19223/inspector/<agent-id>/` from `maui devflow list`) in a **Browser** canvas (`open_canvas` with `canvasId: "browser"`, `title: "DevFlow Inspector"`), and release its writer lease from inside the page via `evaluate_javascript` (`window.dispatchEvent(new Event('pagehide'));`) so `maui devflow` CLI commands can drive the app without a lease conflict.
-6. Leave the simulator and app running and ready for the live demo. Do not modify or commit any files, and do not build other platforms.
+1. Run the app for `net11.0-ios` on the booted simulator and wait for its DevFlow agent.
+2. Show the simulator in the **Mobile Device** canvas and the agent's **DevFlow Inspector** in a **Browser** canvas, then release the Inspector's writer lease.
+3. Reset the app to a clean state: clear saved preferences, then return to **Agenda** with an empty search and **Showing: All Sessions**. Confirm no favourites are stored.
+4. Leave the simulator, app, and launch process running for the presenter. Don't modify or commit files, and don't build other platforms.
