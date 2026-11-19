@@ -24,10 +24,13 @@
 #if WINDOWS
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 
 namespace ConferenceApp.AI;
@@ -58,15 +61,13 @@ namespace ConferenceApp.AI;
 /// establish general reliability.
 /// </para>
 /// <para>
-/// If a native response phase is interrupted, the instance rejects subsequent requests because
-/// the native operation might still be active. Create a new client after the platform has recovered.
+/// Requests without tools pass through unchanged.
 /// </para>
 /// <para>Usage: <c>new WindowsAIToolCallingClient(new WindowsAIChatClient())</c></para>
 /// </remarks>
 [Experimental("MAUIAI0001")]
 internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 {
-	private Exception? terminalToolFailure;
 	private readonly object pendingBatchLock = new();
 	private readonly List<PendingBatch> pendingAnswerBatches = [];
 
@@ -108,7 +109,9 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		ChatOptions? options = null,
 		CancellationToken cancellationToken = default)
 	{
-		ThrowIfToolPlanningUnavailable();
+		if (options?.Tools is not { Count: > 0 })
+			return await base.GetResponseAsync(messages, options, cancellationToken);
+
 		cancellationToken.ThrowIfCancellationRequested();
 		ValidateRequestOptions(options);
 		var conversation = ValidateHistory(messages);
@@ -123,7 +126,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			return await AnswerAsync(conversation, options, cancellationToken);
 
 		var plan = await GetNextContentsAsync(conversation, tools, options, cancellationToken);
-		ThrowIfToolPlanningUnavailable();
 		if (plan is null)
 			return await AnswerAsync(conversation, options, cancellationToken);
 		if (plan.Clarification is not null && options?.ResponseFormat is ChatResponseFormatJson)
@@ -140,7 +142,9 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		ChatOptions? options = null,
 		CancellationToken cancellationToken = default)
 	{
-		ThrowIfToolPlanningUnavailable();
+		if (options?.Tools is not { Count: > 0 })
+			return base.GetStreamingResponseAsync(messages, options, cancellationToken);
+
 		cancellationToken.ThrowIfCancellationRequested();
 		ValidateRequestOptions(options);
 		var conversation = ValidateHistory(messages);
@@ -175,7 +179,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			yield break;
 		}
 		var plan = await GetNextContentsAsync(conversation, tools, options, cancellationToken);
-		ThrowIfToolPlanningUnavailable();
 		cancellationToken.ThrowIfCancellationRequested();
 		if (plan is not null && !(plan.Clarification is not null && options?.ResponseFormat is ChatResponseFormatJson))
 		{
@@ -206,7 +209,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		var selection = options?.AllowMultipleToolCalls == true
 			? await SelectBatchAsync(conversation, tools, previous, options, cancellationToken)
 			: await SelectScalarAsync(conversation, tools, options, cancellationToken);
-		ThrowIfToolPlanningUnavailable();
 		if (selection.Tools.Count == 0)
 			return null;
 
@@ -218,7 +220,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		var suppressed = new List<SkippedTool>();
 		var extractions = await ExtractArgumentsAsync(
 			conversation, selection.Tools, selection.Reason, options, cancellationToken);
-		ThrowIfToolPlanningUnavailable();
 		var modelId = extractions.Values.LastOrDefault()?.ModelId ?? selection.ModelId;
 		var requiresFirstTool = options?.ToolMode is RequiredChatToolMode { RequiredFunctionName: null } &&
 			previous.Length == 0;
@@ -284,7 +285,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		}
 		if (selection.AnswerAfterResults && deferred.Count == 0)
 			RememberAnswerBatch(calls);
-		ThrowIfToolPlanningUnavailable();
 		return new([.. calls], null, modelId);
 	}
 
@@ -353,7 +353,7 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			throw new ArgumentException("Tool names must be nonempty, unique, and unambiguous decision names.", nameof(options));
 
 		foreach (var function in functions)
-			WindowsAIToolSchema.ValidateToolSchema(function.JsonSchema);
+			ValidateToolSchema(function.JsonSchema);
 
 		return functions;
 	}
@@ -672,7 +672,6 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		foreach (var tool in tools)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-			ThrowIfToolPlanningUnavailable();
 			extractions[tool.Name] =
 				await ExtractArgumentsAsync(
 					messages, tool, planningReason, options, cancellationToken);
@@ -688,11 +687,11 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		CancellationToken cancellationToken)
 	{
 		var schema = tool.JsonSchema;
-		var relaxed = WindowsAIToolSchema.CreateExtractionSchema(schema);
+		var relaxed = CreateExtractionSchema(schema);
 		var extraction = CreateArgumentExtractionSchema(tool, relaxed);
 		var extractionSchema = ToJsonElement(extraction);
 		var sources = EvidenceSources(messages);
-		var instructions = WindowsAIToolSchema.HasProperties(schema)
+		var instructions = HasProperties(schema)
 			? new StringBuilder(
 				$"Extract arguments only for {tool.Name}: {tool.Description}\n" +
 				$"Argument schema: {schema.GetRawText()}\n" +
@@ -747,7 +746,7 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 				{
 					["type"] = "array",
 					["description"] =
-						WindowsAIToolSchema.HasProperties(tool.JsonSchema)
+						HasProperties(tool.JsonSchema)
 							? $"Shortest exact quotes that directly support only {tool.Name}'s arguments; " +
 								"do not quote request clauses for other tools."
 							: $"Shortest exact quote showing the actual request needs {tool.Name}; " +
@@ -789,9 +788,9 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			return new(new Dictionary<string, object?>(), evidence, [],
 				$"Windows AI returned invalid or absent evidence for {tool.Name}.",
 				false);
-		argumentsNode = WindowsAIToolSchema.RemoveMissingValues(argumentsNode, schema);
+		argumentsNode = RemoveMissingValues(argumentsNode, schema);
 		var argumentProperties = argumentsNode.EnumerateObject().ToArray();
-		WindowsAIToolSchema.ValidateValue(argumentsNode, schema,
+		ValidateValue(argumentsNode, schema,
 			$"arguments.{tool.Name}", enforceRequired: false);
 		var missing = MissingRequired(argumentsNode, schema, tool.Name);
 		if (missing.Count > 0)
@@ -804,7 +803,7 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			return new(new Dictionary<string, object?>(), evidence, [],
 				$"Windows AI arguments for {tool.Name} lack evidence.",
 				false);
-		WindowsAIToolSchema.ValidateValue(argumentsNode, schema, $"arguments.{tool.Name}");
+		ValidateValue(argumentsNode, schema, $"arguments.{tool.Name}");
 		return new(argumentProperties
 			.ToDictionary(property => property.Name, property => (object?)property.Value.Clone()),
 			evidence, [], null, false);
@@ -1036,29 +1035,20 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		string? clarification = null)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		ThrowIfToolPlanningUnavailable();
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		timeout.CancelAfter(ToolPhaseTimeout);
 		try
 		{
 			var response = await base.GetResponseAsync(
-				AnswerHistory(messages, clarification), WithoutTools(options), timeout.Token).WaitAsync(timeout.Token);
+				AnswerHistory(messages, clarification), WithoutTools(options), timeout.Token);
 			cancellationToken.ThrowIfCancellationRequested();
-			ThrowIfToolPlanningUnavailable();
 			response.ModelId ??= ResponseModelId(response);
 			return response;
 		}
 		catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
 		{
-			var failure = new TimeoutException(
+			throw new TimeoutException(
 				$"Windows AI final answer did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
-			MarkNativeInterruption(failure);
-			throw failure;
-		}
-		catch (OperationCanceledException ex)
-		{
-			MarkNativeInterruption(ex);
-			throw;
 		}
 	}
 
@@ -1069,130 +1059,32 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 		string? clarification = null)
 	{
 		cancellationToken.ThrowIfCancellationRequested();
-		ThrowIfToolPlanningUnavailable();
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		timeout.CancelAfter(ToolPhaseTimeout);
-		var completed = false;
-		var faulted = false;
-		Task<bool>? pendingMove = null;
-		var enumerator = base.GetStreamingResponseAsync(
+		await using var enumerator = base.GetStreamingResponseAsync(
 			AnswerHistory(messages, clarification), WithoutTools(options), timeout.Token)
 			.GetAsyncEnumerator(timeout.Token);
-		try
+		while (true)
 		{
-			while (true)
+			bool hasNext;
+			try
 			{
-				bool hasNext;
-				try
-				{
-					timeout.Token.ThrowIfCancellationRequested();
-					pendingMove = enumerator.MoveNextAsync().AsTask();
-					hasNext = await pendingMove.WaitAsync(timeout.Token);
-					timeout.Token.ThrowIfCancellationRequested();
-					pendingMove = null;
-				}
-				catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
-				{
-					var failure = new TimeoutException(
-						$"Windows AI final-answer streaming did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
-					MarkNativeInterruption(failure);
-					throw failure;
-				}
-				catch (OperationCanceledException ex)
-				{
-					MarkNativeInterruption(ex);
-					throw;
-				}
-				catch (Exception)
-				{
-					// A completed native failure (including a synchronous MoveNext throw)
-					// is not abandonment: no pending operation remains to quarantine.
-					completed = true;
-					faulted = true;
-					pendingMove = null;
-					throw;
-				}
-
-				if (!hasNext)
-				{
-					completed = true;
-					ThrowIfToolPlanningUnavailable();
-					yield break;
-				}
-
-				ThrowIfToolPlanningUnavailable();
-				var update = enumerator.Current;
-				update.ModelId ??= InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
-				yield return update;
+				hasNext = await enumerator.MoveNextAsync();
 			}
+			catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
+			{
+				throw new TimeoutException(
+					$"Windows AI final-answer streaming did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
+			}
+
+			if (!hasNext)
+				yield break;
+
+			cancellationToken.ThrowIfCancellationRequested();
+			var update = enumerator.Current;
+			update.ModelId ??= InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
+			yield return update;
 		}
-		finally
-		{
-			if (!completed)
-			{
-				MarkNativeInterruption(new OperationCanceledException(
-					"Windows AI final-answer streaming ended before native completion.",
-					cancellationToken));
-				ScheduleStreamingCleanup(enumerator, pendingMove);
-			}
-			else
-			{
-				Task? cleanup = null;
-				try
-				{
-					cleanup = enumerator.DisposeAsync().AsTask();
-					await cleanup.WaitAsync(timeout.Token);
-				}
-				catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
-				{
-					var failure = new TimeoutException(
-						$"Windows AI final-answer streaming did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.", ex);
-					MarkNativeInterruption(failure);
-					if (cleanup is not null)
-						ObserveStreamingCleanup(cleanup);
-					if (!faulted)
-						throw failure;
-				}
-				catch (Exception ex)
-				{
-					MarkNativeInterruption(ex);
-					if (cleanup is not null)
-						ObserveStreamingCleanup(cleanup);
-					if (!faulted)
-						throw;
-				}
-			}
-		}
-	}
-
-	private void ScheduleStreamingCleanup(
-		IAsyncEnumerator<ChatResponseUpdate> enumerator,
-		Task<bool>? pendingMove)
-	{
-		var cleanup = DrainAndDisposeStreamingAsync(enumerator, pendingMove);
-		ObserveStreamingCleanup(cleanup);
-	}
-
-	private void ObserveStreamingCleanup(Task cleanup)
-	{
-		_ = cleanup.ContinueWith(
-			task => MarkNativeInterruption(task.Exception!),
-			CancellationToken.None,
-			TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted,
-			TaskScheduler.Default);
-	}
-
-	private static async Task DrainAndDisposeStreamingAsync(
-		IAsyncEnumerator<ChatResponseUpdate> enumerator,
-		Task<bool>? pendingMove)
-	{
-		if (pendingMove is not null)
-			await pendingMove.ContinueWith(
-				static task => _ = task.Exception,
-				CancellationToken.None,
-				TaskContinuationOptions.ExecuteSynchronously,
-				TaskScheduler.Default);
-		await enumerator.DisposeAsync();
 	}
 
 	private static IReadOnlyList<ChatMessage> AnswerHistory(
@@ -1322,46 +1214,24 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			request[0] = new ChatMessage(ChatRole.System, $"{instructions}\n\nCaller instructions:\n{options.Instructions}");
 
 		cancellationToken.ThrowIfCancellationRequested();
-		ThrowIfToolPlanningUnavailable();
 		using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 		timeout.CancelAfter(ToolPhaseTimeout);
 		try
 		{
-			var response = await base.GetResponseAsync(request, requestOptions, timeout.Token)
-				.WaitAsync(timeout.Token);
+			var response = await base.GetResponseAsync(request, requestOptions, timeout.Token);
 			cancellationToken.ThrowIfCancellationRequested();
-			ThrowIfToolPlanningUnavailable();
 			return response;
 		}
 		catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested && timeout.IsCancellationRequested)
 		{
-			var failure = new TimeoutException(
+			throw new TimeoutException(
 				$"Windows AI {schemaName} generation did not complete within {ToolPhaseTimeout.TotalSeconds:0} seconds.",
 				ex);
-			MarkNativeInterruption(failure);
-			throw failure;
-		}
-		catch (OperationCanceledException ex)
-		{
-			MarkNativeInterruption(ex);
-			throw;
 		}
 	}
 
 	private string? ResponseModelId(ChatResponse response) =>
 		response.ModelId ?? InnerClient.GetService<ChatClientMetadata>()?.DefaultModelId;
-
-	private void MarkNativeInterruption(Exception failure) =>
-		Interlocked.CompareExchange(ref terminalToolFailure, failure, null);
-
-	private void ThrowIfToolPlanningUnavailable()
-	{
-		if (Volatile.Read(ref terminalToolFailure) is { } failure)
-			throw new InvalidOperationException(
-				"Windows AI is unavailable after an interrupted native operation. " +
-				"Create a new client before making another request.",
-				failure);
-	}
 
 	private static (string Reason, string Decision) ReadDecision(string? json)
 	{
@@ -1382,5 +1252,340 @@ internal sealed class WindowsAIToolCallingClient : DelegatingChatClient
 			throw new InvalidOperationException("Windows AI returned malformed reason and decision fields.");
 		return (reason.GetString()!, decision.GetString()!);
 	}
+
+	// Windows requires every property in constrained output. Nullable extraction properties
+	// represent absence without forcing the model to invent an argument or overwrite a default.
+	private static JsonObject CreateExtractionSchema(JsonElement schema)
+	{
+		var extraction = JsonNode.Parse(schema.GetRawText())!.AsObject();
+		MakePropertiesNullable(extraction);
+		extraction.Remove("required");
+		return extraction;
+	}
+
+	private static void MakePropertiesNullable(JsonObject schema)
+	{
+		if (schema["properties"] is JsonObject properties)
+		{
+			foreach (var property in properties)
+			{
+				var child = property.Value!.AsObject();
+				MakePropertiesNullable(child);
+				var type = child["type"]!.GetValue<string>();
+				if (type != "null")
+				{
+					child["type"] = new JsonArray(type, "null");
+					if (child["enum"] is JsonArray values && !values.Any(value => value is null))
+						values.Add(null);
+				}
+			}
+		}
+		if (schema["items"] is JsonObject items)
+			MakePropertiesNullable(items);
+	}
+
+	private static JsonElement RemoveMissingValues(JsonElement value, JsonElement schema)
+	{
+		using var stream = new MemoryStream();
+		using (var writer = new Utf8JsonWriter(stream))
+			WritePresentValues(writer, value, schema);
+		using var document = JsonDocument.Parse(stream.ToArray());
+		return document.RootElement.Clone();
+	}
+
+	private static void WritePresentValues(Utf8JsonWriter writer, JsonElement value, JsonElement schema)
+	{
+		if (value.ValueKind == JsonValueKind.Object)
+		{
+			var hasProperties = schema.TryGetProperty("properties", out var properties);
+			writer.WriteStartObject();
+			var names = new HashSet<string>(StringComparer.Ordinal);
+			foreach (var property in value.EnumerateObject())
+			{
+				if (!names.Add(property.Name))
+					throw new InvalidOperationException($"Windows AI returned duplicate argument names: {property.Name}.");
+				if (hasProperties && properties.TryGetProperty(property.Name, out var child))
+				{
+					if (property.Value.ValueKind == JsonValueKind.Null &&
+						child.GetProperty("type").GetString() != "null")
+						continue;
+					if (!IsRequired(schema, property.Name) && IsAbsentObjectShell(property.Value, child))
+						continue;
+					writer.WritePropertyName(property.Name);
+					WritePresentValues(writer, property.Value, child);
+				}
+				else
+					property.WriteTo(writer);
+			}
+			writer.WriteEndObject();
+		}
+		else if (value.ValueKind == JsonValueKind.Array && schema.TryGetProperty("items", out var items))
+		{
+			writer.WriteStartArray();
+			foreach (var item in value.EnumerateArray())
+				WritePresentValues(writer, item, items);
+			writer.WriteEndArray();
+		}
+		else
+			value.WriteTo(writer);
+	}
+
+	private static bool IsRequired(JsonElement schema, string name) =>
+		schema.TryGetProperty("required", out var required) &&
+			required.EnumerateArray().Any(property => property.GetString() == name);
+
+	private static bool IsAbsentObjectShell(JsonElement value, JsonElement schema)
+	{
+		if (value.ValueKind != JsonValueKind.Object || !value.EnumerateObject().Any() ||
+			!schema.TryGetProperty("properties", out var properties))
+			return false;
+		var names = new HashSet<string>(StringComparer.Ordinal);
+		foreach (var property in value.EnumerateObject())
+		{
+			// Unknown and duplicate keys must survive normalization so validation rejects them.
+			if (!names.Add(property.Name) || !properties.TryGetProperty(property.Name, out var child))
+				return false;
+			if (property.Value.ValueKind == JsonValueKind.Null &&
+				child.GetProperty("type").GetString() != "null")
+				continue;
+			if (!IsAbsentObjectShell(property.Value, child))
+				return false;
+		}
+		return true;
+	}
+
+	private static bool HasProperties(JsonElement schema) =>
+		schema.ValueKind == JsonValueKind.Object &&
+		schema.TryGetProperty("properties", out var properties) &&
+		properties.ValueKind == JsonValueKind.Object &&
+		properties.EnumerateObject().Any();
+
+	private static void ValidateToolSchema(JsonElement schema)
+	{
+		if (schema.ValueKind != JsonValueKind.Object ||
+			!schema.TryGetProperty("type", out var type) || type.GetString() != "object")
+			throw new NotSupportedException("Tool arguments must have an object JSON schema.");
+
+		ValidateSupportedSchema(schema);
+	}
+
+	private static void ValidateSupportedSchema(JsonElement schema)
+	{
+		if (schema.ValueKind != JsonValueKind.Object)
+			throw new NotSupportedException("Tool argument schema must be an object.");
+
+		foreach (var keyword in schema.EnumerateObject())
+		{
+			if (keyword.Name is not ("type" or "properties" or "required" or "items" or
+				"additionalProperties" or "enum" or "description" or "title" or "$schema" or
+				"default" or "minimum" or "maximum" or "minLength" or "maxLength" or "pattern"))
+				throw new NotSupportedException($"Unsupported tool argument schema keyword: {keyword.Name}.");
+		}
+
+		if (!schema.TryGetProperty("type", out var type) ||
+			type.ValueKind != JsonValueKind.String ||
+			type.GetString() is not ("object" or "array" or "string" or "integer" or "number" or "boolean" or "null"))
+			throw new NotSupportedException("Tool argument schema must declare a supported type.");
+
+		if (schema.TryGetProperty("properties", out var properties))
+		{
+			if (type.GetString() != "object" || properties.ValueKind != JsonValueKind.Object)
+				throw new NotSupportedException("Tool properties require an object schema.");
+			foreach (var property in properties.EnumerateObject())
+				ValidateSupportedSchema(property.Value);
+		}
+
+		if (schema.TryGetProperty("required", out var required) &&
+			(type.GetString() != "object" || required.ValueKind != JsonValueKind.Array ||
+				required.EnumerateArray().Any(name => name.ValueKind != JsonValueKind.String ||
+					!schema.TryGetProperty("properties", out var declared) ||
+					!declared.TryGetProperty(name.GetString()!, out _))))
+			throw new NotSupportedException("Required tool arguments must name declared properties.");
+
+		if (schema.TryGetProperty("items", out var items))
+		{
+			if (type.GetString() != "array")
+				throw new NotSupportedException("Tool items require an array schema.");
+			ValidateSupportedSchema(items);
+		}
+		else if (type.GetString() == "array")
+			throw new NotSupportedException("Array tool arguments must declare an items schema.");
+
+		if (schema.TryGetProperty("additionalProperties", out var additional) &&
+			additional.ValueKind != JsonValueKind.False)
+			throw new NotSupportedException("Tool argument schemas must prohibit additional properties.");
+
+		if (schema.TryGetProperty("enum", out var allowed) && allowed.ValueKind != JsonValueKind.Array)
+			throw new NotSupportedException("Tool argument enum must be an array.");
+		foreach (var keyword in new[] { "minLength", "maxLength" })
+			if (schema.TryGetProperty(keyword, out var length) &&
+				(type.GetString() != "string" || length.ValueKind != JsonValueKind.Number ||
+					!length.TryGetInt32(out var count) || count < 0))
+				throw new NotSupportedException($"Invalid tool argument {keyword}.");
+		foreach (var keyword in new[] { "minimum", "maximum" })
+			if (schema.TryGetProperty(keyword, out var bound) &&
+				(type.GetString() is not ("integer" or "number") || bound.ValueKind != JsonValueKind.Number))
+				throw new NotSupportedException($"Invalid tool argument {keyword}.");
+		if (schema.TryGetProperty("pattern", out var pattern))
+		{
+			if (type.GetString() != "string" || pattern.ValueKind != JsonValueKind.String)
+				throw new NotSupportedException("Tool argument pattern requires a string schema.");
+			try
+			{
+				_ = new Regex(
+					pattern.GetString()!,
+					RegexOptions.ECMAScript | RegexOptions.CultureInvariant,
+					TimeSpan.FromSeconds(1));
+			}
+			catch (ArgumentException ex)
+			{
+				throw new NotSupportedException("Tool argument pattern is invalid.", ex);
+			}
+		}
+	}
+
+	private static void ValidateValue(
+		JsonElement value, JsonElement schema, string path, bool enforceRequired = true)
+	{
+		var type = schema.GetProperty("type").GetString();
+		var valid = type switch
+		{
+			"object" => value.ValueKind == JsonValueKind.Object,
+			"array" => value.ValueKind == JsonValueKind.Array,
+			"string" => value.ValueKind == JsonValueKind.String,
+			"integer" => value.ValueKind == JsonValueKind.Number &&
+				IsJsonInteger(value),
+			"number" => value.ValueKind == JsonValueKind.Number,
+			"boolean" => value.ValueKind is JsonValueKind.True or JsonValueKind.False,
+			"null" => value.ValueKind == JsonValueKind.Null,
+			_ => false
+		};
+		if (!valid)
+			throw new InvalidOperationException($"Windows AI returned an invalid {path}: expected {type}.");
+
+		if (schema.TryGetProperty("enum", out var allowed) &&
+			!allowed.EnumerateArray().Any(choice => JsonElement.DeepEquals(choice, value)))
+			throw new InvalidOperationException($"Windows AI returned an invalid {path}: value is not in the allowed enum.");
+
+		if (type == "object")
+		{
+			var properties = schema.TryGetProperty("properties", out var declared) ? declared : default;
+			foreach (var property in value.EnumerateObject())
+			{
+				if (properties.ValueKind != JsonValueKind.Object ||
+					!properties.TryGetProperty(property.Name, out var propertySchema))
+					throw new InvalidOperationException($"Windows AI returned an unexpected tool argument: {path}.{property.Name}.");
+				ValidateValue(property.Value, propertySchema, $"{path}.{property.Name}", enforceRequired);
+			}
+
+			if (enforceRequired && schema.TryGetProperty("required", out var required))
+				foreach (var name in required.EnumerateArray())
+					if (!value.TryGetProperty(name.GetString()!, out _))
+						throw new InvalidOperationException($"Windows AI omitted required tool argument: {path}.{name.GetString()}.");
+		}
+		else if (type == "array")
+		{
+			foreach (var item in value.EnumerateArray())
+				ValidateValue(item, schema.GetProperty("items"), $"{path}[]", enforceRequired);
+		}
+		else if (type == "string")
+		{
+			var text = value.GetString()!;
+			var length = text.EnumerateRunes().Count();
+			if ((schema.TryGetProperty("minLength", out var minimum) && length < minimum.GetInt32()) ||
+				(schema.TryGetProperty("maxLength", out var maximum) && length > maximum.GetInt32()))
+				throw new InvalidOperationException($"Windows AI returned an invalid string length for {path}.");
+			if (schema.TryGetProperty("pattern", out var pattern))
+			{
+				try
+				{
+					if (!Regex.IsMatch(
+						text,
+						pattern.GetString()!,
+						RegexOptions.ECMAScript | RegexOptions.CultureInvariant,
+						TimeSpan.FromSeconds(1)))
+						throw new InvalidOperationException($"Windows AI returned an invalid pattern for {path}.");
+				}
+				catch (RegexMatchTimeoutException ex)
+				{
+					throw new InvalidOperationException($"Windows AI pattern validation timed out for {path}.", ex);
+				}
+			}
+		}
+		else if (type is "integer" or "number")
+		{
+			if ((schema.TryGetProperty("minimum", out var minimum) &&
+					CompareJsonNumbers(value, minimum) < 0) ||
+				(schema.TryGetProperty("maximum", out var maximum) &&
+					CompareJsonNumbers(value, maximum) > 0))
+				throw new InvalidOperationException($"Windows AI returned an out-of-range number for {path}.");
+		}
+	}
+
+	private static bool IsJsonInteger(JsonElement value)
+	{
+		var number = ParseJsonNumber(value);
+		return number.Digits == "0" || number.Exponent >= BigInteger.Zero;
+	}
+
+	private static int CompareJsonNumbers(JsonElement left, JsonElement right)
+	{
+		var leftNumber = ParseJsonNumber(left);
+		var rightNumber = ParseJsonNumber(right);
+		if (leftNumber.Digits == "0")
+			return rightNumber.Digits == "0" ? 0 : rightNumber.Negative ? 1 : -1;
+		if (rightNumber.Digits == "0")
+			return leftNumber.Negative ? -1 : 1;
+		if (leftNumber.Negative != rightNumber.Negative)
+			return leftNumber.Negative ? -1 : 1;
+
+		var leftOrder = leftNumber.Exponent + leftNumber.Digits.Length;
+		var rightOrder = rightNumber.Exponent + rightNumber.Digits.Length;
+		var comparison = leftOrder.CompareTo(rightOrder);
+		if (comparison == 0)
+		{
+			var width = Math.Max(leftNumber.Digits.Length, rightNumber.Digits.Length);
+			var leftCoefficient = BigInteger.Parse(leftNumber.Digits, CultureInfo.InvariantCulture) *
+				BigInteger.Pow(10, width - leftNumber.Digits.Length);
+			var rightCoefficient = BigInteger.Parse(rightNumber.Digits, CultureInfo.InvariantCulture) *
+				BigInteger.Pow(10, width - rightNumber.Digits.Length);
+			comparison = leftCoefficient.CompareTo(rightCoefficient);
+		}
+
+		return leftNumber.Negative ? -comparison : comparison;
+	}
+
+	private static JsonNumber ParseJsonNumber(JsonElement value)
+	{
+		var raw = value.GetRawText();
+		var negative = raw[0] == '-';
+		if (negative)
+			raw = raw[1..];
+
+		var exponentIndex = raw.IndexOfAny('e', 'E');
+		var exponent = exponentIndex >= 0
+			? BigInteger.Parse(raw[(exponentIndex + 1)..], CultureInfo.InvariantCulture)
+			: BigInteger.Zero;
+		var significand = exponentIndex >= 0 ? raw[..exponentIndex] : raw;
+		var decimalIndex = significand.IndexOf('.');
+		if (decimalIndex >= 0)
+		{
+			exponent -= significand.Length - decimalIndex - 1;
+			significand = significand.Remove(decimalIndex, 1);
+		}
+
+		var digits = significand.TrimStart('0');
+		if (digits.Length == 0)
+			return new(false, "0", BigInteger.Zero);
+		while (digits.Length > 1 && digits[^1] == '0')
+		{
+			digits = digits[..^1];
+			exponent++;
+		}
+		return new(negative, digits, exponent);
+	}
+
+	private readonly record struct JsonNumber(
+		bool Negative, string Digits, BigInteger Exponent);
 }
 #endif
