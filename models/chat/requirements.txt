@@ -1,5 +1,6 @@
 onnxruntime-genai==0.20.0
 onnxruntime==1.32.0
+onnx-ir==1.1.0
 transformers==5.23.0
 torch==2.15.0
 huggingface-hub==2.4.0
