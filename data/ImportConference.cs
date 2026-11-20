@@ -2,6 +2,7 @@
 #:property TargetFramework=net11.0
 #:property LangVersion=15.0
 #:property Nullable=enable
+#:property ManagePackageVersionsCentrally=false
 #:package AngleSharp@1.10.1
 
 // Imports the CPTMSDUG .NET Conf 2026 website into data/conference/, the offline
@@ -193,7 +194,8 @@ sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, Cance
                 }
 
                 // Prefer the embedded tagline; fall back to the title shown on the card.
-                bios.TryGetValue(name, out var bio);
+                var bioName = Content.MatchName(name, bios.Keys);
+                var bio = bioName is null ? default : bios[bioName];
                 var body = Property(bio, "bio");
                 var tagline = WebUtility.HtmlDecode(Property(bio, "tagline") ?? Text(card, ".speaker-title"));
                 List<string> links =
@@ -269,15 +271,17 @@ sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, Cance
         string? speakerNames, string? note)
     {
         List<string> speakerIds = string.IsNullOrWhiteSpace(speakerNames) ? [] :
-            [.. speakerNames.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Select(Content.Slug)];
-
-        foreach (var speakerId in speakerIds)
-        {
-            if (!speakers.ContainsKey(speakerId))
-                throw new InvalidOperationException($"Unknown speaker {speakerId} in {title}.");
-        }
+            [.. speakerNames.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(name => Content.MatchName(Content.Slug(name), speakers.Keys)
+                    ?? throw new InvalidOperationException($"Unknown speaker {name} in {title}."))];
 
         var id = $"{city.Id}-{Content.Slug(title)}";
+        if (conference.Sessions.Any(session => session.Id == id))
+            id = $"{id}-{start:HHmm}-{Content.Slug(track ?? "general")}";
+
+        if (conference.Sessions.Any(session => session.Id == id))
+            throw new InvalidOperationException($"Duplicate agenda entry {id}.");
+
         var body = descriptions.TryGetValue(title, out var description) ? description.GetString() : null;
 
         conference.Sessions.Add(new(
@@ -396,7 +400,8 @@ sealed class ContentBuilder(string folder, HttpClient http, Uri sourceUrl, Cance
     // --- Small helpers -------------------------------------------------------------------------
 
     bool AreKnownSpeakers(string names) =>
-        names.Split(',', StringSplitOptions.TrimEntries).All(name => speakers.ContainsKey(Content.Slug(name)));
+        names.Split(',', StringSplitOptions.TrimEntries)
+            .All(name => Content.MatchName(Content.Slug(name), speakers.Keys) is not null);
 
     string Absolute(string relative) => new Uri(sourceUrl, relative).AbsoluteUri;
 
@@ -499,6 +504,29 @@ static class Content
 {
     public static ReadOnlySpan<byte> PngSignature => [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
     public static ReadOnlySpan<byte> JpegSignature => [0xff, 0xd8, 0xff];
+
+    public static string? MatchName(string name, IEnumerable<string> candidates)
+    {
+        var names = candidates.ToArray();
+        if (names.Contains(name, StringComparer.Ordinal))
+            return name;
+
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var matches = names.Where(candidate => !string.IsNullOrWhiteSpace(candidate) &&
+            (candidate.Contains(name, StringComparison.OrdinalIgnoreCase) ||
+             name.Contains(candidate, StringComparison.OrdinalIgnoreCase))).ToArray();
+
+        if (matches.Length > 1)
+            throw new InvalidOperationException($"Ambiguous name {name}: {string.Join(", ", matches)}.");
+
+        if (matches.Length == 0)
+            return null;
+
+        Console.WriteLine($"Matched '{name}' to '{matches[0]}' by name containment.");
+        return matches[0];
+    }
 
     // Lowercase kebab-case ASCII: "Jev—a deep dive" becomes "jeva-deep-dive".
     public static string Slug(string value)

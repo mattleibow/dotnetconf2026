@@ -14,7 +14,7 @@ conference/
 ## conference.json
 
 - `cities`: ID, name, date, venue and registration link.
-- `sessions`: one entry per scheduled session **per city**, so a talk given in two cities has two IDs (such as `durban-…` and `cape-town-…`). Each has `start`/`end` (ISO 8601 with a `+02:00` offset), `track`, `speakerIds`, and `kind` (`session` for talks, `general` for registration, lunch and so on). Each talk in a lightning round is its own session.
+- `sessions`: one entry per scheduled session **per city**, so a talk given in two cities has two IDs (such as `durban-…` and `cape-town-…`). Repeated titles within a city receive a start-time and track suffix to keep their IDs unique. Each has `start`/`end` (ISO 8601 with a `+02:00` offset), `track`, `speakerIds`, and `kind` (`session` for talks, `general` for registration, lunch and so on). Each talk in a lightning round is its own session.
 - `speakers`: name, tagline, social links, and the cities they speak in.
 - `venues`: one per city, with address, latitude/longitude, and map link.
 - `sponsors`: tier and the cities they sponsor.
@@ -36,5 +36,7 @@ dotnet run data/ImportConference.cs
 ```
 
 It deletes and rewrites `conference/`. Review the changes with `git diff`; if a run fails or the site is down, `git restore data/conference` brings the previous snapshot back.
+
+Speaker references and biographies use exact name matches first, then a unique case-insensitive contains match (in either direction) to tolerate differences such as a `Dr` prefix. Contains matches are logged; ambiguous matches stop the import.
 
 The site has one AVIF logo, which the importer converts to PNG using macOS `sips`, so refresh on a Mac. The snapshot itself works everywhere.
