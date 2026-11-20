@@ -13,13 +13,13 @@ using Microsoft.ML.OnnxRuntimeGenAI;
 namespace ConferenceApp.AI;
 
 // A local Qwen3-0.6B client using Qwen's native tool-call format.
-// Owns its lazy native model per client instance and streams tokens through a channel off the UI thread.
+// Shares one lazily loaded native model per process (clients are transient) and streams tokens off the UI thread.
 public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
 {
     private static readonly SemaphoreSlim extractGate = new(1, 1);
-    private readonly SemaphoreSlim initGate = new(1, 1);
-    private Model? model;
-    private Tokenizer? tokenizer;
+    private static readonly SemaphoreSlim initGate = new(1, 1);
+    private static Model? model;
+    private static Tokenizer? tokenizer;
 
     public Task<ChatResponse> GetResponseAsync(
         IEnumerable<ChatMessage> messages,
@@ -40,7 +40,8 @@ public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
         if (options?.Tools?.Count > functions.Length && options.ToolMode != ChatToolMode.None)
             throw new NotSupportedException("The Qwen client supports function tools only.");
 
-        var messagesJson = MessagesJson(messages, options);
+        var history = messages as IReadOnlyList<ChatMessage> ?? messages.ToList();
+        var messagesJson = MessagesJson(history, options);
         var toolsJson = functions.Length > 0 ? ToolsJson(functions) : null;
         var maxOutputTokens = Math.Clamp(options?.MaxOutputTokens ?? 512, 1, 2048);
         var requireToolCall = options?.ToolMode is RequiredChatToolMode;
@@ -58,71 +59,18 @@ public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
                 var (loadedModel, loadedTokenizer) = await EnsureModelAsync(cancellationToken).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var prompt = loadedTokenizer.ApplyChatTemplate(null!, messagesJson, toolsJson!, true)
-                    + "<think>\n\n</think>\n\n";
-                using var tokens = loadedTokenizer.Encode(prompt);
-                using var parameters = new GeneratorParams(loadedModel);
-                parameters.SetSearchOption("max_length", (int)tokens[0].Length + maxOutputTokens);
-                parameters.SetSearchOption("do_sample", false);
-                using var generator = new Generator(loadedModel, parameters);
-                generator.AppendTokenSequences(tokens);
-                using var stream = loadedTokenizer.CreateStream();
-
                 var responseId = Guid.NewGuid().ToString("N");
                 var messageId = Guid.NewGuid().ToString("N");
-                var buffer = new StringBuilder();
-                var streamingText = false;
-                var generatedTokens = 0;
-
-                while (!generator.IsDone() && generatedTokens < maxOutputTokens)
+                var (text, streamingText) = Generate(toolsJson);
+                var message = ParseResponse(text, functions);
+                // The small model can re-request a call it already has results for until the iteration cap.
+                if (!requireToolCall && IsRepeatedCall(message, history))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    generator.GenerateNextToken();
-                    var sequence = generator.GetSequence(0);
-                    // EOS may finish generation without appending another token.
-                    if (sequence.Length <= tokens[0].Length + generatedTokens)
-                        break;
-
-                    generatedTokens++;
-                    var piece = stream.Decode(sequence[^1]);
-                    if (string.IsNullOrEmpty(piece))
-                        continue;
-
-                    buffer.Append(piece);
-                    if (streamingText)
-                    {
-                        channel.Writer.TryWrite(new ChatResponseUpdate(ChatRole.Assistant, piece)
-                        {
-                            ResponseId = responseId,
-                            MessageId = messageId,
-                            ModelId = "Qwen3-0.6B"
-                        });
-                        continue;
-                    }
-
-                    if (requireToolCall)
-                        continue;
-
-                    var candidate = StripThinkingPrefix(buffer.ToString().AsSpan());
-                    if (candidate.IsEmpty
-                        || StartsWithOrIsPrefixOf(candidate, "<tool_call>")
-                        || StartsWithOrIsPrefixOf(candidate, "<think>"))
-                        continue;
-
-                    streamingText = true;
-                    channel.Writer.TryWrite(new ChatResponseUpdate(ChatRole.Assistant, candidate.ToString())
-                    {
-                        ResponseId = responseId,
-                        MessageId = messageId,
-                        ModelId = "Qwen3-0.6B"
-                    });
+                    logger.LogWarning("[AI Tool] ONNX repeated an answered tool call; answering from the existing results.");
+                    (text, streamingText) = Generate(null);
+                    message = ParseResponse(text, []);
                 }
 
-                cancellationToken.ThrowIfCancellationRequested();
-                if (!generator.IsDone())
-                    throw new InvalidOperationException("The ONNX tool response exceeded its output limit. No partial tool call was executed.");
-
-                var message = ParseResponse(buffer.ToString(), functions);
                 if (options?.ToolMode is RequiredChatToolMode required
                     && !message.Contents.OfType<FunctionCallContent>().Any(call =>
                         required.RequiredFunctionName is null || call.Name == required.RequiredFunctionName))
@@ -154,6 +102,72 @@ public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
                 }
 
                 channel.Writer.TryComplete();
+
+                (string Text, bool StreamedText) Generate(string? tools)
+                {
+                    var prompt = loadedTokenizer.ApplyChatTemplate(null!, messagesJson, tools!, true)
+                        + "<think>\n\n</think>\n\n";
+                    using var tokens = loadedTokenizer.Encode(prompt);
+                    using var parameters = new GeneratorParams(loadedModel);
+                    parameters.SetSearchOption("max_length", (int)tokens[0].Length + maxOutputTokens);
+                    parameters.SetSearchOption("do_sample", false);
+                    using var generator = new Generator(loadedModel, parameters);
+                    generator.AppendTokenSequences(tokens);
+                    using var stream = loadedTokenizer.CreateStream();
+
+                    var buffer = new StringBuilder();
+                    var streamingText = false;
+                    var generatedTokens = 0;
+
+                    while (!generator.IsDone() && generatedTokens < maxOutputTokens)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        generator.GenerateNextToken();
+                        var sequence = generator.GetSequence(0);
+                        // EOS may finish generation without appending another token.
+                        if (sequence.Length <= tokens[0].Length + generatedTokens)
+                            break;
+
+                        generatedTokens++;
+                        var piece = stream.Decode(sequence[^1]);
+                        if (string.IsNullOrEmpty(piece))
+                            continue;
+
+                        buffer.Append(piece);
+                        if (streamingText)
+                        {
+                            channel.Writer.TryWrite(new ChatResponseUpdate(ChatRole.Assistant, piece)
+                            {
+                                ResponseId = responseId,
+                                MessageId = messageId,
+                                ModelId = "Qwen3-0.6B"
+                            });
+                            continue;
+                        }
+
+                        if (requireToolCall)
+                            continue;
+
+                        var candidate = StripThinkingPrefix(buffer.ToString().AsSpan());
+                        if (candidate.IsEmpty
+                            || StartsWithOrIsPrefixOf(candidate, "<tool_call>")
+                            || StartsWithOrIsPrefixOf(candidate, "<think>"))
+                            continue;
+
+                        streamingText = true;
+                        channel.Writer.TryWrite(new ChatResponseUpdate(ChatRole.Assistant, candidate.ToString())
+                        {
+                            ResponseId = responseId,
+                            MessageId = messageId,
+                            ModelId = "Qwen3-0.6B"
+                        });
+                    }
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (!generator.IsDone())
+                        throw new InvalidOperationException("The ONNX tool response exceeded its output limit. No partial tool call was executed.");
+                    return (buffer.ToString(), streamingText);
+                }
             }
             catch (Exception ex)
             {
@@ -264,11 +278,9 @@ public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
         }
     }
 
+    // The shared native model lives for the process, so disposing one transient client must not unload it.
     public void Dispose()
     {
-        tokenizer?.Dispose();
-        model?.Dispose();
-        initGate.Dispose();
     }
 
     internal static string MessagesJson(IEnumerable<ChatMessage> messages, ChatOptions? options)
@@ -309,6 +321,23 @@ public sealed class QwenChatClient(ILogger<QwenChatClient> logger) : IChatClient
             result.Add(item);
         }
         return result.ToJsonString();
+    }
+
+    internal static bool IsRepeatedCall(ChatMessage response, IEnumerable<ChatMessage> history)
+    {
+        var calls = response.Contents.OfType<FunctionCallContent>().ToArray();
+        if (calls.Length == 0)
+            return false;
+
+        var contents = history.SelectMany(message => message.Contents).ToArray();
+        var answered = contents.OfType<FunctionResultContent>().Select(result => result.CallId).ToHashSet();
+        var previous = contents.OfType<FunctionCallContent>()
+            .Where(call => answered.Contains(call.CallId))
+            .Select(Key)
+            .ToHashSet();
+        return calls.All(call => previous.Contains(Key(call)));
+
+        static string Key(FunctionCallContent call) => call.Name + ArgumentsJson(call.Arguments).ToJsonString();
     }
 
     internal static string ToolsJson(IEnumerable<AIFunctionDeclaration> tools) =>
