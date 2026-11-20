@@ -40,8 +40,10 @@ public class ChatService(
 
     public void Clear()
     {
-        Messages.Clear();
+        // Clear the footer cards first: Android's CollectionView measures the footer when it
+        // swaps to the EmptyView, and a stale tall footer would clip the welcome screen.
         Sessions.Clear();
+        Messages.Clear();
     }
 
     public Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
