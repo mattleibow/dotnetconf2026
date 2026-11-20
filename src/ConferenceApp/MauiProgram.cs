@@ -28,6 +28,7 @@ public static class MauiProgram
             handlers.AddHandler<TabBar, PopToRootShellItemHandler>());
 #endif
 
+        builder.Services.AddSingleton<TimeProvider>(new ConferenceTimeProvider(new TimeOnly(8, 30)));
         builder.Services.AddSingleton<ConferenceDbProvider>();
         builder.Services.AddSingleton<BaseBackgroundService, DatabasePreloadService>();
         builder.Services.AddSingleton<UserPreferencesService>();

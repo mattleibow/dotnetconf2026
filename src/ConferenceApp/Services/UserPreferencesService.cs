@@ -6,7 +6,7 @@ namespace ConferenceApp.Services;
 public record CityChangedMessage;
 public record FavoritesChangedMessage;
 
-public class UserPreferencesService(ConferenceDbProvider dbProvider)
+public class UserPreferencesService(ConferenceDbProvider dbProvider, TimeProvider timeProvider)
 {
     private const string CityKey = "selected_city";
     private const string FavoritesKey = "favorites";
@@ -29,7 +29,7 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider)
     public async Task<City> GetSelectedCityAsync()
     {
         var db = await dbProvider.GetDbAsync();
-        var city = db.GetCity(SelectedCityId);
+        var city = db.GetCity(SelectedCityId, timeProvider);
         if (SelectedCityId != city.Id)
             Preferences.Set(CityKey, city.Id);
         return city;

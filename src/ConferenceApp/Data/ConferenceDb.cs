@@ -21,12 +21,13 @@ public class ConferenceDb(
     public IReadOnlyList<Venue> Venues { get; } = venues;
     public IReadOnlyList<Sponsor> Sponsors { get; } = sponsors;
 
-    public City GetCity(string? cityId = null)
+    public City GetCity(string? cityId = null, TimeProvider? timeProvider = null)
     {
         if (!string.IsNullOrEmpty(cityId) && Cities.FirstOrDefault(c => c.Id == cityId) is { } match)
             return match;
 
-        var today = DateOnly.FromDateTime(DateTime.Now);
+        var now = (timeProvider ?? TimeProvider.System).GetLocalNow();
+        var today = DateOnly.FromDateTime(now.DateTime);
         return Cities.FirstOrDefault(c => c.Date >= today) ?? Cities[^1];
     }
 
