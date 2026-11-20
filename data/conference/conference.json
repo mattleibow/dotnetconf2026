@@ -354,19 +354,19 @@
       "content": "sessions/durban-the-ladder-for-productive-agents.md"
     },
     {
-      "id": "durban-security-in-net-and-the-impact-on-user-experience",
-      "title": "Security in .NET and the impact on user experience",
+      "id": "durban-secure-by-design-usable-by-default-in-the-age-of-ai",
+      "title": "Secure by design, usable by default, in the age of AI",
       "cityId": "durban",
       "start": "2026-11-21T15:30:00\u002B02:00",
       "end": "2026-11-21T16:20:00\u002B02:00",
       "track": ".NET Conf \u2013 Lecture 1",
       "speakerIds": [
-        "rendani-kruger"
+        "dr-rendani-kruger"
       ],
       "note": null,
       "kind": "session",
       "hasAbstract": true,
-      "content": "sessions/durban-security-in-net-and-the-impact-on-user-experience.md"
+      "content": "sessions/durban-secure-by-design-usable-by-default-in-the-age-of-ai.md"
     },
     {
       "id": "durban-the-hidden-cost-of-just-call-the-llm-architecture-patterns-for-cost-efficient-genai",
@@ -501,19 +501,19 @@
       "content": "sessions/cape-town-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework.md"
     },
     {
-      "id": "cape-town-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature",
-      "title": "When Your AI Agent Passes Every .NET Test but Builds the Wrong Feature",
+      "id": "cape-town-arduino-meets-its-sharper-half-an-edge-hmi-on-two-brains",
+      "title": "Arduino Meets Its Sharper Half: An Edge HMI on Two Brains",
       "cityId": "cape-town",
       "start": "2026-11-28T11:20:00\u002B02:00",
       "end": "2026-11-28T12:05:00\u002B02:00",
       "track": "Track 2",
       "speakerIds": [
-        "shilpa-mitra"
+        "allan-pead"
       ],
       "note": null,
       "kind": "session",
       "hasAbstract": true,
-      "content": "sessions/cape-town-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature.md"
+      "content": "sessions/cape-town-arduino-meets-its-sharper-half-an-edge-hmi-on-two-brains.md"
     },
     {
       "id": "cape-town-rag-in-the-real-world-guardrails-semantic-caching-and-security-for-production-ai",
@@ -529,21 +529,6 @@
       "kind": "session",
       "hasAbstract": true,
       "content": "sessions/cape-town-rag-in-the-real-world-guardrails-semantic-caching-and-security-for-production-ai.md"
-    },
-    {
-      "id": "cape-town-your-net-agent-found-the-evidence-should-it-answer",
-      "title": "Your .NET Agent Found the Evidence. Should It Answer?",
-      "cityId": "cape-town",
-      "start": "2026-11-28T12:15:00\u002B02:00",
-      "end": "2026-11-28T12:30:00\u002B02:00",
-      "track": "Track 2",
-      "speakerIds": [
-        "sromana-mukhopadhyay"
-      ],
-      "note": null,
-      "kind": "session",
-      "hasAbstract": true,
-      "content": "sessions/cape-town-your-net-agent-found-the-evidence-should-it-answer.md"
     },
     {
       "id": "cape-town-second-brain-sharper-agent-feeding-your-net-knowledge-to-github-copilot-cli",
@@ -649,19 +634,19 @@
       "content": "sessions/cape-town-building-observable-governable-ai-agents-with-net.md"
     },
     {
-      "id": "cape-town-bringing-the-edge-into-focus",
-      "title": "Bringing the Edge Into Focus",
+      "id": "cape-town-secure-by-design-usable-by-default-in-the-age-of-ai",
+      "title": "Secure by design, usable by default, in the age of AI",
       "cityId": "cape-town",
       "start": "2026-11-28T15:50:00\u002B02:00",
       "end": "2026-11-28T16:35:00\u002B02:00",
       "track": "Track 1",
       "speakerIds": [
-        "allan-pead"
+        "dr-rendani-kruger"
       ],
       "note": null,
       "kind": "session",
       "hasAbstract": true,
-      "content": "sessions/cape-town-bringing-the-edge-into-focus.md"
+      "content": "sessions/cape-town-secure-by-design-usable-by-default-in-the-age-of-ai.md"
     },
     {
       "id": "cape-town-if-ai-knows-everything-what-do-i-know",
@@ -785,19 +770,17 @@
       "content": "sessions/bloemfontein-agents-building-agentic-apps-ai-goes-mobile-with-net-maui.md"
     },
     {
-      "id": "bloemfontein-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature",
-      "title": "When Your AI Agent Passes Every .NET Test but Builds the Wrong Feature",
+      "id": "bloemfontein-session-to-be-announced",
+      "title": "Session to be announced",
       "cityId": "bloemfontein",
       "start": "2026-12-05T10:25:00\u002B02:00",
       "end": "2026-12-05T11:10:00\u002B02:00",
       "track": "Track 2",
-      "speakerIds": [
-        "shilpa-mitra"
-      ],
+      "speakerIds": [],
       "note": null,
-      "kind": "session",
-      "hasAbstract": true,
-      "content": "sessions/bloemfontein-when-your-ai-agent-passes-every-net-test-but-builds-the-wrong-feature.md"
+      "kind": "general",
+      "hasAbstract": false,
+      "content": "sessions/bloemfontein-session-to-be-announced.md"
     },
     {
       "id": "bloemfontein-the-agent-is-just-a-loop-building-ai-agents-in-c-with-microsoft-agent-framework",
@@ -918,22 +901,22 @@
       "content": "sessions/bloemfontein-beyond-the-prompt-exploring-ai-assisted-game-development-with-net.md"
     },
     {
-      "id": "bloemfontein-security-in-net-and-the-impact-on-user-experience",
-      "title": "Security in .NET and the impact on user experience",
+      "id": "bloemfontein-secure-by-design-usable-by-default-in-the-age-of-ai",
+      "title": "Secure by design, usable by default, in the age of AI",
       "cityId": "bloemfontein",
       "start": "2026-12-05T14:55:00\u002B02:00",
       "end": "2026-12-05T15:40:00\u002B02:00",
       "track": "Track 2",
       "speakerIds": [
-        "rendani-kruger"
+        "dr-rendani-kruger"
       ],
       "note": null,
       "kind": "session",
       "hasAbstract": true,
-      "content": "sessions/bloemfontein-security-in-net-and-the-impact-on-user-experience.md"
+      "content": "sessions/bloemfontein-secure-by-design-usable-by-default-in-the-age-of-ai.md"
     },
     {
-      "id": "bloemfontein-session-to-be-announced",
+      "id": "bloemfontein-session-to-be-announced-1550-track-1",
       "title": "Session to be announced",
       "cityId": "bloemfontein",
       "start": "2026-12-05T15:50:00\u002B02:00",
@@ -943,22 +926,7 @@
       "note": null,
       "kind": "general",
       "hasAbstract": false,
-      "content": "sessions/bloemfontein-session-to-be-announced.md"
-    },
-    {
-      "id": "bloemfontein-your-net-agent-found-the-evidence-should-it-answer",
-      "title": "Your .NET Agent Found the Evidence. Should It Answer?",
-      "cityId": "bloemfontein",
-      "start": "2026-12-05T15:50:00\u002B02:00",
-      "end": "2026-12-05T16:05:00\u002B02:00",
-      "track": "Track 2",
-      "speakerIds": [
-        "sromana-mukhopadhyay"
-      ],
-      "note": null,
-      "kind": "session",
-      "hasAbstract": true,
-      "content": "sessions/bloemfontein-your-net-agent-found-the-evidence-should-it-answer.md"
+      "content": "sessions/bloemfontein-session-to-be-announced-1550-track-1.md"
     },
     {
       "id": "bloemfontein-the-privacy-firewall-keeping-pastoral-notes-away-from-the-finance-office-with-row-level-security",
@@ -1089,6 +1057,22 @@
       "hasBio": true,
       "content": "speakers/dean-martin.md",
       "image": "speakers/dean-martin.jpg"
+    },
+    {
+      "id": "dr-rendani-kruger",
+      "name": "Dr Rendani Kruger",
+      "tagline": "Director and Software Architect, Monkey and River",
+      "cityIds": [
+        "durban",
+        "cape-town",
+        "bloemfontein"
+      ],
+      "links": [
+        "https://www.linkedin.com/in/rendani-maarten-kruger-phd-9b8565b5/"
+      ],
+      "hasBio": true,
+      "content": "speakers/dr-rendani-kruger.md",
+      "image": "speakers/dr-rendani-kruger.jpg"
     },
     {
       "id": "ethan-buckle",
@@ -1376,21 +1360,6 @@
       "image": "speakers/racheline-mouyana.jpg"
     },
     {
-      "id": "rendani-kruger",
-      "name": "Rendani Kruger",
-      "tagline": "Director",
-      "cityIds": [
-        "durban",
-        "bloemfontein"
-      ],
-      "links": [
-        "https://www.linkedin.com/in/rendani-maarten-kruger-phd-9b8565b5/"
-      ],
-      "hasBio": true,
-      "content": "speakers/rendani-kruger.md",
-      "image": "speakers/rendani-kruger.jpg"
-    },
-    {
       "id": "richard-basson",
       "name": "Richard Basson",
       "tagline": "Practice Lead: Software Engineering - DVT",
@@ -1417,22 +1386,6 @@
       "image": "speakers/sheldon-williams.jpg"
     },
     {
-      "id": "shilpa-mitra",
-      "name": "Shilpa Mitra",
-      "tagline": "Co-founder \u0026 CEO, FlowStacks | Building infrastructure and developer tools for AI agents",
-      "cityIds": [
-        "cape-town",
-        "bloemfontein"
-      ],
-      "links": [
-        "https://www.linkedin.com/in/shilpa-mitra-7223b2b1/",
-        "https://webafterai.substack.com/"
-      ],
-      "hasBio": true,
-      "content": "speakers/shilpa-mitra.md",
-      "image": "speakers/shilpa-mitra.jpg"
-    },
-    {
       "id": "sisanda-lisa-masango",
       "name": "Sisanda Lisa Masango",
       "tagline": "Cybersecurity innovator| AI Security Explorer | Helping Developers \u0026 Small Businesses Build Safer Systems",
@@ -1443,21 +1396,6 @@
       "hasBio": true,
       "content": "speakers/sisanda-lisa-masango.md",
       "image": "speakers/sisanda-lisa-masango.png"
-    },
-    {
-      "id": "sromana-mukhopadhyay",
-      "name": "Sromana Mukhopadhyay",
-      "tagline": "Co-founder \u0026 Principal Researcher, BlockQuest Labs Inc. | AI Evaluation \u0026 Agent Reliability",
-      "cityIds": [
-        "cape-town",
-        "bloemfontein"
-      ],
-      "links": [
-        "https://www.linkedin.com/in/sromana-mukhopadhyay-02b3b3b1/"
-      ],
-      "hasBio": true,
-      "content": "speakers/sromana-mukhopadhyay.md",
-      "image": "speakers/sromana-mukhopadhyay.png"
     },
     {
       "id": "uvaan-covenden",
