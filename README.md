@@ -112,4 +112,5 @@ The snapshot is already included; building and browsing do not scrape the websit
 dotnet run data/ImportConference.cs
 ```
 
-The AI stack separately contains `models/DownloadModels.cs`; it is not present or needed on `main`.
+The optional model preparation scripts are grouped under [`models/`](models/README.md).
+The app on `main` does not use them; the AI stack does.
