@@ -207,14 +207,14 @@ return AgentWorkflowBuilder.BuildSequential(
 
 ### Recommendations: multi-turn group chat
 
-[`TalkRecommendationWorkflow.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/Agents/TalkRecommendationWorkflow.cs) uses `CreateGroupChatBuilderWith` and `RoundRobinGroupChatManager` with **no tools**, relying on user and available-session context:
+[`TalkRecommendationWorkflow.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/Agents/TalkRecommendationWorkflow.cs) uses `CreateGroupChatBuilderWith` and a small custom `GroupChatManager` with **no tools**, relying on user and available-session context:
 
 ```text
 Turn 1: Concierge → pause for attendee interests
-Turn 2: Concierge → DepthAdvocate → BreadthAdvocate → PracticalAdvocate → Moderator
+Turn 2: Concierge → DepthAdvocate ⇄ AlternativeAdvocate (2 rounds) → Moderator
 ```
 
-The custom termination function pauses after Concierge's first iteration (`IterationCount >= 1`). On the next turn, Concierge locks in requested/avoided topics; each advocate pitches 2–3 distinct talks; Moderator targets a chronological shortlist of 4–6. Already-saved talks are excluded from candidates.
+`PanelGroupChatManager` overrides `SelectNextAgentAsync` and `ShouldTerminateAsync`: Turn 1 stops after Concierge asks. On the next turn, Concierge locks in requested/avoided topics, then the advocates take turns over two rounds, each pitching **one** talk not yet mentioned (AlternativeAdvocate reacts and offers a different option). Moderator lists the four picks chronologically. Already-saved talks are excluded from candidates.
 
 ### Stateful routing plus embedding similarity
 
