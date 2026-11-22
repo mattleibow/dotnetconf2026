@@ -49,6 +49,7 @@ public static class MauiProgram
         builder.Logging.AddDebug();
         builder.Logging.SetMinimumLevel(LogLevel.Information);
         builder.Logging.AddFilter("Microsoft.Extensions.AI", LogLevel.Debug);
+        builder.Logging.AddFilter("Microsoft.Maui.Essentials.AI", LogLevel.Debug);
         builder.AddMauiDevFlowAgent(options =>
         {
             options.EnableLayoutDiagnostics = true;
