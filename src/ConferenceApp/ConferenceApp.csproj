@@ -70,6 +70,11 @@
 		<MauiAsset Include="..\..\models\embedding\all-MiniLM-L6-v2\**" LogicalName="models/embedding/all-MiniLM-L6-v2/%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<MauiAsset Include="..\..\models\chat\Qwen3-0.6B\*" LogicalName="models/chat/Qwen3-0.6B/%(Filename)%(Extension)" />
+		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
+	</ItemGroup>
+
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<ReferenceNativeSymbol Include="RegisterCustomOps" SymbolType="Function" SymbolMode="Ignore" />
 		<LinkerArgument Include="-lsqlite3" />
@@ -88,6 +93,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
 		<PackageReference Include="Microsoft.Maui.DevFlow.Agent" Condition="'$(Configuration)' == 'Debug'" />
 		<PackageReference Include="Microsoft.Extensions.AI" />
+		<PackageReference Include="Microsoft.Maui.AI.Attributes" />
 		<PackageReference Include="Microsoft.ML.OnnxRuntime" />
 		<PackageReference Include="Microsoft.ML.Tokenizers" />
 		<PackageReference Include="Microsoft.Maui.Essentials.AI" />
@@ -96,6 +102,11 @@
 	<Target Name="RequireEmbeddingModel" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
 		<Error Condition="!Exists('$(MSBuildProjectDirectory)/../../models/embedding/all-MiniLM-L6-v2/model.onnx') or !Exists('$(MSBuildProjectDirectory)/../../models/embedding/all-MiniLM-L6-v2/vocab.txt')"
 		       Text="The ONNX embedding model is missing. Follow models/embedding/README.md to download all-MiniLM-L6-v2 before building." />
+	</Target>
+
+	<Target Name="RequireToolModel" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true' and $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<Error Condition="!Exists('$(MSBuildProjectDirectory)/../../models/chat/Qwen3-0.6B/genai_config.json')"
+		       Text="The ONNX tool model is missing. Follow models/chat/README.md to export Qwen3-0.6B before building." />
 	</Target>
 
 </Project>

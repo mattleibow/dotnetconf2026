@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ConferenceApp.AI;
 using ConferenceApp.Data;
@@ -98,7 +99,10 @@ public class ChatService(
         [
             new(ChatRole.System, $"""
                 You are the .NET Conf South Africa assistant.
-                Answer briefly using the schedule below.
+                Answer briefly using the schedule below and available tools.
+                When asked about sponsors, call get_sponsors.
+                When asked to favourite sessions by topic (such as all mobile or gaming sessions), call search_sessions first to find the matching talks and then call add_favorite for each matching session.
+                When asked to open or navigate to a session, speaker profile, or page, use navigate_to_session, navigate_to_speaker, or navigate_to_page.
                 Current City: {currentCity.Name} | Event Date: {currentCity.Date:dddd, yyyy-MM-dd} | Current Time: {timeProvider.GetLocalNow():HH:mm}
                 Saved Favourites: {(favorites.Length > 0 ? string.Join("; ", favorites) : "None yet")}
 
@@ -111,7 +115,30 @@ public class ChatService(
 
         var options = new ChatOptions
         {
-            Temperature = 0
+            Temperature = 0,
+            Tools =
+            [
+                AIFunctionFactory.Create(
+                    [Description("List the event sponsors and their sponsorship tiers for a city, or the current city if omitted.")]
+                    ([Description("Optional city name ('Durban', 'Cape Town', 'Bloemfontein').")] string city = "") =>
+                    {
+                        var targetCity = db.Cities.FirstOrDefault(c =>
+                            !string.IsNullOrWhiteSpace(city) && (
+                                c.Id.Equals(city.Trim(), StringComparison.OrdinalIgnoreCase) ||
+                                c.Name.Contains(city.Trim(), StringComparison.OrdinalIgnoreCase)))
+                            ?? currentCity;
+
+                        logger.LogInformation("[AI Tool] get_sponsors(city: '{CityId}')", targetCity.Id);
+                        var sponsors = db.Sponsors
+                            .Where(s => s.CityIds.Contains(targetCity.Id))
+                            .Select(s => $"{s.Name} ({s.Tier}) — {s.Url}");
+                        return string.Join('\n', sponsors);
+                    },
+                    "get_sponsors"),
+                .. ConferenceDataToolContext.Default.Tools,
+                .. FavoritesToolContext.Default.Tools,
+                .. NavigationToolContext.Default.Tools
+            ]
         };
 
         var itemsByMessage = new Dictionary<string, ChatItem>();
@@ -123,6 +150,9 @@ public class ChatService(
             await foreach (var update in chatClient.GetStreamingResponseAsync(turnHistory, options, cancellationToken))
             {
                 updates.Add(update);
+
+                foreach (var call in update.Contents.OfType<FunctionCallContent>())
+                    AddToolCall(reply, call.Name);
 
                 if (update.Role is null || update.Role == ChatRole.Assistant)
                     lastItem = AppendText(reply, itemsByMessage, update.Text, update.AuthorName, update.MessageId);
