@@ -31,12 +31,12 @@ public static class TalkRecommendationWorkflow
         var concierge = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "Concierge",
+                Name = "concierge",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are Concierge, hosting the conference session recommendation
+                        You are concierge, hosting the conference session recommendation
                         panel.
 
                         If you have NOT yet asked the attendee to confirm their topics:
@@ -65,12 +65,12 @@ public static class TalkRecommendationWorkflow
         var depthAdvocate = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "DepthAdvocate",
+                Name = "depth-advocate",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are DepthAdvocate on the conference panel. You champion the
+                        You are depth-advocate on the conference panel. You champion the
                         talks that go deepest into the attendee's Confirmed topics.
 
                         Pitch exactly ONE NEW talk from the candidate sessions in context.
@@ -94,12 +94,12 @@ public static class TalkRecommendationWorkflow
         var alternativeAdvocate = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "AlternativeAdvocate",
+                Name = "alternative-advocate",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are AlternativeAdvocate on the conference panel. You react to
+                        You are alternative-advocate on the conference panel. You react to
                         the previous pitch and offer a different option.
 
                         Pitch exactly ONE NEW talk from the candidate sessions in context.
@@ -121,15 +121,15 @@ public static class TalkRecommendationWorkflow
         var moderator = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "Moderator",
+                Name = "moderator",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
-                        You are Moderator wrapping up the recommendation panel.
+                        You are moderator wrapping up the recommendation panel.
 
-                        List the distinct talks pitched by DepthAdvocate and
-                        AlternativeAdvocate in chronological order. Output ONLY bullet
+                        List the distinct talks pitched by depth-advocate and
+                        alternative-advocate in chronological order. Output ONLY bullet
                         lines ("- HH:mm – HH:mm: Exact Title — short reason").
                         """,
                     Temperature = 0
@@ -165,7 +165,7 @@ public static class TalkRecommendationWorkflow
         for (var i = messages.Count - 1; i > 0; i--)
         {
             if (messages[i].Role == ChatRole.User && string.IsNullOrEmpty(messages[i].AuthorName))
-                return messages.Take(i).Any(m => m.AuthorName == "Concierge");
+                return messages.Take(i).Any(m => m.AuthorName == "concierge");
         }
 
         return false;

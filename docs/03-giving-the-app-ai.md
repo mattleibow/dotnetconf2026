@@ -191,14 +191,14 @@ The pipeline is compact: background session enrichment → summaries in RAG cont
 
 [`SessionDeepDiveWorkflow.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/Agents/SessionDeepDiveWorkflow.cs):
 
-1. `SessionResearcher` reads the target abstract and speaker bio with data tools and builds a factual brief.
-2. `TakeawaysAgent` produces three technical takeaway bullets.
-3. In parallel with takeaways, `QuestionsCoachAgent` produces two things to think about and two Q&A questions.
+1. `session-researcher` reads the target abstract and speaker bio with data tools and builds a factual brief.
+2. `takeaways` produces three technical takeaway bullets.
+3. In parallel with takeaways, `questions-coach` produces two things to think about and two Q&A questions.
 
 ```csharp
 var parallelAnalysis = AgentWorkflowBuilder
-    .BuildConcurrent("DeepDiveParallelAnalysis", [takeawaysAgent, questionsCoachAgent])
-    .AsAIAgent(name: "DeepDiveParallelAnalysis");
+    .BuildConcurrent("deep-dive-parallel-analysis", [takeawaysAgent, questionsCoachAgent])
+    .AsAIAgent(name: "deep-dive-parallel-analysis");
 
 return AgentWorkflowBuilder.BuildSequential(
     "SessionDeepDiveWorkflow",
@@ -210,17 +210,17 @@ return AgentWorkflowBuilder.BuildSequential(
 [`TalkRecommendationWorkflow.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/AI/Agents/TalkRecommendationWorkflow.cs) uses `CreateGroupChatBuilderWith` and a small custom `GroupChatManager` with **no tools**, relying on user and available-session context:
 
 ```text
-Turn 1: Concierge → pause for attendee interests
-Turn 2: Concierge → DepthAdvocate ⇄ AlternativeAdvocate (2 rounds) → Moderator
+Turn 1: concierge → pause for attendee interests
+Turn 2: concierge → depth-advocate ⇄ alternative-advocate (2 rounds) → moderator
 ```
 
-`PanelGroupChatManager` overrides `SelectNextAgentAsync` and `ShouldTerminateAsync`: Turn 1 stops after Concierge asks. On the next turn, Concierge locks in requested/avoided topics, then the advocates take turns over two rounds, each pitching **one** talk not yet mentioned (AlternativeAdvocate reacts and offers a different option). Moderator lists the four picks chronologically. Already-saved talks are excluded from candidates.
+`PanelGroupChatManager` overrides `SelectNextAgentAsync` and `ShouldTerminateAsync`: Turn 1 stops after concierge asks. On the next turn, concierge locks in requested/avoided topics, then the advocates take turns over two rounds, each pitching **one** talk not yet mentioned (alternative-advocate reacts and offers a different option). `moderator` lists the four picks chronologically. Already-saved talks are excluded from candidates.
 
 ### Stateful routing plus embedding similarity
 
 Workflows adapt with `.AsAIAgent(...).AsIChatClient(allowNonChatClientAgents: true)`. The keyed assistant wraps two routers:
 
-1. `RoutingChatClient.Create` checks message history. If the last named assistant message has `AuthorName == "Concierge"`, route the next user response back to recommendations.
+1. `RoutingChatClient.Create` checks message history. If the last named assistant message has `AuthorName == "concierge"`, route the next user response back to recommendations.
 2. Otherwise, `SemanticRoutingChatClient` compares the prompt to deep-dive/recommendation utterances using the same ONNX embedding generator (`scoreThreshold: 0.58f`, `topK: 1`), falling back to the default assistant.
 
 This routes using embeddings, not an extra model-written tool plan.
@@ -229,9 +229,9 @@ This routes using embeddings, not an extra model-written tool plan.
 
 Open the stack's [`Services/ChatService.cs`](https://github.com/mattleibow/dotnetconf2026/blob/mattleibow-ai-6-windows-tool-calling/src/ConferenceApp/Services/ChatService.cs), not the stub on `main`.
 
-- **Progress, not internal chatter:** research and Concierge handoff turns update `reply.Progress`, shown by `chat-progress`, instead of filling the visible bubble with intermediate state.
-- **De-interleave parallel streams:** show `TakeawaysAgent` tokens under **Key Takeaways**, buffer `QuestionsCoachAgent`, then append **Things to Think About & Ask** so concurrent output remains readable.
-- **Preserve routing history:** store `updates.ToChatResponse().Messages` in `reply.ResponseMessages`, retaining `AuthorName` across turns for the Concierge follow-up route.
+- **Progress, not internal chatter:** research and concierge handoff turns update `reply.Progress`, shown by `chat-progress`, instead of filling the visible bubble with intermediate state.
+- **De-interleave parallel streams:** show `takeaways` tokens under **Key Takeaways**, buffer `questions-coach`, then append **Things to Think About & Ask** so concurrent output remains readable.
+- **Preserve routing history:** store `updates.ToChatResponse().Messages` in `reply.ResponseMessages`, retaining `AuthorName` across turns for the concierge follow-up route.
 - **Tappable evidence:** `AddReferencedSessionsAsync` finds current-city talk titles/IDs mentioned in the reply and attaches `Session` cards. `chat-session-card-{Id}` opens session details.
 
 ## Assistant live demo
@@ -240,4 +240,4 @@ Select **Durban** and verify model availability. The empty chat shows four start
 
 1. **`When is Matthew's talk?`** or **`Do my favourites clash?`** — show schedule/RAG context and any resulting session card. A schedule answer need not require a tool call.
 2. **New chat**, then **`Prepare me for Matthew's talk: takeaways and questions`** — show researcher progress, data tools where supported, and the two parallel analysts.
-3. **New chat**, then **`Can you suggest some talks for me?`** — when Concierge asks, reply **`AI and Cloud, no Web`**. Show the advocates and Moderator; this workflow is tool-free.
+3. **New chat**, then **`Can you suggest some talks for me?`** — when concierge asks, reply **`AI and Cloud, no Web`**. Show the advocates and moderator; this workflow is tool-free.

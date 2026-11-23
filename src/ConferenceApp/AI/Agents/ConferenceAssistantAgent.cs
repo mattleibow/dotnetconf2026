@@ -18,7 +18,7 @@ public static class ConferenceAssistantAgent
         return localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "ConferenceAssistant",
+                Name = "conference-assistant",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {

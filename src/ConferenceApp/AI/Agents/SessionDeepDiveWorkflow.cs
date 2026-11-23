@@ -27,7 +27,7 @@ public static class SessionDeepDiveWorkflow
         var sessionResearcher = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "SessionResearcher",
+                Name = "session-researcher",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
@@ -55,13 +55,13 @@ public static class SessionDeepDiveWorkflow
         var takeawaysAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "TakeawaysAgent",
+                Name = "takeaways",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
                         Using only the session and speaker details collected by
-                        SessionResearcher, write 3 concise bullet points ("- ")
+                        session-researcher, write 3 concise bullet points ("- ")
                         explaining what to expect in this session and the key technical
                         takeaways for a developer. Include the exact session title and
                         time in the first bullet. Keep each bullet to 1 or 2 short
@@ -76,13 +76,13 @@ public static class SessionDeepDiveWorkflow
         var questionsCoachAgent = localClient.AsAIAgent(
             new ChatClientAgentOptions
             {
-                Name = "QuestionsCoachAgent",
+                Name = "questions-coach",
                 UseProvidedChatClientAsIs = true,
                 ChatOptions = new ChatOptions
                 {
                     Instructions = """
                         Using only the session and speaker details collected by
-                        SessionResearcher, suggest 2 thoughtful things to think about
+                        session-researcher, suggest 2 thoughtful things to think about
                         during the talk and 2 smart questions the attendee can ask the
                         speaker during Q&A. Use bullet points ("- ") and keep each
                         point to 1 or 2 short sentences. Do not include an introductory
@@ -95,8 +95,8 @@ public static class SessionDeepDiveWorkflow
             services);
 
         var parallelAnalysis = AgentWorkflowBuilder
-            .BuildConcurrent("DeepDiveParallelAnalysis", [takeawaysAgent, questionsCoachAgent])
-            .AsAIAgent(name: "DeepDiveParallelAnalysis");
+            .BuildConcurrent("deep-dive-parallel-analysis", [takeawaysAgent, questionsCoachAgent])
+            .AsAIAgent(name: "deep-dive-parallel-analysis");
 
         return AgentWorkflowBuilder.BuildSequential(
             "SessionDeepDiveWorkflow",
