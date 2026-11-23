@@ -7,6 +7,8 @@ The AI layers are merged: walk through the **styled .NET MAUI 11 conference app*
 
 The [ordered PR stack](../README.md#demo-branches) remains useful as a historical walkthrough.
 
+The [gateway runbook](04-ai-gateway.md) adds server-first chat through a LiteLLM gateway (Azure OpenAI and Ollama) with native on-device fallback.
+
 ## Runbook sections
 
 | Part | Duration | Guide |
@@ -14,6 +16,7 @@ The [ordered PR stack](../README.md#demo-branches) remains useful as a historica
 | **1 — What's New in .NET 11, C# 15 & MAUI 11** | 5–8 mins | [Framework and baseline code tour](01-whats-new-net11-maui11.md) |
 | **2 — Agents Building Apps** | 12–15 mins | [Preparation, exploration, and optional bug hunt](02-agents-building-apps.md) |
 | **3 — Giving the App That Same AI** | ~20 mins | [Native AI-stack walkthrough](03-giving-the-app-ai.md) |
+| **Gateway extension** | Optional | [Aspire, LiteLLM, server models, and on-device fallback](04-ai-gateway.md) |
 
 ## Pre-flight
 

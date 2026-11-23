@@ -33,7 +33,7 @@
                         <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
                             <Border Style="{StaticResource FrostedPillBorder}"
                                     HorizontalOptions="Center">
-                                <Label Text="ON-DEVICE AI CONCIERGE"
+                                <Label Text="AI CONCIERGE"
                                        Style="{StaticResource Label}"
                                        TextColor="{StaticResource White}" />
                             </Border>
