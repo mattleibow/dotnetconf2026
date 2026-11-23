@@ -29,12 +29,12 @@ public static class AgentExtensions
 
         // Sequential + concurrent fan-out: Researcher -> parallel [TakeawaysAgent, QuestionsCoachAgent].
         var deepDiveClient = SessionDeepDiveWorkflow.Create(services)
-            .AsAIAgent(name: "SessionDeepDive")
+            .AsAIAgent(name: "session-deep-dive")
             .AsIChatClient(allowNonChatClientAgents: true);
 
         // Multi-turn group chat: Concierge -> 2 rounds of Depth <-> Alternative -> Moderator.
         var recommendationClient = TalkRecommendationWorkflow.Create(services)
-            .AsAIAgent(name: "TalkRecommendations")
+            .AsAIAgent(name: "talk-recommendations")
             .AsIChatClient(allowNonChatClientAgents: true);
 
         // Semantic router: uses our ONNX MiniLM embeddings to pick the right agent or workflow per prompt.
@@ -57,7 +57,7 @@ public static class AgentExtensions
         {
             var lastAssistant = context.Messages.LastOrDefault(m =>
                 m.Role == ChatRole.Assistant && !string.IsNullOrWhiteSpace(m.AuthorName));
-            if (lastAssistant?.AuthorName == "Concierge")
+            if (lastAssistant?.AuthorName == "concierge")
                 return ValueTask.FromResult(recommendationClient);
 
             return ValueTask.FromResult<IChatClient>(semanticRouter);
