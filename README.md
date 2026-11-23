@@ -22,7 +22,7 @@ The schedule, biographies, images, search, and favourites work offline. Map tile
 |---|---|
 | [`ConferenceApp.slnx`](ConferenceApp.slnx), [`src/ConferenceApp/`](src/ConferenceApp/) | MAUI app, XAML views, view models, and platform projects |
 | [`Data/`](src/ConferenceApp/Data/) | `ConferenceDbProvider`, read-only `ConferenceDb`, preload service, and conference models |
-| [`Services/`](src/ConferenceApp/Services/) | Literal search, user preferences, chat availability stub, and background-service base |
+| [`Services/`](src/ConferenceApp/Services/) | Semantic search, user preferences, streamed chat, and background-service base |
 | [`.github/prompts/`](.github/prompts/) | `00-prepare-demo`, `01-explore-app`, and `02-bug-hunt` |
 | [`docs/`](docs/README.md) | .NET 11 notes, DevFlow runbook, and the separate AI-stack walkthrough |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Agent guidance for the whole demo, including stack-only AI conventions |
@@ -45,7 +45,7 @@ The native on-device AI stack is ordered **bottom to top**:
 | 5 | [#37](https://github.com/mattleibow/dotnetconf2026/pull/37) | Multi-agent workflows and routing |
 | 6 | [#41](https://github.com/mattleibow/dotnetconf2026/pull/41) | Experimental Windows tool calling |
 
-Use the corresponding branch for each walkthrough, or the [top-of-stack source](https://github.com/mattleibow/dotnetconf2026/tree/mattleibow-ai-6-windows-tool-calling) for the combined demo.
+These layers are now merged. Use their PRs as a historical walkthrough, or walk through the combined code directly.
 
 ## Check tooling, then run one target
 
@@ -98,7 +98,7 @@ maui devflow list
 maui devflow logs --follow --no-json
 ```
 
-On `main`, search is literal and chat is unavailable. Queries such as `football forecasts` demonstrate semantic retrieval **only on the AI stack**, after indexing.
+Queries such as `football forecasts` demonstrate semantic retrieval after the packaged catalogue has been indexed.
 
 ## On-device AI
 
@@ -113,4 +113,4 @@ dotnet run data/ImportConference.cs
 ```
 
 The optional model preparation scripts are grouped under [`models/`](models/README.md).
-The app on `main` does not use them; the AI stack does.
+The embedding model is required to build the app; the chat model is used on Windows.
