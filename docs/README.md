@@ -3,9 +3,9 @@
 **Session:** *Agents Building Agentic Apps: AI Goes Mobile with .NET MAUI*  
 **Duration:** approximately 45 minutes
 
-Start on `main`: a **styled, functional .NET MAUI 11 conference app** with offline content, literal agenda search, manual favourites, speaker profiles, and an Assistant availability stub. It has no on-device model integration.
+The AI layers are merged: walk through the **styled .NET MAUI 11 conference app** directly in the editor, with packaged semantic search, native on-device AI, conference tools, and multi-agent workflows.
 
-Follow [the README's ordered PR stack](../README.md#demo-branches) for the AI portion.
+The [ordered PR stack](../README.md#demo-branches) remains useful as a historical walkthrough.
 
 ## Runbook sections
 

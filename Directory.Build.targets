@@ -1,0 +1,15 @@
+<Project>
+
+  <!--
+    Workaround for https://github.com/dotnet/sdk/issues/57310: `dotnet build -t:Run` (used by Aspire to launch
+    the iOS app) fails when the SDK path contains a space, e.g. dotnetup's "~/Library/Application Support".
+    Runs only before the Run target, so plain `dotnet run` (which starts RunCommand as a process) is unaffected.
+  -->
+  <Target Name="_QuoteRunCommandWithSpaces" BeforeTargets="Run"
+          Condition="'$(TargetPlatformIdentifier)' == 'ios' and $(RunCommand.Contains(' ')) and !$(RunCommand.StartsWith('&quot;'))">
+    <PropertyGroup>
+      <RunCommand>&quot;$(RunCommand)&quot;</RunCommand>
+    </PropertyGroup>
+  </Target>
+
+</Project>
