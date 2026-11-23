@@ -104,7 +104,7 @@ public class ChatService(
                     AddToolCall(reply, call.Name);
 
                 if (update.Role is null || update.Role == ChatRole.Assistant)
-                    lastItem = AppendText(reply, itemsByMessage, update.Text, update.AuthorName, update.MessageId);
+                    lastItem = AppendText(reply, itemsByMessage, update.Text, update.AuthorName, update.MessageId, update.ModelId);
             }
 
             history.Add(new(ChatRole.User, text));
@@ -138,7 +138,7 @@ public class ChatService(
     }
 
     // Each agent turn gets its own bubble (keyed by message), so a group chat agent speaking twice gets two bubbles.
-    private ChatItem AppendText(ChatItem reply, Dictionary<string, ChatItem> itemsByMessage, string? text, string? author = null, string? messageId = null)
+    private ChatItem AppendText(ChatItem reply, Dictionary<string, ChatItem> itemsByMessage, string? text, string? author = null, string? messageId = null, string? modelId = null)
     {
         if (string.IsNullOrEmpty(text))
             return itemsByMessage.Values.LastOrDefault() ?? reply;
@@ -147,7 +147,8 @@ public class ChatService(
         if (!itemsByMessage.TryGetValue(key, out var item))
         {
             item = itemsByMessage.Count == 0 ? reply : new ChatItem(isUser: false);
-            item.Author = author;
+            // Show which model answered, e.g. "conference-assistant (apple-intelligence)".
+            item.Author = string.IsNullOrEmpty(modelId) ? author : $"{author} ({modelId})";
             item.Progress = "";
             if (item != reply)
                 Messages.Add(item);
