@@ -2,6 +2,7 @@ using System.ComponentModel;
 using ConferenceApp.Data;
 using ConferenceApp.Services;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace ConferenceApp.AI;
@@ -9,7 +10,7 @@ namespace ConferenceApp.AI;
 public sealed class SpeakerEnrichmentService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
-    IChatClient chatClient,
+    [FromKeyedServices(ChatExtensions.Local)] IChatClient chatClient,
     ILogger<SpeakerEnrichmentService> logger)
     : EnrichmentService<Speaker>(dbProvider, preferences, chatClient, logger)
 {

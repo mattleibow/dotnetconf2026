@@ -1,0 +1,32 @@
+# LiteLLM gateway endpoints. The app asks for "azure"; each endpoint decides which model it runs.
+# Guardrails, virtual keys and budgets are managed in the Admin UI (/ui) and stored in Postgres.
+model_list:
+  - model_name: azure
+    litellm_params:
+      model: azure/azure-chat
+      api_base: os.environ/AZURE_API_BASE
+      api_key: os.environ/AZURE_API_KEY
+      api_version: "2024-10-21"
+  - model_name: ollama
+    litellm_params:
+      model: ollama_chat/qwen2.5:3b
+      api_base: os.environ/OLLAMA_API_BASE
+
+router_settings:
+  # If Azure fails, serve the request from the local Ollama server instead.
+  fallbacks: [{ "azure": ["ollama"] }]
+
+guardrails:
+  # Demo policy from config (read-only in the Admin UI). Add more guardrails in the UI.
+  - guardrail_name: "no-mary-poppins"
+    litellm_params:
+      guardrail: litellm_content_filter
+      mode: "pre_call"
+      default_on: true
+      blocked_words:
+        - keyword: "poppins"
+          action: "BLOCK"
+          description: "Mary Poppins is off limits at this conference"
+        - keyword: "supercalifragilisticexpialidocious"
+          action: "BLOCK"
+          description: "Mary Poppins is off limits at this conference"

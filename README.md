@@ -8,10 +8,10 @@ The companion app and speaker guide for .NET Conf 2026 South Africa.
 
 `main` is a **.NET 11 / .NET MAUI 11** conference app:
 
-- **Agenda:** city-scoped, case-insensitive substring search over titles, abstracts, and speaker names; All / Favourites filter; swipeable session cards and inline favourite controls.
+- **Agenda:** city-scoped semantic search with packaged ONNX embeddings; All / Favourites filter; swipeable session cards and inline favourite controls.
 - **Event:** conference details, sponsors, venue photos, and an embedded map.
 - **Speakers:** profiles, biographies, and links to their sessions.
-- **Assistant:** chat UI and starter suggestions, ready for the AI walkthrough.
+- **Assistant:** conference tools, contextual agents, and multi-agent workflows. Chat uses the optional gateway first, falling back to native on-device AI when the server is unreachable.
 - **Local state:** selected city and favourites in `Preferences`. Conference content for **Durban, Cape Town, and Bloemfontein** ships with the app.
 
 The schedule, biographies, images, search, and favourites work offline. Map tiles, external maps, and sponsor websites can require network access. The layouts support portrait phones and wide desktop windows, with light and dark themes. Debug builds register the MAUI DevFlow agent.
@@ -23,6 +23,7 @@ The schedule, biographies, images, search, and favourites work offline. Map tile
 | [`ConferenceApp.slnx`](ConferenceApp.slnx), [`src/ConferenceApp/`](src/ConferenceApp/) | MAUI app, XAML views, view models, and platform projects |
 | [`Data/`](src/ConferenceApp/Data/) | `ConferenceDbProvider`, read-only `ConferenceDb`, preload service, and conference models |
 | [`Services/`](src/ConferenceApp/Services/) | Semantic search, user preferences, streamed chat, and background-service base |
+| [`src/ConferenceApp.AppHost/`](src/ConferenceApp.AppHost/) | Aspire orchestration: LiteLLM gateway, Azure OpenAI, Ollama, and the MAUI app |
 | [`.github/prompts/`](.github/prompts/) | `00-prepare-demo`, `01-explore-app`, and `02-bug-hunt` |
 | [`docs/`](docs/README.md) | .NET 11 notes, DevFlow runbook, and the separate AI-stack walkthrough |
 | [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Agent guidance for the whole demo, including stack-only AI conventions |
@@ -46,6 +47,10 @@ The native on-device AI stack is ordered **bottom to top**:
 | 6 | [#41](https://github.com/mattleibow/dotnetconf2026/pull/41) | Experimental Windows tool calling |
 
 These layers are now merged. Use their PRs as a historical walkthrough, or walk through the combined code directly.
+
+## Gateway demo
+
+Follow the [gateway runbook](docs/04-ai-gateway.md). Aspire runs a LiteLLM gateway in front of Azure OpenAI and a local Ollama server, plus the app on Mac, iOS and Android. The app's default `IChatClient` tries the gateway first and falls back to native on-device AI on any failure; background enrichment stays on-device.
 
 ## Check tooling, then run one target
 

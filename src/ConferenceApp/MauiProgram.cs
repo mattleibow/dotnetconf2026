@@ -3,6 +3,7 @@ using ConferenceApp.Data;
 using ConferenceApp.Services;
 using ConferenceApp.ViewModels;
 using ConferenceApp.Views;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 #if DEBUG
 using Microsoft.Maui.DevFlow.Agent;
@@ -28,6 +29,12 @@ public static class MauiProgram
         builder.ConfigureMauiHandlers(handlers =>
             handlers.AddHandler<TabBar, PopToRootShellItemHandler>());
 #endif
+
+        // Aspire passes service URLs (e.g. services__ai-gateway__http__0) as environment variables;
+        // service discovery lets every HttpClient resolve names like "https+http://ai-gateway".
+        builder.Configuration.AddEnvironmentVariables();
+        builder.Services.AddServiceDiscovery();
+        builder.Services.ConfigureHttpClientDefaults(http => http.AddServiceDiscovery());
 
         builder.Services.AddSingleton<TimeProvider>(new ConferenceTimeProvider(new TimeOnly(8, 30)));
         builder.Services.AddSingleton<ConferenceDbProvider>();

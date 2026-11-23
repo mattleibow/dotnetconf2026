@@ -1,12 +1,19 @@
+using System.ClientModel;
+using System.ClientModel.Primitives;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Maui.Essentials.AI;
+using OpenAI;
 
 namespace ConferenceApp.AI;
 
-// Registers the platform's local on-device IChatClient and model availability checks.
+// Registers the cloud gateway and native on-device clients, with the default IChatClient failing over from cloud to local.
 public static class ChatExtensions
 {
+    public const string Cloud = "cloud";
+    public const string Local = "local";
+
 #if ANDROID
     private static readonly string[] AndroidCandidateModels =
     [
@@ -19,8 +26,33 @@ public static class ChatExtensions
 
     public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
     {
-        // Register a transient local IChatClient so concurrent agents don't contend on one session.
-        builder.Services.AddTransient<IChatClient>(CreateLocalChatClient);
+        // Aspire supplies the gateway (direct on Mac, a dev tunnel on simulators) and its key as configuration.
+        var hasGateway = builder.Configuration.GetSection("services:ai-gateway").Exists();
+
+        builder.Services.AddKeyedTransient<IChatClient>(Local, (services, _) => CreateLocalChatClient(services));
+
+        builder.Services.AddKeyedTransient<IChatClient>(Cloud, (services, _) =>
+            new OpenAIClient(new ApiKeyCredential(builder.Configuration["AI_GATEWAY_KEY"] ?? ""), new OpenAIClientOptions
+            {
+                Endpoint = new Uri("https+http://ai-gateway/v1"),
+                Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
+                NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
+            })
+                .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
+                .AsIChatClient()
+                .AsBuilder()
+                .UseFunctionInvocation(services.GetRequiredService<ILoggerFactory>())
+                .UseLogging(services.GetRequiredService<ILoggerFactory>())
+                .Build(services));
+
+        // Each agent gets its own client: try the gateway first, and use on-device AI if it fails.
+        builder.Services.AddTransient<IChatClient>(services => !hasGateway
+            ? services.GetRequiredKeyedService<IChatClient>(Local)
+            : new OrderedFailoverChatClient(
+            [
+                services.GetRequiredKeyedService<IChatClient>(Cloud),
+                services.GetRequiredKeyedService<IChatClient>(Local)
+            ]));
         return builder;
     }
 

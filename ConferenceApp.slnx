@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/ConferenceApp.AppHost/ConferenceApp.AppHost.csproj" />
     <Project Path="src/ConferenceApp/ConferenceApp.csproj" />
   </Folder>
 </Solution>
