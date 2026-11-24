@@ -49,7 +49,7 @@ The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters h
 [`ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) registers a keyed `remote` client (`CreateRemoteChatClient`: OpenAI protocol → `https+http://ai-gateway/v1`), a keyed `local` on-device client, and a default `IChatClient` that is `OrderedFailoverChatClient(remote, local)`:
 
 - Every request tries the gateway first; nothing is pinned after a failure.
-- Any error before output is streamed — unreachable server, timeout (30 s), quota, or a guardrail block — falls back to on-device AI. A blocked topic stays blocked at the gateway for the rest of that chat because the history is resent; use **New chat**.
+- Any error before output is streamed — unreachable server, timeout (15 s, no client retries; the gateway does its own), quota, or a guardrail block — falls back to on-device AI. If that fails too, the reply says the assistant can't answer right now and the error is logged. A blocked topic stays blocked at the gateway for the rest of that chat because the history is resent; use **New chat**.
 - Background catalogue enrichment always uses the on-device client.
 - Each reply's author shows the agent and the endpoint that answered, e.g. `conference-assistant (azure)`, or the on-device model after a fallback.
 
