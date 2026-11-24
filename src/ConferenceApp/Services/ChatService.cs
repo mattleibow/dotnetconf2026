@@ -101,8 +101,10 @@ public class ChatService(
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !cancellationToken.IsCancellationRequested)
         {
+            logger.LogError(ex, "[AI Chat] Reply failed.");
+            const string message = "The assistant can't answer right now. Check your connection and try again.";
             lastItem.Progress = "";
-            lastItem.Text = string.IsNullOrWhiteSpace(lastItem.Text) ? ex.Message : $"{lastItem.Text}\n\n{ex.Message}";
+            lastItem.Text = string.IsNullOrWhiteSpace(lastItem.Text) ? message : $"{lastItem.Text}\n\n{message}";
         }
         finally
         {

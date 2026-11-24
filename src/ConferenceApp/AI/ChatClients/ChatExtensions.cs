@@ -54,7 +54,8 @@ public static class ChatExtensions
         {
             Endpoint = new Uri("https+http://ai-gateway/v1"),
             Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
-            NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
+            NetworkTimeout = TimeSpan.FromSeconds(15), // Fall back to on-device AI quickly if the gateway is unreachable.
+            RetryPolicy = new ClientRetryPolicy(maxRetries: 0) // The gateway already retries and falls back between endpoints.
         };
 
         return new OpenAIClient(creds, options)
