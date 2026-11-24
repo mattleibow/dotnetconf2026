@@ -30,11 +30,19 @@ Virtual keys, budgets, rate limits and any further guardrails are managed in the
 
 ## First run
 
-1. Set the Azure context for provisioning in the AppHost's user secrets (`Azure:SubscriptionId`, `Azure:Location`, `Azure:TenantId`, `Azure:CredentialSource=AzureCli`), then `aspire start`.
-2. After `foundry` is provisioned, copy its key into the `azure-openai-key` parameter (dashboard or `aspire secret set Parameters:azure-openai-key …`).
-3. Open the Admin UI (`ai-gateway` → `/ui`, user `admin`, password = `litellm-master-key`) and create the app's virtual key with the value of the `litellm-app-key` parameter, allowed models `azure` and `ollama`.
+1. Set the Azure context for provisioning in the AppHost's user secrets (`Azure:SubscriptionId`, `Azure:Location`, `Azure:TenantId`, `Azure:CredentialSource=AzureCli`), then run `aspire start` from the repository root.
+2. After `foundry` is provisioned, copy its key into the `azure-openai-key` parameter (dashboard or `aspire secret set Parameters:azure-openai-key …`) and restart `ai-gateway`.
+3. Create the app's virtual key once, with the value of the `litellm-app-key` parameter (it persists in Postgres):
 
-The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters have demo defaults; override them in the dashboard or with `aspire secret set`.
+   ```sh
+   curl -X POST <ai-gateway-url>/key/generate \
+     -H "Authorization: Bearer <litellm-master-key>" -H "Content-Type: application/json" \
+     -d '{"key": "<litellm-app-key>", "key_alias": "conference-app", "models": ["azure", "ollama"]}'
+   ```
+
+4. Start `conference-app-maccatalyst`, `conference-app-ios-simulator` or `conference-app-android-emulator` from the dashboard. The iOS SDK picks the simulator, so boot the one you want first (with none booted it may pick an iPad).
+
+The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters have demo defaults; override them in the dashboard or with `aspire secret set`. The Admin UI is at `ai-gateway` → `/ui` (user `admin`, password = `litellm-master-key`).
 
 ## The app
 
@@ -43,6 +51,8 @@ The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters h
 - Every request tries the gateway first; nothing is pinned after a failure.
 - Any error before output is streamed — unreachable server, timeout (30 s), quota, or a guardrail block — falls back to on-device AI. A blocked topic stays blocked at the gateway for the rest of that chat because the history is resent; use **New chat**.
 - Background catalogue enrichment always uses the on-device client.
+- Each reply's author shows the agent and the endpoint that answered, e.g. `conference-assistant (azure)`, or the on-device model after a fallback.
+- Known limitation: `ChatService` still checks the on-device model before chatting, so a device without one (for example an Android emulator without Gemini Nano) shows the unavailable message even when the gateway is running.
 
 [`MauiProgram.cs`](../src/ConferenceApp/MauiProgram.cs) adds environment variables to configuration and enables Aspire service discovery for every `HttpClient`, so `ai-gateway` resolves to the address Aspire supplied (directly on Mac, via the dev tunnel on devices).
 
@@ -50,3 +60,4 @@ The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters h
 
 - Foundry Local isn't used: Microsoft documents it as a single-user on-device runtime, not a server. Ollama stands in for an internal model server; in production that would be vLLM or Foundry Local on Azure Local behind the same gateway.
 - The tunnel uses anonymous access, so the gateway is reachable from the internet while it runs; the LiteLLM virtual key is the only protection.
+- Aspire launches the iOS app with `dotnet build -t:Run`. [`Directory.Build.targets`](../Directory.Build.targets) works around [dotnet/sdk#57310](https://github.com/dotnet/sdk/issues/57310) when the .NET SDK path contains a space (for example dotnetup).

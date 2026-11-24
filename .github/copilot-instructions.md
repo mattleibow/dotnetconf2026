@@ -39,7 +39,7 @@ When unsure about a .NET 11 or MAUI 11 API, check Microsoft Learn first:
 ## App architecture
 
 - Keep the structure flat and easy to read on a projector: `AI/`, `Converters/`, `Data/`, `Services/`, `ViewModels/`, `Views/`, and `Resources/`.
-- The app lives in `src/ConferenceApp/` with `ConferenceDbProvider` and `ConferenceDb` in `Data/` (read-only conference data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService`, and `ChatService`. On `main`, search is literal and chat explicitly unavailable. The separate AI stack adds ONNX semantic search over `VectorStoreCollection<string, Session>`, streaming on-device chat, and `builder.AddConferenceAI()` in `AI/ConferenceAIExtensions.cs`; don't assume those integrations exist on the baseline.
+- The app lives in `src/ConferenceApp/` with `ConferenceDbProvider` and `ConferenceDb` in `Data/` (read-only conference data access), `UserPreferencesService` (city and favourites in `Preferences`), `SearchService`, and `ChatService`. `builder.AddConferenceAI()` in `AI/ConferenceAIExtensions.cs` adds ONNX semantic search over `VectorStoreCollection<string, Session>`, streaming chat, tools, and agents. Launched by the Aspire AppHost (`src/ConferenceApp.AppHost`), the default `IChatClient` tries the LiteLLM gateway first and falls back to on-device AI; otherwise it is on-device only.
 - Register pages, view models, and services with dependency injection in `MauiProgram.cs`. Never call `AddTransient<Page, ViewModel>()`: register them separately with `AddTransient<Page>().AddTransient<ViewModel>()`.
 - Use Shell for navigation: one page per top-level section, and routes for detail pages. Never fake tabs by toggling `IsVisible` on one page.
 - One view model per page, with commands (`CommunityToolkit.Mvvm`) rather than event handlers in code-behind.
@@ -77,6 +77,7 @@ Use the installed skills rather than guessing. Load the ones that match the task
 - Plain `dotnet run` doesn't watch edits. Use `dotnet watch` (or an IDE) only when XAML Incremental Hot Reload is wanted, after checking its current iOS requirements.
 - Run and build one target framework at a time, only for the requested platform(s). For general cross-platform UI work, Mac Catalyst is a convenient local loop before final iOS/Android checks.
 - Reuse a booted simulator (`xcrun simctl list devices booted`). Normally quit apps you launched and shut down simulators you booted, but leave the app, simulator, and launch process running when preparing a live demo. Never stop shared devices or unrelated processes.
+- To run with the AI gateway, start the Aspire AppHost (`aspire start` from the repository root) and launch the app resources from the dashboard; see [the gateway runbook](../docs/04-ai-gateway.md).
 - Don't change shared toolchain settings or install workloads without approval. If something can't run, say what's unverified rather than retrying indefinitely.
 
 ### Driving the app with DevFlow

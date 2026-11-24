@@ -21,13 +21,13 @@ Run [`01-explore-app.prompt.md`](../.github/prompts/01-explore-app.prompt.md):
 |---|---|
 | **Mobile Device canvas** (`mobile-device`), when available | The running simulator, real taps, and navigation; otherwise use the native Simulator |
 | **Inspector — UI tree** | `agenda-search`, `favorites-filter`, `session-<id>`, `session-favorite-<id>`, and `favorite-button` |
-| **Inspector — Logs** | Actual `ILogger` diagnostics and exceptions; AI pipeline logs exist only on the AI stack |
+| **Inspector — Logs** | Actual `ILogger` diagnostics and exceptions, including `[AI …]` pipeline entries |
 | **Inspector — Storage** | `selected_city` (city ID) and `favorites` (comma-separated session IDs) |
 | **Layout diagnostics / screenshots** | Clipped text, off-screen elements, zero-sized controls, and visual artifacts |
 
 Top-level Shell routes are `//agenda`, `//event`, `//speakers`, and `//assistant`. Detail navigation uses `session?id=<id>` and `speaker?id=<id>`, not route templates. The toolbar `city-picker` selects **Durban**, **Cape Town**, or **Bloemfontein**.
 
-Search on `main` matches case-insensitive substrings in the current city's session titles, abstracts, and speaker names. Search `.NET MAUI` for this walkthrough; synonym queries belong to the semantic-search stack demo.
+Search first matches case-insensitive substrings in the current city's session titles, abstracts, and speaker names, then appends semantic matches once indexing finishes. Search `.NET MAUI` for this walkthrough; synonym queries such as `football forecasts` belong to the [Part 3](03-giving-the-app-ai.md) semantic-search demo.
 
 ### Batch UI steps
 
@@ -84,4 +84,4 @@ After the fixes, use the same .NET 11 launch command (or an already-configured H
 
 Show themed surfaces, a gradient Event hero, native map, swipeable Agenda tickets, inline favourites, and Assistant starter suggestions. Use [`DESIGN.md`](../DESIGN.md) and [`PRODUCT.md`](../PRODUCT.md) for phone/desktop layout checks.
 
-Next: [**Part 3 — Giving the App That Same AI**](03-giving-the-app-ai.md) (switch to the native AI stack).
+Next: [**Part 3 — Giving the App That Same AI**](03-giving-the-app-ai.md).

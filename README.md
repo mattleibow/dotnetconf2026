@@ -11,7 +11,7 @@ The companion app and speaker guide for .NET Conf 2026 South Africa.
 - **Agenda:** city-scoped semantic search with packaged ONNX embeddings; All / Favourites filter; swipeable session cards and inline favourite controls.
 - **Event:** conference details, sponsors, venue photos, and an embedded map.
 - **Speakers:** profiles, biographies, and links to their sessions.
-- **Assistant:** conference tools, contextual agents, and multi-agent workflows. Chat uses the optional gateway first, falling back to native on-device AI when the server is unreachable.
+- **Assistant:** conference tools, contextual agents, and multi-agent workflows on the native on-device model. Launched through the Aspire AppHost, chat tries the AI gateway first and falls back to on-device AI.
 - **Local state:** selected city and favourites in `Preferences`. Conference content for **Durban, Cape Town, and Bloemfontein** ships with the app.
 
 The schedule, biographies, images, search, and favourites work offline. Map tiles, external maps, and sponsor websites can require network access. The layouts support portrait phones and wide desktop windows, with light and dark themes. Debug builds register the MAUI DevFlow agent.
@@ -25,8 +25,8 @@ The schedule, biographies, images, search, and favourites work offline. Map tile
 | [`Services/`](src/ConferenceApp/Services/) | Semantic search, user preferences, streamed chat, and background-service base |
 | [`src/ConferenceApp.AppHost/`](src/ConferenceApp.AppHost/) | Aspire orchestration: LiteLLM gateway, Azure OpenAI, Ollama, and the MAUI app |
 | [`.github/prompts/`](.github/prompts/) | `00-prepare-demo`, `01-explore-app`, and `02-bug-hunt` |
-| [`docs/`](docs/README.md) | .NET 11 notes, DevFlow runbook, and the separate AI-stack walkthrough |
-| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Agent guidance for the whole demo, including stack-only AI conventions |
+| [`docs/`](docs/README.md) | .NET 11 notes, DevFlow runbook, AI walkthrough, and gateway runbook |
+| [`.github/copilot-instructions.md`](.github/copilot-instructions.md) | Agent guidance for the whole demo, including AI conventions |
 | [`DESIGN.md`](DESIGN.md), [`PRODUCT.md`](PRODUCT.md) | Design system and product brief |
 | [`data/`](data/README.md) | Packaged JSON catalogue, Markdown descriptions, and real conference images |
 
@@ -34,7 +34,7 @@ The schedule, biographies, images, search, and favourites work offline. Map tile
 
 The optional [bug-hunt PR #33](https://github.com/mattleibow/dotnetconf2026/pull/33) uses **`mattleibow-demo-bugs-for-devflow-bug-hunt`**. Prepare that branch in an isolated worktree/session and ensure it is rebased onto the latest fetched `main` before the demo. Its seed adds the speaker, favourites, and map regressions; the input-border artifact is also present on `main`. Run [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md) on that baseline, not on `main`; see [the bug-hunt preflight](docs/02-agents-building-apps.md#step-02-optional-bug-hunt).
 
-The native on-device AI stack is ordered **bottom to top**:
+The AI walkthrough was built as a stack of PRs, ordered **bottom to top**:
 
 | Layer | Pull request | Adds |
 |---|---|---|
@@ -50,7 +50,7 @@ These layers are now merged. Use their PRs as a historical walkthrough, or walk 
 
 ## Gateway demo
 
-Follow the [gateway runbook](docs/04-ai-gateway.md). Aspire runs a LiteLLM gateway in front of Azure OpenAI and a local Ollama server, plus the app on Mac, iOS and Android. The app's default `IChatClient` tries the gateway first and falls back to native on-device AI on any failure; background enrichment stays on-device.
+Run `aspire start` from the repository root and follow the [gateway runbook](docs/04-ai-gateway.md) for first-run setup. Aspire runs a LiteLLM gateway in front of Azure OpenAI and a local Ollama server, plus the app on Mac, iOS and Android. The app's default `IChatClient` tries the gateway first and falls back to native on-device AI on any failure; background enrichment stays on-device.
 
 ## Check tooling, then run one target
 
@@ -96,7 +96,7 @@ See [Part 1](docs/01-whats-new-net11-maui11.md) for framework features and [the 
 1. [`00-prepare-demo.prompt.md`](.github/prompts/00-prepare-demo.prompt.md): use .NET 11 `dotnet run` on the booted iOS simulator and open the available device/Inspector canvases. **Clears saved preferences and resets live Agenda search/filter state.**
 2. [`01-explore-app.prompt.md`](.github/prompts/01-explore-app.prompt.md): find the MAUI talk, favourite it, inspect storage, and open the speaker profile.
 3. On `mattleibow-demo-bugs-for-devflow-bug-hunt`, [`02-bug-hunt.prompt.md`](.github/prompts/02-bug-hunt.prompt.md): diagnose, fix, and verify the blank speaker, empty favourites filter, invisible map, and input-border artifacts.
-4. On the native AI stack, follow [Part 3](docs/03-giving-the-app-ai.md) for local chat, semantic search, typed enrichment, tools, and workflows.
+4. Follow [Part 3](docs/03-giving-the-app-ai.md) for local chat, semantic search, typed enrichment, tools, and workflows.
 
 ```sh
 maui devflow list
@@ -107,7 +107,7 @@ Queries such as `football forecasts` demonstrate semantic retrieval after the pa
 
 ## On-device AI
 
-Local chat needs Apple Intelligence (iOS / Mac Catalyst 26+), Gemini Nano (Android), or a packaged launch on a Windows Copilot+ PC.
+Local chat needs Apple Intelligence (iOS / Mac Catalyst 26+), Gemini Nano (Android), or a packaged launch on a Windows Copilot+ PC. Without the Aspire AppHost, the app uses only on-device AI.
 
 ## Conference data
 
