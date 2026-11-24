@@ -107,7 +107,7 @@ Queries such as `football forecasts` demonstrate semantic retrieval after the pa
 
 ## On-device AI
 
-Local chat needs Apple Intelligence (iOS / Mac Catalyst 26+), Gemini Nano (Android), or a packaged launch on a Windows Copilot+ PC. Without the Aspire AppHost, the app uses only on-device AI.
+Local chat needs Apple Intelligence (iOS / Mac Catalyst 26+), Gemini Nano (Android), or a packaged launch on a Windows Copilot+ PC. Without the Aspire AppHost, `ai-gateway` doesn't resolve, so chat falls back to on-device AI.
 
 ## Conference data
 

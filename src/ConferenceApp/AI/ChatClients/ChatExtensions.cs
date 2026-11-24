@@ -26,17 +26,15 @@ public static class ChatExtensions
 
     public static MauiAppBuilder AddChatClients(this MauiAppBuilder builder)
     {
-        // Aspire supplies the gateway (direct on Mac, a dev tunnel on simulators) and its key as configuration.
-        var hasGateway = builder.Configuration.GetSection("services:ai-gateway").Exists();
+        builder.Services.AddKeyedTransient<IChatClient>(Local,
+            (services, _) => CreateLocalChatClient(services));
 
-        builder.Services.AddKeyedTransient<IChatClient>(Local, (services, _) => CreateLocalChatClient(services));
-
-        builder.Services.AddKeyedTransient<IChatClient>(Remote, (services, _) => CreateRemoteChatClient(services));
+        builder.Services.AddKeyedTransient<IChatClient>(Remote,
+            (services, _) => CreateRemoteChatClient(services));
 
         // Each agent gets its own client: try the gateway first, and use on-device AI if it fails.
-        builder.Services.AddTransient<IChatClient>(services => !hasGateway
-            ? services.GetRequiredKeyedService<IChatClient>(Local)
-            : new OrderedFailoverChatClient(
+        builder.Services.AddTransient<IChatClient>(services =>
+            new OrderedFailoverChatClient(
             [
                 services.GetRequiredKeyedService<IChatClient>(Remote),
                 services.GetRequiredKeyedService<IChatClient>(Local)
@@ -50,12 +48,16 @@ public static class ChatExtensions
         var configuration = services.GetRequiredService<IConfiguration>();
         var loggerFactory = services.GetRequiredService<ILoggerFactory>();
 
-        return new OpenAIClient(new ApiKeyCredential(configuration["AI_GATEWAY_KEY"] ?? ""), new OpenAIClientOptions
+        var creds = new ApiKeyCredential(configuration["AI_GATEWAY_KEY"] ?? "");
+
+        var options = new OpenAIClientOptions
         {
             Endpoint = new Uri("https+http://ai-gateway/v1"),
             Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
             NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
-        })
+        };
+
+        return new OpenAIClient(creds, options)
             .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
             .AsIChatClient()
             .AsBuilder()
@@ -121,6 +123,7 @@ public static class ChatExtensions
                 .Build();
         }
 #endif
+
         return new UnavailableChatClient();
     }
 
