@@ -38,12 +38,12 @@ public static class ChatExtensions
                 Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
                 NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
             })
-                .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
-                .AsIChatClient()
-                .AsBuilder()
-                .UseFunctionInvocation(services.GetRequiredService<ILoggerFactory>())
-                .UseLogging(services.GetRequiredService<ILoggerFactory>())
-                .Build(services));
+            .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
+            .AsIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation(services.GetRequiredService<ILoggerFactory>())
+            .UseLogging(services.GetRequiredService<ILoggerFactory>())
+            .Build(services));
 
         // Each agent gets its own client: try the gateway first, and use on-device AI if it fails.
         builder.Services.AddTransient<IChatClient>(services => !hasGateway
@@ -53,6 +53,7 @@ public static class ChatExtensions
                 services.GetRequiredKeyedService<IChatClient>(Cloud),
                 services.GetRequiredKeyedService<IChatClient>(Local)
             ]));
+
         return builder;
     }
 
@@ -102,12 +103,12 @@ public static class ChatExtensions
 
             var logger = loggerFactory.CreateLogger(typeof(ChatExtensions));
             return RoutingChatClient.Create((context, _) =>
-            {
-                var toolCount = context.ChatOptions?.Tools?.Count ?? 0;
-                logger.LogInformation("[AI Chat] Routing to {Provider} ({ToolCount} tools).",
-                    toolCount > 0 ? "ONNX Qwen3-0.6B" : "Windows AI", toolCount);
-                return ValueTask.FromResult(toolCount > 0 ? toolClient : platformClient);
-            })
+                {
+                    var toolCount = context.ChatOptions?.Tools?.Count ?? 0;
+                    logger.LogInformation("[AI Chat] Routing to {Provider} ({ToolCount} tools).",
+                        toolCount > 0 ? "ONNX Qwen3-0.6B" : "Windows AI", toolCount);
+                    return ValueTask.FromResult(toolCount > 0 ? toolClient : platformClient);
+                })
                 .AsBuilder()
                 .UseLogging(loggerFactory)
                 .Build();

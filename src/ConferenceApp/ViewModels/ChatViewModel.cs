@@ -27,11 +27,7 @@ public partial class ChatViewModel(
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
-    [ObservableProperty]
-    public partial string? UnavailableReason { get; set; }
-
-    protected override async Task OnLoadAsync() =>
-        UnavailableReason = await chat.GetUnavailableReasonAsync();
+    protected override Task OnLoadAsync() => Task.CompletedTask;
 
     [RelayCommand]
     private Task AskSuggestionAsync(string suggestion)
@@ -66,10 +62,6 @@ public partial class ChatViewModel(
 
         try
         {
-            UnavailableReason = await chat.GetUnavailableReasonAsync(turn.Token);
-            if (!string.IsNullOrEmpty(UnavailableReason))
-                return;
-
             Prompt = "";
             await chat.SendAsync(text, turn.Token);
         }

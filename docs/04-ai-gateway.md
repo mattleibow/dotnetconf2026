@@ -52,7 +52,6 @@ The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters h
 - Any error before output is streamed — unreachable server, timeout (30 s), quota, or a guardrail block — falls back to on-device AI. A blocked topic stays blocked at the gateway for the rest of that chat because the history is resent; use **New chat**.
 - Background catalogue enrichment always uses the on-device client.
 - Each reply's author shows the agent and the endpoint that answered, e.g. `conference-assistant (azure)`, or the on-device model after a fallback.
-- Known limitation: `ChatService` still checks the on-device model before chatting, so a device without one (for example an Android emulator without Gemini Nano) shows the unavailable message even when the gateway is running.
 
 [`MauiProgram.cs`](../src/ConferenceApp/MauiProgram.cs) adds environment variables to configuration and enables Aspire service discovery for every `HttpClient`, so `ai-gateway` resolves to the address Aspire supplied (directly on Mac, via the dev tunnel on devices).
 

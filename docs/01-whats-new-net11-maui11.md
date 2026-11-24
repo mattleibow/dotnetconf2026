@@ -62,10 +62,10 @@ Use expressions for small display decisions, not hidden business logic:
 
 ```xml
 AutomationId="{$'session-{Id}'}"
-IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+HorizontalOptions="{IsUser ? LayoutOptions.End : LayoutOptions.Start}"
 ```
 
-[`ChatPage.xaml`](../src/ConferenceApp/Views/ChatPage.xaml) uses `CollectionView.EmptyView` for suggestions and the availability/busy expression to disable inputs.
+[`ChatPage.xaml`](../src/ConferenceApp/Views/ChatPage.xaml) uses `CollectionView.EmptyView` for suggestions, `{!IsBusy}` to disable inputs during a turn, and the `IsUser` expression to align chat bubbles.
 
 Other useful MAUI 11 notes (not a checklist of features used by this app):
 

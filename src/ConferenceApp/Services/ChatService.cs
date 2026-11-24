@@ -5,7 +5,6 @@ using ConferenceApp.Data;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Maui.Essentials.AI;
 
 namespace ConferenceApp.Services;
 
@@ -25,7 +24,7 @@ public partial class ChatItem(bool isUser, string text = "", string? author = nu
     public partial string Progress { get; set; } = "";
 }
 
-// Manages conversation history, streams responses from the local on-device IChatClient, and resolves referenced Session cards.
+// Manages conversation history, streams responses from the assistant IChatClient, and resolves referenced Session cards.
 public class ChatService(
     ConferenceDbProvider dbProvider,
     UserPreferencesService preferences,
@@ -54,18 +53,6 @@ public class ChatService(
         history.Clear();
     }
 
-    public async Task<string?> GetUnavailableReasonAsync(CancellationToken cancellationToken = default) =>
-        await ChatExtensions.GetModelAvailabilityAsync(cancellationToken, logger) switch
-        {
-            ChatModelAvailability.Available => null,
-            ChatModelAvailability.RequirementsNotMet =>
-                "This device doesn't currently meet the requirements for on-device chat. You can still browse the agenda and favourites. No cloud service is used.",
-            ChatModelAvailability.Disabled => "On-device AI is turned off. Enable it in your device settings to chat locally. No cloud service is used.",
-            ChatModelAvailability.NotReady or ChatModelAvailability.Downloading =>
-                "The on-device model isn't ready yet. Try again when it's ready.",
-            _ => "On-device chat isn't available on this device right now. You can still browse the agenda and favourites. No cloud service is used."
-        };
-
     public async Task SendAsync(string text, CancellationToken cancellationToken = default)
     {
         Sessions.Clear();
@@ -73,16 +60,9 @@ public class ChatService(
 
         var reply = new ChatItem(isUser: false)
         {
-            Progress = "Thinking on device..."
+            Progress = "Thinking..."
         };
         Messages.Add(reply);
-
-        if (await GetUnavailableReasonAsync(cancellationToken) is { } reason)
-        {
-            reply.Progress = "";
-            reply.Text = reason;
-            return;
-        }
 
         List<ChatMessage> turnHistory =
         [
