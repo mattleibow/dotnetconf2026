@@ -26,7 +26,7 @@ The [gateway runbook](04-ai-gateway.md) adds server-first chat through a LiteLLM
 4. Confirm the app with `maui devflow agent status`, including platform and device UDID, and ensure the installed build comes from the intended workspace/branch. Use its discovered agent port and Inspector URL from `maui devflow list`, not a hardcoded agent ID. Release the Inspector's writer lease before CLI UI work; see [preview leases](02-agents-building-apps.md#devflow-preview-leases).
 5. For UI changes, inspect the requested platform(s) against [`DESIGN.md`](../DESIGN.md). A separate cross-platform rehearsal should cover phone/wide desktop and light/dark themes; an explicitly iOS-only demo does not require desktop or Android builds.
 6. For the optional bug hunt, prepare `mattleibow-demo-bugs-for-devflow-bug-hunt` rebased onto current `main` in isolation before the talk, then launch that workspace. Follow [the bug-hunt preflight](02-agents-building-apps.md#step-02-optional-bug-hunt), not the functional `main` exploration.
-7. For Part 3, use a session on the intended AI branch, verify local-model availability and vector indexing, and keep logs visible.
+7. For Part 3, verify local-model availability and vector indexing, and keep logs visible. For the gateway, start the AppHost first; see the [gateway runbook](04-ai-gateway.md).
 
 ```sh
 maui devflow list
