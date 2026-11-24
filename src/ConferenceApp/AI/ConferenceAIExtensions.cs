@@ -5,7 +5,7 @@ public static class ConferenceAIExtensions
 {
     public static MauiAppBuilder AddConferenceAI(this MauiAppBuilder builder)
     {
-        // Register cloud-first chat with native on-device fallback.
+        // Register remote-first chat with native on-device fallback.
         builder.AddChatClients();
 
         // Register semantic search embeddings, in-memory vector store, and session indexing.

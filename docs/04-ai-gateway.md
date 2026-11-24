@@ -46,7 +46,7 @@ The `litellm-master-key`, `litellm-app-key` and `postgres-password` parameters h
 
 ## The app
 
-[`ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) registers a keyed `cloud` client (OpenAI protocol → `https+http://ai-gateway/v1`), a keyed `local` on-device client, and a default `IChatClient` that is `OrderedFailoverChatClient(cloud, local)`:
+[`ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) registers a keyed `remote` client (`CreateRemoteChatClient`: OpenAI protocol → `https+http://ai-gateway/v1`), a keyed `local` on-device client, and a default `IChatClient` that is `OrderedFailoverChatClient(remote, local)`:
 
 - Every request tries the gateway first; nothing is pinned after a failure.
 - Any error before output is streamed — unreachable server, timeout (30 s), quota, or a guardrail block — falls back to on-device AI. A blocked topic stays blocked at the gateway for the rest of that chat because the history is resent; use **New chat**.

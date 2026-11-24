@@ -8,10 +8,10 @@ using OpenAI;
 
 namespace ConferenceApp.AI;
 
-// Registers the cloud gateway and native on-device clients, with the default IChatClient failing over from cloud to local.
+// Registers the remote gateway and native on-device clients, with the default IChatClient failing over from remote to local.
 public static class ChatExtensions
 {
-    public const string Cloud = "cloud";
+    public const string Remote = "remote";
     public const string Local = "local";
 
 #if ANDROID
@@ -31,30 +31,37 @@ public static class ChatExtensions
 
         builder.Services.AddKeyedTransient<IChatClient>(Local, (services, _) => CreateLocalChatClient(services));
 
-        builder.Services.AddKeyedTransient<IChatClient>(Cloud, (services, _) =>
-            new OpenAIClient(new ApiKeyCredential(builder.Configuration["AI_GATEWAY_KEY"] ?? ""), new OpenAIClientOptions
-            {
-                Endpoint = new Uri("https+http://ai-gateway/v1"),
-                Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
-                NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
-            })
-            .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
-            .AsIChatClient()
-            .AsBuilder()
-            .UseFunctionInvocation(services.GetRequiredService<ILoggerFactory>())
-            .UseLogging(services.GetRequiredService<ILoggerFactory>())
-            .Build(services));
+        builder.Services.AddKeyedTransient<IChatClient>(Remote, (services, _) => CreateRemoteChatClient(services));
 
         // Each agent gets its own client: try the gateway first, and use on-device AI if it fails.
         builder.Services.AddTransient<IChatClient>(services => !hasGateway
             ? services.GetRequiredKeyedService<IChatClient>(Local)
             : new OrderedFailoverChatClient(
             [
-                services.GetRequiredKeyedService<IChatClient>(Cloud),
+                services.GetRequiredKeyedService<IChatClient>(Remote),
                 services.GetRequiredKeyedService<IChatClient>(Local)
             ]));
 
         return builder;
+    }
+
+    private static IChatClient CreateRemoteChatClient(IServiceProvider services)
+    {
+        var configuration = services.GetRequiredService<IConfiguration>();
+        var loggerFactory = services.GetRequiredService<ILoggerFactory>();
+
+        return new OpenAIClient(new ApiKeyCredential(configuration["AI_GATEWAY_KEY"] ?? ""), new OpenAIClientOptions
+        {
+            Endpoint = new Uri("https+http://ai-gateway/v1"),
+            Transport = new HttpClientPipelineTransport(services.GetRequiredService<IHttpClientFactory>().CreateClient()),
+            NetworkTimeout = TimeSpan.FromSeconds(30) // Fall back to on-device AI quickly if the gateway is unreachable.
+        })
+            .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
+            .AsIChatClient()
+            .AsBuilder()
+            .UseFunctionInvocation(loggerFactory)
+            .UseLogging(loggerFactory)
+            .Build(services);
     }
 
     private static IChatClient CreateLocalChatClient(IServiceProvider services)
