@@ -28,14 +28,14 @@ Look for model/index startup, `LoggingEmbeddingGenerator`, `[AI Search]`, `[AI R
 
 Open [`ChatExtensions.cs`](../src/ConferenceApp/AI/ChatClients/ChatExtensions.cs) and [`UnavailableChatClient.cs`](../src/ConferenceApp/AI/ChatClients/UnavailableChatClient.cs).
 
-MAUI Essentials AI supplies `IChatClient` implementations. The registration checks OS support, and `GetModelAvailabilityAsync()` checks model readiness before chat or enrichment.
+MAUI Essentials AI supplies `IChatClient` implementations. The registration checks OS support, and `GetModelAvailabilityAsync()` checks model readiness before background enrichment. Chat has no up-front check: when no model can answer, the failover reaches `UnavailableChatClient`, which replies with a friendly message.
 
 | Platform | Client and invocation |
 |---|---|
 | iOS / Mac Catalyst 26+ | `AppleIntelligenceChatClient`, with `loggerFactory` and `functionInvocationServices: services`; Apple's native Foundation Models bridge invokes tools |
 | Supported Android devices (API check 26+) | `GeminiNanoChatClient` profiles behind `OrderedFailoverChatClient`, then `.UseFunctionInvocation(loggerFactory)` and `.Build(services)` |
 | Windows | `WindowsAIChatClient` for plain requests; requests with tools route to the bundled [`QwenChatClient`](../models/chat/README.md) with managed function invocation |
-| Unsupported / unavailable | Availability message and disabled chat controls |
+| Unsupported / unavailable | `UnavailableChatClient` replies with a friendly message on unsupported platforms; a disabled or not-ready model shows its error in the reply |
 
 Apple passes DI services into the native client rather than adding the managed function-invocation loop:
 

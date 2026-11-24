@@ -8,19 +8,9 @@
                      Command="{Binding PickCityCommand}" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto,*,Auto" Padding="16,12,16,16" RowSpacing="12">
-        <!-- Unavailable Banner -->
-        <Border Style="{StaticResource WarningBannerBorder}"
-                IsVisible="{!string.IsNullOrEmpty(UnavailableReason)}">
-            <Label AutomationId="chat-unavailable"
-                   Text="{Binding UnavailableReason}"
-                   Style="{StaticResource Caption}"
-                   FontFamily="OpenSansSemibold"
-                   TextColor="{AppThemeBinding Light={StaticResource WarningTextLight}, Dark={StaticResource WarningTextDark}}" />
-        </Border>
-
+    <Grid RowDefinitions="*,Auto" Padding="16,12,16,16" RowSpacing="12">
         <!-- Messages & Starter Suggestions -->
-        <CollectionView Grid.Row="1" AutomationId="chat-messages" ItemsSource="{Binding Messages}">
+        <CollectionView AutomationId="chat-messages" ItemsSource="{Binding Messages}">
             <CollectionView.EmptyView>
                 <VerticalStackLayout Spacing="20"
                                      Padding="12"
@@ -49,7 +39,7 @@
                     </Border>
 
                     <VerticalStackLayout Spacing="10"
-                                         IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                                         IsEnabled="{!IsBusy}"
                                          BindableLayout.ItemsSource="{Binding Suggestions}">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
@@ -158,12 +148,12 @@
         </CollectionView>
 
         <!-- Bottom Input Bar -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
             <Border Style="{StaticResource SearchContainerBorder}">
                 <Entry AutomationId="chat-input"
                        Placeholder="Ask about sessions, speakers, or your schedule..."
                        Text="{Binding Prompt}"
-                       IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                       IsEnabled="{!IsBusy}"
                        ReturnCommand="{Binding SendCommand}" />
             </Border>
             <Button Grid.Column="1"
@@ -173,7 +163,7 @@
                     Padding="18,10"
                     CornerRadius="14"
                     MinimumHeightRequest="44"
-                    IsEnabled="{string.IsNullOrEmpty(UnavailableReason) AND !IsBusy}"
+                    IsEnabled="{!IsBusy}"
                     Command="{Binding SendCommand}" />
         </Grid>
     </Grid>
