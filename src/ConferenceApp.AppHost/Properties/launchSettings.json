@@ -4,7 +4,16 @@
       "commandName": "Project",
       "launchBrowser": false,
       "environmentVariables": {
-        "DOTNET_ENVIRONMENT": "Development"
+        "DOTNET_ENVIRONMENT": "Development",
+        "LocalModelRuntime": "ModelRunner"
+      }
+    },
+    "ollama": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development",
+        "LocalModelRuntime": "Ollama"
       }
     }
   }

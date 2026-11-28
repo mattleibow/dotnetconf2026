@@ -9,8 +9,10 @@ model_list:
       api_version: "2024-10-21"
   - model_name: ollama
     litellm_params:
-      model: ollama_chat/qwen2.5:3b
+      # The AppHost selects the local Model Runner or deployed Ollama model by execution mode.
+      model: os.environ/OLLAMA_MODEL
       api_base: os.environ/OLLAMA_API_BASE
+      api_key: unused # Docker Model Runner ignores the key, but LiteLLM's OpenAI route requires one.
 
 router_settings:
   # If Azure fails, serve the request from the local Ollama server instead.

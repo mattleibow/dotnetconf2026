@@ -62,6 +62,7 @@ public static class ChatExtensions
             .GetChatClient("azure") // The gateway endpoint to use; LiteLLM falls back to "ollama" if Azure fails.
             .AsIChatClient()
             .AsBuilder()
+            .Use(inner => new GatewayCooldownChatClient(inner, loggerFactory.CreateLogger<GatewayCooldownChatClient>()))
             .UseFunctionInvocation(loggerFactory)
             .UseLogging(loggerFactory)
             .Build(services);

@@ -75,6 +75,11 @@
 		<PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI" />
 	</ItemGroup>
 
+	<!-- Desktop builds host a local MCP server for editors such as VS Code -->
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst' or $([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<PackageReference Include="ModelContextProtocol.Core" />
+	</ItemGroup>
+
 	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
 		<ReferenceNativeSymbol Include="RegisterCustomOps" SymbolType="Function" SymbolMode="Ignore" />
 		<LinkerArgument Include="-lsqlite3" />

@@ -45,6 +45,11 @@ public static class MauiProgram
 
         builder.AddConferenceAI();
 
+#if MACCATALYST || WINDOWS
+        // Desktop builds also share the conference tools with editors like VS Code over MCP.
+        builder.Services.AddSingleton<BaseBackgroundService, ConferenceMcpServer>();
+#endif
+
         builder.Services.AddTransient<EventPage>().AddTransient<EventViewModel>();
         builder.Services.AddTransient<AgendaPage>().AddTransient<AgendaViewModel>();
         builder.Services.AddTransient<SpeakersPage>().AddTransient<SpeakersViewModel>();

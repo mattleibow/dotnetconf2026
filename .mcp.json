@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "conference-app": {
+      "type": "http",
+      "url": "http://localhost:5299/mcp/",
+      "tools": ["*"]
+    }
+  }
+}
