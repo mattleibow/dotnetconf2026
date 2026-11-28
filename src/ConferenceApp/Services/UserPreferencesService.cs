@@ -9,7 +9,6 @@ public record FavoritesChangedMessage;
 public class UserPreferencesService(ConferenceDbProvider dbProvider, TimeProvider timeProvider)
 {
     private const string CityKey = "selected_city";
-    private const string FavoritesKey = "favorites";
 
     public string? SelectedCityId
     {
@@ -36,7 +35,7 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider, TimeProvide
     }
 
     public IReadOnlySet<string> GetFavoriteIds() =>
-        Preferences.Get(FavoritesKey, "")
+        Preferences.Get("favorite-sessions", "")
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .ToHashSet();
 
@@ -53,7 +52,7 @@ public class UserPreferencesService(ConferenceDbProvider dbProvider, TimeProvide
             changed |= isFavorite ? ids.Add(sessionId) : ids.Remove(sessionId);
         if (!changed)
             return;
-        Preferences.Set(FavoritesKey, string.Join(',', ids));
+        Preferences.Set("favorite_sessions", string.Join(',', ids));
         WeakReferenceMessenger.Default.Send(new FavoritesChangedMessage());
     }
 }
