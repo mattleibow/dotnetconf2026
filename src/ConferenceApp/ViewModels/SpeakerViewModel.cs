@@ -26,18 +26,20 @@ public partial class SpeakerViewModel(
 
     public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        query.TryGetValue("speakerId", out var id);
-        speakerId = id as string;
+        speakerId = (string)query["id"];
         Refresh();
     }
 
     protected override async Task OnLoadAsync()
     {
-        if (SelectedCity is not { } city)
+        if (string.IsNullOrEmpty(speakerId) || SelectedCity is not { } city)
             return;
 
         var db = await DbProvider.GetDbAsync();
-        Speaker = db.Speakers.First(s => s.Id == speakerId);
+        Speaker = db.Speakers.FirstOrDefault(s => s.Id == speakerId);
+        if (Speaker is null)
+            return;
+
         Bio = Speaker.Bio ?? "";
         Sessions.Clear();
         foreach (var session in db.Sessions.Where(s => s.CityId == city.Id && s.SpeakerIds.Contains(Speaker.Id)))
