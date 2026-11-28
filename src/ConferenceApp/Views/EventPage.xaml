@@ -198,7 +198,6 @@
                                     Padding="0">
                                 <Map x:Name="VenueMap"
                                      AutomationId="venue-map"
-                                     HeightRequest="220"
                                      IsShowingUser="False" />
                             </Border>
 

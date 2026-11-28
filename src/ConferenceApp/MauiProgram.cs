@@ -30,17 +30,6 @@ public static class MauiProgram
             handlers.AddHandler<TabBar, PopToRootShellItemHandler>());
 #endif
 
-        // The surrounding Border supplies the search and chat input chrome.
-        Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("BorderlessEntry", (handler, _) =>
-        {
-#if IOS || MACCATALYST
-            handler.PlatformView.BorderStyle = UIKit.UITextBorderStyle.None;
-#elif ANDROID
-            handler.PlatformView.Background = null;
-            handler.PlatformView.SetPadding(0, 0, 0, 0);
-#endif
-        });
-
         // Aspire passes service URLs (e.g. services__ai-gateway__http__0) as environment variables;
         // service discovery lets every HttpClient resolve names like "https+http://ai-gateway".
         builder.Configuration.AddEnvironmentVariables();
